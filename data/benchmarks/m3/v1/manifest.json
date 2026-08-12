@@ -1,0 +1,145 @@
+{
+  "manifest_version": 1,
+  "benchmark_id": "chargepath-m3-synthetic-v1",
+  "algorithm_version": "chargepath-label-setting-v1",
+  "result_serialization_version": 1,
+  "fixture": {
+    "path": "cases.json",
+    "schema_version": 1,
+    "synthetic": true,
+    "sha256": "b805fe43dc89d3129e1126d1d5529b9bf5058ab0b4e8a86362caeccd472b980d"
+  },
+  "algorithms": [
+    "shortest_driving_time",
+    "fastest",
+    "shortest_distance",
+    "fewest_charging_stops",
+    "greedy_fixed_80"
+  ],
+  "baseline_contract": {
+    "shortest_driving_time": "minimum summed driving duration, then lexicographic full node sequence",
+    "greedy_station_order": [
+      "remaining_shortest_driving_duration_asc",
+      "current_to_station_duration_asc",
+      "stable_station_id_asc"
+    ],
+    "greedy_charge_target_soc_pct": 80
+  },
+  "cases": [
+    {
+      "id": "direct_feasible",
+      "topology_class": "direct_feasible",
+      "soc_step_pct": 5,
+      "expected_feasible": true,
+      "expected_feasibility_source": {
+        "kind": "hand_audited_witness",
+        "node_ids": ["origin", "destination"],
+        "reason": "100 km consumes 35 percentage points on the 5 percent grid and leaves 45 percent SOC, above the 10 percent reserve."
+      }
+    },
+    {
+      "id": "one_stop",
+      "topology_class": "one_stop",
+      "soc_step_pct": 5,
+      "expected_feasible": true,
+      "expected_feasibility_source": {
+        "kind": "hand_audited_witness",
+        "node_ids": ["origin", "hub", "destination"],
+        "reason": "Each 140 km leg consumes ten 5 percent buckets; charging at the compatible hub restores enough energy for the second leg and reserve."
+      }
+    },
+    {
+      "id": "multi_stop",
+      "topology_class": "multi_stop",
+      "soc_step_pct": 5,
+      "expected_feasible": true,
+      "expected_feasibility_source": {
+        "kind": "hand_audited_witness",
+        "node_ids": ["origin", "first", "second", "destination"],
+        "reason": "Three 140 km legs are feasible by recharging at both compatible intermediate stations."
+      }
+    },
+    {
+      "id": "detour_choice",
+      "topology_class": "detour_choice",
+      "soc_step_pct": 5,
+      "expected_feasible": true,
+      "expected_feasibility_source": {
+        "kind": "hand_audited_witness",
+        "node_ids": ["origin", "fast_near", "destination"],
+        "reason": "The fast-near corridor has two individually feasible 140 km legs with a compatible charger between them."
+      }
+    },
+    {
+      "id": "connector_incompatible",
+      "topology_class": "connector_incompatible",
+      "soc_step_pct": 5,
+      "expected_feasible": false,
+      "expected_feasibility_source": {
+        "kind": "hand_audited_exhaustion",
+        "reason": "The only path requires energy beyond the initial usable amount and its only station is CHAdeMO while the vehicle supports CCS2 only."
+      }
+    },
+    {
+      "id": "exact_reserve_boundary",
+      "topology_class": "exact_reserve_boundary",
+      "soc_step_pct": 5,
+      "expected_feasible": true,
+      "expected_feasibility_source": {
+        "kind": "hand_audited_witness",
+        "node_ids": ["origin", "destination"],
+        "reason": "150 km consumes exactly ten 5 percent buckets from 60 percent and arrives at the 10 percent reserve."
+      }
+    },
+    {
+      "id": "discretization_rejected",
+      "topology_class": "discretization_rejected",
+      "soc_step_pct": 5,
+      "expected_feasible": false,
+      "expected_feasibility_source": {
+        "kind": "hand_audited_exhaustion",
+        "reason": "At 5 percent resolution the 12 percent reserve rounds to three buckets and the 140 km leg needs ten buckets, leaving only two."
+      }
+    },
+    {
+      "id": "infeasible",
+      "topology_class": "infeasible",
+      "soc_step_pct": 5,
+      "expected_feasible": false,
+      "expected_feasibility_source": {
+        "kind": "hand_audited_exhaustion",
+        "reason": "The sole 200 km leg requires more energy than the initial SOC can spend while retaining reserve, and no charging station exists."
+      }
+    }
+  ],
+  "sensitivity_runs": [
+    {
+      "id": "soc_grid_discretization_boundary",
+      "case_id": "discretization_rejected",
+      "factor": "soc_step_pct",
+      "values": [10, 5, 2],
+      "fixed_input_fixture_sha256": "b805fe43dc89d3129e1126d1d5529b9bf5058ab0b4e8a86362caeccd472b980d"
+    }
+  ],
+  "pruning_audits": [
+    {
+      "id": "detour_choice_small_graph",
+      "case_id": "detour_choice",
+      "route_geometry": {
+        "type": "LineString",
+        "coordinates": [[31.0, 39.0], [33.0, 39.0]]
+      },
+      "selection_config": {
+        "algorithm": "equirectangular-segment-v1",
+        "corridor_width_km": 25,
+        "candidate_cap": 5,
+        "ranking_keys": [
+          "corridor_distance_km_asc",
+          "route_progress_fraction_asc",
+          "max_power_kw_desc",
+          "stable_station_id_asc"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+GET /route/v1/driving/13,52;13.01,52?alternatives=false&steps=false&geometries=geojson&overview=full

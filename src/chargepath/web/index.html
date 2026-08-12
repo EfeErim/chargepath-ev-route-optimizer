@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Compare charging stops and arrival time for one battery-electric car trip with ChargePath."
+    />
+    <title>ChargePath · EV route planner</title>
+    <!-- Leaflet@1.9.4. Map attribution: OpenStreetMap contributors. -->
+    <link rel="stylesheet" href="/leaflet.css" />
+    <link rel="stylesheet" href="/app.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="ChargePath home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" role="img">
+            <path d="M18.4 2.8 8.1 17.1h7.2l-1.8 12.1 10.4-15h-7.2l1.7-11.4Z" />
+          </svg>
+        </span>
+        <span>
+          <strong>ChargePath</strong>
+          <small>EV route planner</small>
+        </span>
+      </a>
+
+      <div class="topbar-actions">
+        <span class="mode-pill" id="modePill">Loading</span>
+        <span class="privacy-badge">
+          <span class="privacy-dot" aria-hidden="true"></span>
+          Runs locally
+        </span>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside class="setup-panel" aria-labelledby="setupTitle">
+        <div class="setup-copy">
+          <p class="eyebrow">ONE CAR · ONE TRIP</p>
+          <h1 id="setupTitle">Where are you going?</h1>
+          <p>Choose an origin and destination. ChargePath compares feasible charging plans.</p>
+        </div>
+
+        <section class="location-stack" aria-label="Route endpoints">
+          <button class="location-card" id="originButton" type="button" disabled>
+            <span class="location-symbol origin-symbol" aria-hidden="true"></span>
+            <span class="location-copy">
+              <small>Origin</small>
+              <strong id="originValue">Choose on map</strong>
+            </span>
+            <span class="location-action" id="originAction">Choose</span>
+          </button>
+          <span class="location-connector" aria-hidden="true"></span>
+          <button class="location-card" id="destinationButton" type="button" disabled>
+            <span class="location-symbol destination-symbol" aria-hidden="true"></span>
+            <span class="location-copy">
+              <small>Destination</small>
+              <strong id="destinationValue">Choose on map</strong>
+            </span>
+            <span class="location-action" id="destinationAction">Choose</span>
+          </button>
+        </section>
+
+        <p class="selection-hint" id="selectionHint" aria-live="polite">
+          Choose the origin on the map.
+        </p>
+
+        <section class="vehicle-section" aria-labelledby="vehicleTitle">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">VEHICLE DETAILS</p>
+              <h2 id="vehicleTitle">Enter your vehicle details</h2>
+            </div>
+          </div>
+
+          <p class="vehicle-guidance">
+            Enter the values for the vehicle you are driving. These inputs determine energy use and charging feasibility.
+          </p>
+
+          <div class="input-grid" aria-label="Vehicle details">
+            <label for="battery">
+              Usable battery
+              <span class="input-shell">
+                <input id="battery" type="number" min="10" max="200" step="1" inputmode="decimal" />
+                <span>kWh</span>
+              </span>
+            </label>
+            <label for="initialSoc">
+              Initial charge
+              <span class="input-shell">
+                <input id="initialSoc" type="number" min="1" max="100" step="1" inputmode="decimal" />
+                <span>%</span>
+              </span>
+            </label>
+            <label for="consumption">
+              Consumption
+              <span class="input-shell">
+                <input id="consumption" type="number" min="5" max="80" step="0.1" inputmode="decimal" />
+                <span>kWh/100 km</span>
+              </span>
+            </label>
+            <label for="maxPower">
+              Maximum charging power
+              <span class="input-shell">
+                <input id="maxPower" type="number" min="20" max="500" step="1" inputmode="decimal" />
+                <span>kW</span>
+              </span>
+            </label>
+            <label for="reserveSoc">
+              Arrival reserve
+              <span class="input-shell">
+                <input id="reserveSoc" type="number" min="0" max="50" step="1" inputmode="decimal" />
+                <span>%</span>
+              </span>
+            </label>
+            <label for="safety">
+              Safety factor
+              <span class="input-shell">
+                <input id="safety" type="number" min="1" max="2" step="0.05" inputmode="decimal" />
+                <span>×</span>
+              </span>
+            </label>
+          </div>
+        </section>
+
+        <p class="form-error" id="formError" role="alert"></p>
+        <button class="plan-button" id="planButton" type="button" disabled>
+          <span id="planButtonText">Compare routes</span>
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M4 10h11m-4.5-4.5L15 10l-4.5 4.5" />
+          </svg>
+        </button>
+
+        <div class="data-note">
+          <span aria-hidden="true">i</span>
+          <p>
+            <strong id="dataLabel">Loading data details</strong>
+            Charging and arrival times are estimates; live station availability is not shown.
+          </p>
+        </div>
+      </aside>
+
+      <section class="map-stage" aria-label="Route map">
+        <div id="map" class="map" aria-label="Leaflet route selection map"></div>
+
+        <div class="map-fallback" id="mapFallback" hidden>
+          <span class="map-fallback-icon" aria-hidden="true">!</span>
+          <strong>Map unavailable</strong>
+          <span>The route explanation remains available in the results panel.</span>
+          <span class="sr-only">
+            Map library unavailable. The route explanation remains usable below.
+          </span>
+        </div>
+
+        <div class="map-toolbar">
+          <span class="map-status" id="mapStatus">
+            <span class="status-pulse" aria-hidden="true"></span>
+            Waiting for route selection
+          </span>
+          <button class="map-tool-button" id="fitButton" type="button" title="Fit route to view" disabled>
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M7 3H3v4m10-4h4v4M7 17H3v-4m10 4h4v-4" />
+            </svg>
+            Show route
+          </button>
+        </div>
+
+        <div class="basemap-warning" id="basemapWarning" hidden>
+          <span class="sr-only">Basemap unavailable</span>
+          <strong>Basemap unavailable.</strong>
+          The endpoints and route line remain available.
+        </div>
+
+        <aside class="results-panel" id="resultsPanel" aria-label="Route results">
+          <div class="results-topline">
+            <div>
+              <p class="eyebrow">ROUTE RESULT</p>
+              <h2>Compare options</h2>
+            </div>
+            <span class="result-status">Estimated</span>
+          </div>
+
+          <div class="result-empty" id="resultEmpty">
+            <div class="empty-visual" aria-hidden="true">
+              <span class="empty-point"></span>
+              <span class="empty-route"></span>
+              <span class="empty-bolt">
+                <svg viewBox="0 0 24 24">
+                  <path d="m13.6 2.5-7.2 10h5L10.1 21l7.4-10.4h-5l1.1-8.1Z" />
+                </svg>
+              </span>
+              <span class="empty-point destination"></span>
+            </div>
+            <h3 id="emptyTitle">Your trip will take shape here</h3>
+            <p id="emptyText">
+              Once you choose endpoints and compare routes, you will see the driving, charging, and
+              arrival plan here.
+            </p>
+            <ol class="empty-steps">
+              <li><span>1</span> Choose origin and destination</li>
+              <li><span>2</span> Enter vehicle details</li>
+              <li><span>3</span> Compare feasible routes</li>
+            </ol>
+          </div>
+
+          <div class="result-loading" id="resultLoading" hidden>
+            <span class="spinner" aria-hidden="true"></span>
+            <strong>Calculating route options</strong>
+            <p>Checking energy demand and charging stops.</p>
+          </div>
+
+          <div class="result-failure" id="resultFailure" hidden>
+            <span class="failure-icon" aria-hidden="true">!</span>
+            <strong>Could not calculate a route</strong>
+            <p id="failureText"></p>
+          </div>
+
+          <div class="result-content" id="resultContent" hidden>
+            <div class="option-tabs" id="optionTabs" role="tablist" aria-label="Route options"></div>
+
+            <article class="route-summary-card" id="routeSummary">
+              <div class="route-summary-heading">
+                <span class="strategy-label" id="strategyLabel">Fastest</span>
+                <span class="route-title" id="routeTitle">Origin → Destination</span>
+              </div>
+
+              <div class="hero-metric">
+                <small>Estimated total time</small>
+                <strong id="totalTime">—</strong>
+              </div>
+
+              <div class="metric-grid">
+                <div>
+                  <small>Distance</small>
+                  <strong id="distance">—</strong>
+                </div>
+                <div>
+                  <small>Arrival charge</small>
+                  <strong id="arrivalSoc">—</strong>
+                </div>
+                <div>
+                  <small>Driving</small>
+                  <strong id="driveTime">—</strong>
+                </div>
+                <div>
+                  <small>Charging</small>
+                  <strong id="chargeTime">—</strong>
+                </div>
+              </div>
+            </article>
+
+            <section class="result-section" aria-labelledby="socTitle">
+              <div class="section-title-row">
+                <div>
+                  <p class="eyebrow">ENERGY PLAN</p>
+                  <h3 id="socTitle">Battery along the route</h3>
+                </div>
+                <span id="timelineReserve">—</span>
+              </div>
+              <div class="soc-timeline" id="socTimeline"></div>
+            </section>
+
+            <section class="result-section" aria-labelledby="chargingTitle">
+              <div class="section-title-row">
+                <div>
+                  <p class="eyebrow">CHARGING PLAN</p>
+                  <h3 id="chargingTitle">Planned stops</h3>
+                </div>
+                <span id="stopCount">—</span>
+              </div>
+              <div class="charging-plan" id="chargingPlan"></div>
+            </section>
+
+            <div class="unavailable-box" id="unavailableBox" hidden>
+              <strong>Some alternatives could not be calculated</strong>
+              <p id="unavailableText"></p>
+            </div>
+
+            <p class="model-boundary" id="modelBoundary"></p>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <script src="/leaflet.js"></script>
+    <script src="/app.js"></script>
+  </body>
+</html>

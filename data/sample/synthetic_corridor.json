@@ -1,0 +1,77 @@
+{
+  "metadata": {
+    "name": "Synthetic corridor",
+    "schema_version": 2,
+    "synthetic": true,
+    "purpose": "Deterministic optimizer example; not real road or charger data"
+  },
+  "trip": {
+    "origin_id": "origin",
+    "destination_id": "destination"
+  },
+  "vehicle": {
+    "name": "Synthetic EV",
+    "usable_battery_kwh": 60,
+    "initial_soc_pct": 60,
+    "consumption_kwh_per_100km": 20,
+    "max_dc_power_kw": 150,
+    "reserve_soc_pct": 10,
+    "energy_safety_factor": 1.0,
+    "supported_dc_connectors": ["CCS2"]
+  },
+  "stations": [
+    {
+      "id": "fast_hub",
+      "name": "Fast Hub",
+      "latitude": 39.0,
+      "longitude": 32.0,
+      "max_power_kw": 150,
+      "connector_type": "CCS2"
+    },
+    {
+      "id": "slow_hub",
+      "name": "Slow Hub",
+      "latitude": 39.1,
+      "longitude": 31.5,
+      "max_power_kw": 50,
+      "connector_type": "CCS2"
+    }
+  ],
+  "legs": [
+    {
+      "origin_id": "origin",
+      "destination_id": "destination",
+      "distance_km": 300,
+      "duration_minutes": 180,
+      "geometry": {"type": "LineString", "coordinates": [[31.0, 38.9], [32.0, 39.35], [33.0, 39.2]]}
+    },
+    {
+      "origin_id": "origin",
+      "destination_id": "fast_hub",
+      "distance_km": 120,
+      "duration_minutes": 75,
+      "geometry": {"type": "LineString", "coordinates": [[31.0, 38.9], [31.5, 38.95], [32.0, 39.0]]}
+    },
+    {
+      "origin_id": "fast_hub",
+      "destination_id": "destination",
+      "distance_km": 190,
+      "duration_minutes": 115,
+      "geometry": {"type": "LineString", "coordinates": [[32.0, 39.0], [32.45, 39.05], [33.0, 39.2]]}
+    },
+    {
+      "origin_id": "origin",
+      "destination_id": "slow_hub",
+      "distance_km": 100,
+      "duration_minutes": 65,
+      "geometry": {"type": "LineString", "coordinates": [[31.0, 38.9], [31.2, 39.0], [31.5, 39.1]]}
+    },
+    {
+      "origin_id": "slow_hub",
+      "destination_id": "destination",
+      "distance_km": 180,
+      "duration_minutes": 140,
+      "geometry": {"type": "LineString", "coordinates": [[31.5, 39.1], [32.2, 39.3], [33.0, 39.2]]}
+    }
+  ]
+}

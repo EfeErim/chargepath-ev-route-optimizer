@@ -1,0 +1,176 @@
+{
+  "schema_version": 1,
+  "synthetic": true,
+  "description": "Project-authored deterministic cases for ChargePath M3 evaluation.",
+  "cases": [
+    {
+      "id": "direct_feasible",
+      "origin_id": "origin",
+      "destination_id": "destination",
+      "vehicle": {
+        "name": "M3 Synthetic EV",
+        "usable_battery_kwh": 60,
+        "initial_soc_pct": 80,
+        "consumption_kwh_per_100km": 20,
+        "max_dc_power_kw": 150,
+        "reserve_soc_pct": 10,
+        "energy_safety_factor": 1,
+        "supported_dc_connectors": ["CCS2"]
+      },
+      "stations": [],
+      "legs": [
+        {"origin_id": "origin", "destination_id": "destination", "distance_km": 100, "duration_minutes": 60}
+      ]
+    },
+    {
+      "id": "one_stop",
+      "origin_id": "origin",
+      "destination_id": "destination",
+      "vehicle": {
+        "name": "M3 Synthetic EV",
+        "usable_battery_kwh": 60,
+        "initial_soc_pct": 60,
+        "consumption_kwh_per_100km": 20,
+        "max_dc_power_kw": 150,
+        "reserve_soc_pct": 10,
+        "energy_safety_factor": 1,
+        "supported_dc_connectors": ["CCS2"]
+      },
+      "stations": [
+        {"id": "hub", "name": "Synthetic Hub", "latitude": 39.0, "longitude": 32.0, "max_power_kw": 150, "connector_type": "CCS2"}
+      ],
+      "legs": [
+        {"origin_id": "origin", "destination_id": "hub", "distance_km": 140, "duration_minutes": 80},
+        {"origin_id": "hub", "destination_id": "destination", "distance_km": 140, "duration_minutes": 80}
+      ]
+    },
+    {
+      "id": "multi_stop",
+      "origin_id": "origin",
+      "destination_id": "destination",
+      "vehicle": {
+        "name": "M3 Synthetic EV",
+        "usable_battery_kwh": 60,
+        "initial_soc_pct": 60,
+        "consumption_kwh_per_100km": 20,
+        "max_dc_power_kw": 150,
+        "reserve_soc_pct": 10,
+        "energy_safety_factor": 1,
+        "supported_dc_connectors": ["CCS2"]
+      },
+      "stations": [
+        {"id": "first", "name": "Synthetic First", "latitude": 39.0, "longitude": 31.7, "max_power_kw": 150, "connector_type": "CCS2"},
+        {"id": "second", "name": "Synthetic Second", "latitude": 39.0, "longitude": 32.3, "max_power_kw": 150, "connector_type": "CCS2"}
+      ],
+      "legs": [
+        {"origin_id": "origin", "destination_id": "first", "distance_km": 140, "duration_minutes": 80},
+        {"origin_id": "first", "destination_id": "second", "distance_km": 140, "duration_minutes": 80},
+        {"origin_id": "second", "destination_id": "destination", "distance_km": 140, "duration_minutes": 80}
+      ]
+    },
+    {
+      "id": "detour_choice",
+      "origin_id": "origin",
+      "destination_id": "destination",
+      "vehicle": {
+        "name": "M3 Synthetic EV",
+        "usable_battery_kwh": 60,
+        "initial_soc_pct": 60,
+        "consumption_kwh_per_100km": 20,
+        "max_dc_power_kw": 150,
+        "reserve_soc_pct": 10,
+        "energy_safety_factor": 1,
+        "supported_dc_connectors": ["CCS2"]
+      },
+      "stations": [
+        {"id": "fast_near", "name": "Synthetic Fast Near", "latitude": 39.01, "longitude": 32.0, "max_power_kw": 250, "connector_type": "CCS2"},
+        {"id": "slow_far", "name": "Synthetic Slow Far", "latitude": 40.0, "longitude": 32.0, "max_power_kw": 50, "connector_type": "CCS2"}
+      ],
+      "legs": [
+        {"origin_id": "origin", "destination_id": "fast_near", "distance_km": 140, "duration_minutes": 60},
+        {"origin_id": "fast_near", "destination_id": "destination", "distance_km": 140, "duration_minutes": 60},
+        {"origin_id": "origin", "destination_id": "slow_far", "distance_km": 120, "duration_minutes": 70},
+        {"origin_id": "slow_far", "destination_id": "destination", "distance_km": 150, "duration_minutes": 75}
+      ]
+    },
+    {
+      "id": "connector_incompatible",
+      "origin_id": "origin",
+      "destination_id": "destination",
+      "vehicle": {
+        "name": "M3 Synthetic EV",
+        "usable_battery_kwh": 60,
+        "initial_soc_pct": 60,
+        "consumption_kwh_per_100km": 20,
+        "max_dc_power_kw": 150,
+        "reserve_soc_pct": 10,
+        "energy_safety_factor": 1,
+        "supported_dc_connectors": ["CCS2"]
+      },
+      "stations": [
+        {"id": "hub", "name": "Synthetic Incompatible Hub", "latitude": 39.0, "longitude": 32.0, "max_power_kw": 150, "connector_type": "CHADEMO"}
+      ],
+      "legs": [
+        {"origin_id": "origin", "destination_id": "hub", "distance_km": 100, "duration_minutes": 60},
+        {"origin_id": "hub", "destination_id": "destination", "distance_km": 100, "duration_minutes": 60}
+      ]
+    },
+    {
+      "id": "exact_reserve_boundary",
+      "origin_id": "origin",
+      "destination_id": "destination",
+      "vehicle": {
+        "name": "M3 Synthetic EV",
+        "usable_battery_kwh": 60,
+        "initial_soc_pct": 60,
+        "consumption_kwh_per_100km": 20,
+        "max_dc_power_kw": 150,
+        "reserve_soc_pct": 10,
+        "energy_safety_factor": 1,
+        "supported_dc_connectors": ["CCS2"]
+      },
+      "stations": [],
+      "legs": [
+        {"origin_id": "origin", "destination_id": "destination", "distance_km": 150, "duration_minutes": 90}
+      ]
+    },
+    {
+      "id": "discretization_rejected",
+      "origin_id": "origin",
+      "destination_id": "destination",
+      "vehicle": {
+        "name": "M3 Synthetic EV",
+        "usable_battery_kwh": 60,
+        "initial_soc_pct": 60,
+        "consumption_kwh_per_100km": 20,
+        "max_dc_power_kw": 150,
+        "reserve_soc_pct": 12,
+        "energy_safety_factor": 1,
+        "supported_dc_connectors": ["CCS2"]
+      },
+      "stations": [],
+      "legs": [
+        {"origin_id": "origin", "destination_id": "destination", "distance_km": 140, "duration_minutes": 84}
+      ]
+    },
+    {
+      "id": "infeasible",
+      "origin_id": "origin",
+      "destination_id": "destination",
+      "vehicle": {
+        "name": "M3 Synthetic EV",
+        "usable_battery_kwh": 60,
+        "initial_soc_pct": 60,
+        "consumption_kwh_per_100km": 20,
+        "max_dc_power_kw": 150,
+        "reserve_soc_pct": 10,
+        "energy_safety_factor": 1,
+        "supported_dc_connectors": ["CCS2"]
+      },
+      "stations": [],
+      "legs": [
+        {"origin_id": "origin", "destination_id": "destination", "distance_km": 200, "duration_minutes": 120}
+      ]
+    }
+  ]
+}
