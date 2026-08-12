@@ -1,5 +1,6 @@
 # ChargePath 0.1.0 exact source-release allowlist. Keep sorted; no glob patterns.
 .env.example
+.gitattributes
 .github/workflows/ci.yml
 .gitignore
 AGENTS.md
