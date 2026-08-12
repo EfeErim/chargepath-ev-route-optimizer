@@ -484,6 +484,12 @@ The candidate is committed and pushed to `origin/main`. The first Windows CI run
 cross-platform line-ending checksum mismatch. Commit `4fe8eef` added LF checkout normalization;
 the rerun passed both matrix jobs. See `docs/evidence/m5/ci-run-2026-08-12.md` for immutable URLs.
 
+### Publication record (2026-08-12)
+
+[`v0.1.0`](https://github.com/EfeErim/chargepath-ev-route-optimizer/releases/tag/v0.1.0) is the
+published GitHub Release for commit `629abcd335d41ec276851ade7ccebd1f90787cae`. Its public release
+record is captured in `docs/evidence/m5/github-release-2026-08-12.md`.
+
 ## Known risks
 
 - EPDK's endpoint and one observed schema were verified on 2026-08-09, but the public Swagger still
@@ -503,3 +509,4 @@ the rerun passed both matrix jobs. See `docs/evidence/m5/ci-run-2026-08-12.md` f
 Independent repository is on `main`, tracking `origin/main`. All 84 allowlisted candidate files are
 committed; ignored environments, caches, raw/processed EPDK data, and generated package metadata
 remain outside the candidate. The final CI correction is green; v0.1.0 publication is in progress.
+The public v0.1.0 tag and GitHub Release are published.
