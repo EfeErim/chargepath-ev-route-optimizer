@@ -2,12 +2,12 @@
 
 ChargePath is a local-first portfolio project that chooses feasible charging stops and charging amounts for a single battery-electric car, while delegating road-network geometry to a configured OpenStreetMap routing engine.
 
-> **Status:** M0 through M4 are complete; 0.1.0 is prepared as the M5 release candidate. The deterministic optimization core, competitive route
+> **Status:** M0 through M5 are complete; 0.1.0 has passed the exact Windows and Ubuntu CI matrix. The deterministic optimization core, competitive route
 > options, independent replay, schema-versioned synthetic demo, explicit OSRM route/table adapter,
 > observed-schema EPDK normalizer, static public CCS2 DC projection, and deterministic corridor
 > selector are runnable. The fixture-first loopback Leaflet demo exposes verified route options,
 > charging actions, and estimated SOC without requiring OSRM or EPDK network access. Final M5 status
-> requires green Windows and Ubuntu CI on the exact candidate published with explicit approval.
+> is independently verified by the [published CI run](https://github.com/EfeErim/chargepath-ev-route-optimizer/actions/runs/31600469029).
 
 ## Demo
 
