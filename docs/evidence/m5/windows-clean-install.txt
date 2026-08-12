@@ -1,0 +1,54 @@
+ChargePath 0.1.0 Windows clean-install evidence
+Candidate date: 2026-08-10
+Status: passed
+
+Environment:
+- Windows x64 host
+- CPython 3.11.9
+- pip 26.2
+- setuptools 83.0.0
+- isolated environment: %TEMP%\chargepath-m5-clean-20260810
+- install source: the local release-candidate worktree
+- dependency graph: constraints/release-py311.txt
+
+Install commands:
+- python -m pip install --upgrade "pip==26.2" "setuptools==83.0.0"
+- python -m pip install --constraint constraints/release-py311.txt --editable ".[dev]"
+
+Installed verification packages:
+- colorama 0.4.6
+- iniconfig 2.3.0
+- librt 0.13.0
+- mypy 1.20.2
+- mypy_extensions 1.1.0
+- packaging 26.2
+- pathspec 1.1.1
+- pluggy 1.6.0
+- Pygments 2.20.0
+- pytest 8.4.2
+- Ruff 0.16.1
+- typing_extensions 4.16.0
+
+Canonical gate result using CHARGEPATH_PYTHON to select the isolated interpreter:
+- 69 tests passed
+- byte-compilation passed
+- offline synthetic CLI demo passed with three verified route options
+- Ruff lint passed; 49 Python files were formatted
+- strict mypy passed with no issues in 26 source files
+- pip check found no broken requirements
+- release wheel build/content check passed
+- the wheel installed non-editably in a second temporary environment
+- the installed fixture service loaded its packaged synthetic data outside the repository
+- release audit passed for all 76 allowlisted files
+- final line: All project checks passed.
+
+README command checks in the isolated environment:
+- `python -m chargepath.demo --port 8771` bound only to loopback
+- `GET /api/config` returned HTTP 200, fixture mode, two synthetic endpoints, the synthetic freshness
+  label, and OpenStreetMap attribution
+- the M3 benchmark command completed with 3 warm-ups and 20 repetitions using temporary output paths
+- regenerated normalized correctness SHA-256 was
+  db55067b92a5904624dcf9fe90c5861561cc092b0b7754673ee101ef849572b6 and matched the committed artifact
+
+No credential, absolute user path, raw EPDK row, or generated benchmark output is stored in this
+transcript.

@@ -1,0 +1,56 @@
+{
+  "access": {
+    "request_body": "{}",
+    "request_content_type": "application/json",
+    "request_method": "GET",
+    "response_content_type": "application/json;charset=utf-8",
+    "response_status": 200
+  },
+  "candidate_selection_default": {
+    "algorithm": "equirectangular-segment-farthest-progress-v3",
+    "candidate_cap": 50,
+    "coverage_policy": "prefix-monotonic-largest-progress-gap-then-quality",
+    "corridor_width_km": 25.0,
+    "final_tie_break": "stable_station_id_asc",
+    "progress_gap_tolerance_fraction": 0.02,
+    "ranking_keys": [
+      "route_progress_coverage_gap_desc_with_tolerance",
+      "corridor_distance_km_asc",
+      "max_power_kw_desc",
+      "route_progress_fraction_asc",
+      "stable_station_id_asc"
+    ]
+  },
+  "compatible_public_ccs2_site_count": 7640,
+  "manifest_version": 1,
+  "quota_status": "unknown_not_documented",
+  "reconciliation": {
+    "sites": {
+      "accepted": 16539,
+      "duplicates": 0,
+      "input": 16539,
+      "rejected": 0
+    },
+    "sockets": {
+      "accepted": 46955,
+      "duplicates": 0,
+      "input": 46955,
+      "rejected": 0
+    }
+  },
+  "repository_decision": "metadata_and_synthetic_fixture_only",
+  "request_fingerprint_sha256": "60f45ebeee282a1c1aba01fba4441bc72fbbe7ded9f73e0e92db491ddfe16cab",
+  "response_bytes": 15444078,
+  "response_sha256": "2850e5e2082751ffcc955a11ad217671c98b292ca665f87d2966fb42c90ae005",
+  "response_status": 200,
+  "retrieved_at": "2026-08-09T14:13:33Z",
+  "reuse_status": "pending_verification",
+  "snapshot_id": "epdk-20260809-2850e5e20827",
+  "source": "EPDK charging-station service",
+  "source_freshness": "unknown_not_supplied_by_response",
+  "source_record_count": 16539,
+  "source_schema_version": "epdk-observed-2026-08-09-v1",
+  "source_socket_count": 46955,
+  "source_url": "https://apigateway.epdk.gov.tr/sarjIstasyonlari",
+  "transformation_version": "chargepath-normalize-v1"
+}
