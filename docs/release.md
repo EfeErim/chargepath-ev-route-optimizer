@@ -93,4 +93,5 @@ The immutable run and job URLs are also recorded in
 
 M5 is complete: the candidate was committed and pushed, both matrix jobs are green, immutable
 commit/run evidence is recorded, and the allowlist was rechecked locally. The v0.1.0 tag and GitHub
-Release provide the public publication record for this completed candidate.
+Release provide the public publication record for this completed candidate:
+[`v0.1.0 on GitHub`](https://github.com/EfeErim/chargepath-ev-route-optimizer/releases/tag/v0.1.0).
