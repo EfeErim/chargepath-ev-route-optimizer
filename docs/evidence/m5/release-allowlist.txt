@@ -24,6 +24,7 @@ docs/evidence/m3/correctness_v1.json
 docs/evidence/m3/runtime_2026-08-09.json
 docs/evidence/m4/fixture-primary.png
 docs/evidence/m5/browser-smoke-2026-08-12.md
+docs/evidence/m5/ci-run-2026-08-12.md
 docs/evidence/m5/release-allowlist.txt
 docs/evidence/m5/windows-clean-install.txt
 docs/experiment_plan.md

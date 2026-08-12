@@ -80,9 +80,17 @@ the map UI even when the basemap fails.
 - full readiness boundary: [`docs/limitations.md`](limitations.md);
 - milestone acceptance records: [`PROJECT_STATE.md`](../PROJECT_STATE.md).
 
+## External CI verification
+
+The exact candidate at commit
+[`4fe8eef`](https://github.com/EfeErim/chargepath-ev-route-optimizer/commit/4fe8eef82fbbecc0cf878b856c96ea04f85269a2)
+passed the canonical gate on both `ubuntu-24.04` and `windows-2025` in [GitHub Actions run
+31600469029](https://github.com/EfeErim/chargepath-ev-route-optimizer/actions/runs/31600469029).
+The immutable run and job URLs are also recorded in
+[`docs/evidence/m5/ci-run-2026-08-12.md`](evidence/m5/ci-run-2026-08-12.md).
+
 ## Approval-gated finalization
 
-M5 is complete only after the exact candidate is committed and pushed with explicit approval, both
-matrix jobs are green, the immutable commit and run URLs are recorded in `PROJECT_STATE.md`, and the
-allowlist is rechecked at that commit. Tagging and creating a GitHub release remain separate explicit
-approval steps.
+M5 is complete: the candidate was committed and pushed, both matrix jobs are green, immutable
+commit/run evidence is recorded, and the allowlist was rechecked locally. The v0.1.0 tag and GitHub
+Release provide the public publication record for this completed candidate.

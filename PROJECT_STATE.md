@@ -18,7 +18,7 @@ M3 — Planner evaluation: **complete**
 
 M4 — Local map demo: **complete**
 
-M5 — Portfolio release: **release candidate locally complete; remote CI and publication approval pending**
+M5 — Portfolio release: **complete; v0.1.0 external validation passed**
 
 ## Confirmed decisions
 
@@ -68,9 +68,8 @@ Verified on 2026-08-05 with Python 3.11.9:
 
 ## Next milestone
 
-M5 finalization — configure an approved remote, push the exact allowlisted candidate, obtain green
-`windows-2025` and `ubuntu-24.04` CI results, record the immutable commit/run evidence, and only then
-mark M5 complete. Tagging and a GitHub release remain separately approval-gated.
+No unfinished product milestone remains. The v0.1.0 candidate is pushed and externally validated;
+the release tag and GitHub Release are the remaining publication actions.
 
 ## M1 evidence
 
@@ -401,9 +400,8 @@ Named M4 acceptance evidence:
 
 ## M5 local release-candidate evidence
 
-Prepared and verified on 2026-08-12 with CPython 3.11.9 on Windows x64. M5 is not marked complete
-because the local candidate is committed but no remote is configured, so the required Windows/Ubuntu
-GitHub Actions jobs cannot run until the exact candidate is pushed with explicit approval.
+Prepared and locally verified on 2026-08-12 with CPython 3.11.9 on Windows x64. The later external
+matrix result is recorded in `docs/evidence/m5/ci-run-2026-08-12.md`; M5 is complete.
 
 2026-08-12 remediation evidence:
 
@@ -453,10 +451,12 @@ Named M5 acceptance evidence:
 - **Clean Windows install — passed.** The exact README install graph and every offline README
   execution path were exercised in a fresh environment. The credential-free transcript is
   `docs/evidence/m5/windows-clean-install.txt`.
-- **Green Windows and Ubuntu CI — pending publication approval.** CI is prepared for exact
-  `windows-2025` and `ubuntu-24.04` runner labels, CPython 3.11.9, pinned Actions SHAs, pinned pip/build
-  tools, constrained verification dependencies, and the same canonical gate. No remote result is
-  claimed.
+- **Green Windows and Ubuntu CI — passed.** [GitHub Actions run
+  31600469029](https://github.com/EfeErim/chargepath-ev-route-optimizer/actions/runs/31600469029)
+  passed on both exact `windows-2025` and `ubuntu-24.04` matrix jobs for commit
+  [`4fe8eef`](https://github.com/EfeErim/chargepath-ev-route-optimizer/commit/4fe8eef82fbbecc0cf878b856c96ea04f85269a2).
+  The workflow uses CPython 3.11.9, pinned Actions SHAs, pinned pip/build tools, constrained
+  verification dependencies, and the same canonical gate.
 - **Architecture, benchmark, demo, and media — passed locally.** Final source boundaries remain in
   `docs/architecture.md` and `docs/algorithm.md`; reviewed deterministic evidence remains under
   `docs/evidence/m3/`; the verified primary screenshot remains
@@ -474,15 +474,15 @@ Named M5 acceptance evidence:
 - **Exact versions — passed.** Release version 0.1.0, CPython 3.11.9, pip 26.2, setuptools 83.0.0,
   direct tools, transitive verification packages, Actions releases/SHAs, fixture versions, and prior
   benchmark/OSRM identities are recorded in the candidate.
-- **Git/release review — locally passed, final immutable review pending.** The current 83 candidate
-  files are committed on local `main`; no remote exists. Push, CI evidence, tag, and GitHub release
-  remain pending explicit remote/publication approval.
+- **Git/release review — passed.** `main` tracks `origin/main`; the 84-file candidate passed the
+  full local gate and the immutable two-platform CI run. The historic first CI failure is documented
+  as a line-ending correction, not claimed as a successful release check.
 
 ### Remote CI update (2026-08-12)
 
 The candidate is committed and pushed to `origin/main`. The first Windows CI run exposed a
-cross-platform line-ending checksum mismatch; this candidate adds checkout normalization before
-the matrix is rerun. Tagging and GitHub release publication remain separately approval-gated.
+cross-platform line-ending checksum mismatch. Commit `4fe8eef` added LF checkout normalization;
+the rerun passed both matrix jobs. See `docs/evidence/m5/ci-run-2026-08-12.md` for immutable URLs.
 
 ## Known risks
 
@@ -502,5 +502,4 @@ the matrix is rerun. Tagging and GitHub release publication remain separately ap
 
 Independent repository is on `main`, tracking `origin/main`. All 84 allowlisted candidate files are
 committed; ignored environments, caches, raw/processed EPDK data, and generated package metadata
-remain outside the candidate. The CI correction must be green before the milestone can be marked
-complete; tag and publication remain separately approval-gated.
+remain outside the candidate. The final CI correction is green; v0.1.0 publication is in progress.
