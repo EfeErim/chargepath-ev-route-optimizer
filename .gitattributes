@@ -1,0 +1,3 @@
+# The release audit pins checksums for several text fixtures and browser assets.
+# Preserve their bytes on every checkout, including Windows CI.
+* text=auto eol=lf
