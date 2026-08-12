@@ -1,0 +1,108 @@
+{
+  "statusCode": 200,
+  "statusDescription": "OK",
+  "message": null,
+  "columnNames": [
+    "sarjIstasyonuNo",
+    "sarjIstasyonuAdi",
+    "yesilSarjIstasyonuMu",
+    "hizmetSekli",
+    "sarjAgiIsletmecisiUnvan",
+    "sarjAgiIsletmecisiLisansNo",
+    "sarjIstasyonuIsletmecisi",
+    "marka",
+    "olumluGorusVerenDagitimSirketiLisansNo",
+    "olumluGorusVerenDagitimSirketiLisansUnvani",
+    "dagitimSirketiOlumluGorusBelgeNumarasi",
+    "soketler",
+    "adres",
+    "enlem",
+    "boylam"
+  ],
+  "numRows": 4,
+  "result": null,
+  "elapsedTime": 1,
+  "errors": [],
+  "data": [
+    {
+      "sarjIstasyonuNo": "SYN-SITE-001",
+      "sarjIstasyonuAdi": "Synthetic North Hub",
+      "yesilSarjIstasyonuMu": "HAYIR",
+      "hizmetSekli": "HALKA_ACIK",
+      "sarjAgiIsletmecisiUnvan": "Synthetic Operator A",
+      "sarjAgiIsletmecisiLisansNo": "SYN-LIC-A",
+      "sarjIstasyonuIsletmecisi": "Synthetic Site A",
+      "marka": "Synthetic Brand",
+      "olumluGorusVerenDagitimSirketiLisansNo": "SYN-DIST-A",
+      "olumluGorusVerenDagitimSirketiLisansUnvani": "Synthetic Distribution A",
+      "dagitimSirketiOlumluGorusBelgeNumarasi": "SYN-DOC-A",
+      "soketler": [
+        {"soketNo": "DC-1", "soketTipi": "DC", "soketTuru": "DC_CCS", "soketGucu": "150"},
+        {"soketNo": "DC-2", "soketTipi": "DC", "soketTuru": "DC_CCS", "soketGucu": "180"},
+        {"soketNo": "AC-1", "soketTipi": "AC", "soketTuru": "AC_TYPE2", "soketGucu": "22"}
+      ],
+      "adres": "Synthetic address 1",
+      "enlem": 39.0,
+      "boylam": 32.0
+    },
+    {
+      "sarjIstasyonuNo": "SYN-SITE-002",
+      "sarjIstasyonuAdi": "Synthetic South Hub",
+      "yesilSarjIstasyonuMu": "EVET",
+      "hizmetSekli": "OZEL",
+      "sarjAgiIsletmecisiUnvan": "Synthetic Operator B",
+      "sarjAgiIsletmecisiLisansNo": "SYN-LIC-B",
+      "sarjIstasyonuIsletmecisi": "Synthetic Site B",
+      "marka": "Synthetic Brand",
+      "olumluGorusVerenDagitimSirketiLisansNo": "SYN-DIST-B",
+      "olumluGorusVerenDagitimSirketiLisansUnvani": "Synthetic Distribution B",
+      "dagitimSirketiOlumluGorusBelgeNumarasi": "SYN-DOC-B",
+      "soketler": [
+        {"soketNo": "DC-1", "soketTipi": "DC", "soketTuru": "DC_CCS", "soketGucu": "50"},
+        {"soketNo": "BAD-POWER", "soketTipi": "DC", "soketTuru": "DC_CCS", "soketGucu": "0"},
+        {"soketNo": "DC-1", "soketTipi": "DC", "soketTuru": "DC_CCS", "soketGucu": "50"}
+      ],
+      "adres": "Synthetic address 2",
+      "enlem": 38.9,
+      "boylam": 32.5
+    },
+    {
+      "sarjIstasyonuNo": "SYN-BAD-COORD",
+      "sarjIstasyonuAdi": "Synthetic Invalid Coordinate",
+      "yesilSarjIstasyonuMu": "HAYIR",
+      "hizmetSekli": "HALKA_ACIK",
+      "sarjAgiIsletmecisiUnvan": "Synthetic Operator C",
+      "sarjAgiIsletmecisiLisansNo": "SYN-LIC-C",
+      "sarjIstasyonuIsletmecisi": "Synthetic Site C",
+      "marka": "Synthetic Brand",
+      "olumluGorusVerenDagitimSirketiLisansNo": "SYN-DIST-C",
+      "olumluGorusVerenDagitimSirketiLisansUnvani": "Synthetic Distribution C",
+      "dagitimSirketiOlumluGorusBelgeNumarasi": "SYN-DOC-C",
+      "soketler": [
+        {"soketNo": "DC-1", "soketTipi": "DC", "soketTuru": "DC_CCS", "soketGucu": "120"}
+      ],
+      "adres": "Synthetic invalid address",
+      "enlem": 95.0,
+      "boylam": 33.0
+    },
+    {
+      "sarjIstasyonuNo": "SYN-SITE-001",
+      "sarjIstasyonuAdi": "Synthetic Duplicate Site",
+      "yesilSarjIstasyonuMu": "HAYIR",
+      "hizmetSekli": "HALKA_ACIK",
+      "sarjAgiIsletmecisiUnvan": "Synthetic Operator A",
+      "sarjAgiIsletmecisiLisansNo": "SYN-LIC-A",
+      "sarjIstasyonuIsletmecisi": "Synthetic Duplicate",
+      "marka": "Synthetic Brand",
+      "olumluGorusVerenDagitimSirketiLisansNo": "SYN-DIST-A",
+      "olumluGorusVerenDagitimSirketiLisansUnvani": "Synthetic Distribution A",
+      "dagitimSirketiOlumluGorusBelgeNumarasi": "SYN-DOC-A2",
+      "soketler": [
+        {"soketNo": "DC-X", "soketTipi": "DC", "soketTuru": "DC_CCS", "soketGucu": "90"}
+      ],
+      "adres": "Synthetic duplicate address",
+      "enlem": 39.1,
+      "boylam": 32.1
+    }
+  ]
+}

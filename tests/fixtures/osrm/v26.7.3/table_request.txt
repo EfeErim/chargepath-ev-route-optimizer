@@ -1,0 +1,1 @@
+GET /table/v1/driving/13,52;13.01,52;13.005,52.01?annotations=duration,distance&sources=all&destinations=all

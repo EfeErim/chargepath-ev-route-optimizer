@@ -1,0 +1,1225 @@
+{
+  "algorithm_summaries": {
+    "fastest": {
+      "reference_feasible_returned": 5,
+      "reference_infeasible_returned": 0,
+      "returned_plans": 5,
+      "verified_plans": 5
+    },
+    "fewest_charging_stops": {
+      "reference_feasible_returned": 5,
+      "reference_infeasible_returned": 0,
+      "returned_plans": 5,
+      "verified_plans": 5
+    },
+    "greedy_fixed_80": {
+      "reference_feasible_returned": 5,
+      "reference_infeasible_returned": 0,
+      "returned_plans": 5,
+      "verified_plans": 5
+    },
+    "shortest_distance": {
+      "reference_feasible_returned": 5,
+      "reference_infeasible_returned": 0,
+      "returned_plans": 5,
+      "verified_plans": 5
+    },
+    "shortest_driving_time": {
+      "reference_feasible_returned": 2,
+      "reference_infeasible_returned": 0,
+      "returned_plans": 2,
+      "verified_plans": 2
+    }
+  },
+  "algorithm_version": "chargepath-label-setting-v1",
+  "artifact_version": 1,
+  "benchmark_id": "chargepath-m3-synthetic-v1",
+  "case_count": 8,
+  "case_results": [
+    {
+      "case_id": "direct_feasible",
+      "expected_feasibility_source": {
+        "kind": "hand_audited_witness",
+        "node_ids": [
+          "origin",
+          "destination"
+        ],
+        "reason": "100 km consumes 35 percentage points on the 5 percent grid and leaves 45 percent SOC, above the 10 percent reserve."
+      },
+      "expected_feasible": true,
+      "route_options": {
+        "distinct_option_count": 1,
+        "options": [
+          {
+            "plan": {
+              "arrival_soc_pct": 45.0,
+              "charging_minutes": 0,
+              "charging_stops": [],
+              "driving_minutes": 60,
+              "node_ids": [
+                "origin",
+                "destination"
+              ],
+              "total_distance_km": 100,
+              "total_minutes": 60
+            },
+            "strategy_aliases": [
+              "fastest",
+              "shortest_distance",
+              "fewest_charging_stops",
+              "greedy_fixed_80"
+            ]
+          }
+        ],
+        "unavailable_strategies": []
+      },
+      "runs": [
+        {
+          "algorithm": "shortest_driving_time",
+          "feasible": true,
+          "plan": {
+            "arrival_soc_pct": 45.0,
+            "charging_minutes": 0.0,
+            "charging_stops": [],
+            "driving_minutes": 60,
+            "node_ids": [
+              "origin",
+              "destination"
+            ],
+            "total_distance_km": 100,
+            "total_minutes": 60
+          },
+          "reserve_violations": 0,
+          "verified": true
+        },
+        {
+          "algorithm": "fastest",
+          "feasible": true,
+          "plan": {
+            "arrival_soc_pct": 45.0,
+            "charging_minutes": 0,
+            "charging_stops": [],
+            "driving_minutes": 60,
+            "node_ids": [
+              "origin",
+              "destination"
+            ],
+            "total_distance_km": 100,
+            "total_minutes": 60
+          },
+          "reserve_violations": 0,
+          "verified": true
+        },
+        {
+          "algorithm": "shortest_distance",
+          "feasible": true,
+          "plan": {
+            "arrival_soc_pct": 45.0,
+            "charging_minutes": 0,
+            "charging_stops": [],
+            "driving_minutes": 60,
+            "node_ids": [
+              "origin",
+              "destination"
+            ],
+            "total_distance_km": 100,
+            "total_minutes": 60
+          },
+          "reserve_violations": 0,
+          "verified": true
+        },
+        {
+          "algorithm": "fewest_charging_stops",
+          "feasible": true,
+          "plan": {
+            "arrival_soc_pct": 45.0,
+            "charging_minutes": 0,
+            "charging_stops": [],
+            "driving_minutes": 60,
+            "node_ids": [
+              "origin",
+              "destination"
+            ],
+            "total_distance_km": 100,
+            "total_minutes": 60
+          },
+          "reserve_violations": 0,
+          "verified": true
+        },
+        {
+          "algorithm": "greedy_fixed_80",
+          "feasible": true,
+          "plan": {
+            "arrival_soc_pct": 45.0,
+            "charging_minutes": 0,
+            "charging_stops": [],
+            "driving_minutes": 60,
+            "node_ids": [
+              "origin",
+              "destination"
+            ],
+            "total_distance_km": 100,
+            "total_minutes": 60
+          },
+          "reserve_violations": 0,
+          "verified": true
+        }
+      ],
+      "soc_step_pct": 5,
+      "topology_class": "direct_feasible"
+    },
+    {
+      "case_id": "one_stop",
+      "expected_feasibility_source": {
+        "kind": "hand_audited_witness",
+        "node_ids": [
+          "origin",
+          "hub",
+          "destination"
+        ],
+        "reason": "Each 140 km leg consumes ten 5 percent buckets; charging at the compatible hub restores enough energy for the second leg and reserve."
+      },
+      "expected_feasible": true,
+      "route_options": {
+        "distinct_option_count": 2,
+        "options": [
+          {
+            "plan": {
+              "arrival_soc_pct": 10.0,
+              "charging_minutes": 14.0,
+              "charging_stops": [
+                {
+                  "arrival_soc_pct": 10.0,
+                  "charging_minutes": 14.0,
+                  "departure_soc_pct": 60.0,
+                  "energy_added_kwh": 30.0,
+                  "station_id": "hub"
+                }
+              ],
+              "driving_minutes": 160,
+              "node_ids": [
+                "origin",
+                "hub",
+                "destination"
+              ],
+              "total_distance_km": 280,
+              "total_minutes": 174.0
+            },
+            "strategy_aliases": [
+              "fastest",
+              "shortest_distance",
+              "fewest_charging_stops"
+            ]
+          },
+          {
+            "plan": {
+              "arrival_soc_pct": 30.0,
+              "charging_minutes": 18.8,
+              "charging_stops": [
+                {
+                  "arrival_soc_pct": 10.0,
+                  "charging_minutes": 18.8,
+                  "departure_soc_pct": 80.0,
+                  "energy_added_kwh": 42.0,
+                  "station_id": "hub"
+                }
+              ],
+              "driving_minutes": 160,
+              "node_ids": [
+                "origin",
+                "hub",
+                "destination"
+              ],
+              "total_distance_km": 280,
+              "total_minutes": 178.8
+            },
+            "strategy_aliases": [
+              "greedy_fixed_80"
+            ]
+          }
+        ],
+        "unavailable_strategies": []
+      },
+      "runs": [
+        {
+          "algorithm": "shortest_driving_time",
+          "feasible": false,
+          "reason": "shortest-driving-time baseline path violates the reserve-SOC invariant"
+        },
+        {
+          "algorithm": "fastest",
+          "feasible": true,
+          "plan": {
+            "arrival_soc_pct": 10.0,
+            "charging_minutes": 14.0,
+            "charging_stops": [
+              {
+                "arrival_soc_pct": 10.0,
+                "charging_minutes": 14.0,
+                "departure_soc_pct": 60.0,
+                "energy_added_kwh": 30.0,
+                "station_id": "hub"
+              }
+            ],
+            "driving_minutes": 160,
+            "node_ids": [
+              "origin",
+              "hub",
+              "destination"
+            ],
+            "total_distance_km": 280,
+            "total_minutes": 174.0
+          },
+          "reserve_violations": 0,
+          "verified": true
+        },
+        {
+          "algorithm": "shortest_distance",
+          "feasible": true,
+          "plan": {
+            "arrival_soc_pct": 10.0,
+            "charging_minutes": 14.0,
+            "charging_stops": [
+              {
+                "arrival_soc_pct": 10.0,
+                "charging_minutes": 14.0,
+                "departure_soc_pct": 60.0,
+                "energy_added_kwh": 30.0,
+                "station_id": "hub"
+              }
+            ],
+            "driving_minutes": 160,
+            "node_ids": [
+              "origin",
+              "hub",
+              "destination"
+            ],
+            "total_distance_km": 280,
+            "total_minutes": 174.0
+          },
+          "reserve_violations": 0,
+          "verified": true
+        },
+        {
+          "algorithm": "fewest_charging_stops",
+          "feasible": true,
+          "plan": {
+            "arrival_soc_pct": 10.0,
+            "charging_minutes": 14.0,
+            "charging_stops": [
+              {
+                "arrival_soc_pct": 10.0,
+                "charging_minutes": 14.0,
+                "departure_soc_pct": 60.0,
+                "energy_added_kwh": 30.0,
+                "station_id": "hub"
+              }
+            ],
+            "driving_minutes": 160,
+            "node_ids": [
+              "origin",
+              "hub",
+              "destination"
+            ],
+            "total_distance_km": 280,
+            "total_minutes": 174.0
+          },
+          "reserve_violations": 0,
+          "verified": true
+        },
+        {
+          "algorithm": "greedy_fixed_80",
+          "feasible": true,
+          "plan": {
+            "arrival_soc_pct": 30.0,
+            "charging_minutes": 18.8,
+            "charging_stops": [
+              {
+                "arrival_soc_pct": 10.0,
+                "charging_minutes": 18.8,
+                "departure_soc_pct": 80.0,
+                "energy_added_kwh": 42.0,
+                "station_id": "hub"
+              }
+            ],
+            "driving_minutes": 160,
+            "node_ids": [
+              "origin",
+              "hub",
+              "destination"
+            ],
+            "total_distance_km": 280,
+            "total_minutes": 178.8
+          },
+          "reserve_violations": 0,
+          "verified": true
+        }
+      ],
+      "soc_step_pct": 5,
+      "topology_class": "one_stop"
+    },
+    {
+      "case_id": "multi_stop",
+      "expected_feasibility_source": {
+        "kind": "hand_audited_witness",
+        "node_ids": [
+          "origin",
+          "first",
+          "second",
+          "destination"
+        ],
+        "reason": "Three 140 km legs are feasible by recharging at both compatible intermediate stations."
+      },
+      "expected_feasible": true,
+      "route_options": {
+        "distinct_option_count": 2,
+        "options": [
+          {
+            "plan": {
+              "arrival_soc_pct": 10.0,
+              "charging_minutes": 28.0,
+              "charging_stops": [
+                {
+                  "arrival_soc_pct": 10.0,
+                  "charging_minutes": 14.0,
+                  "departure_soc_pct": 60.0,
+                  "energy_added_kwh": 30.0,
+                  "station_id": "first"
+                },
+                {
+                  "arrival_soc_pct": 10.0,
+                  "charging_minutes": 14.0,
+                  "departure_soc_pct": 60.0,
+                  "energy_added_kwh": 30.0,
+                  "station_id": "second"
+                }
+              ],
+              "driving_minutes": 240,
+              "node_ids": [
+                "origin",
+                "first",
+                "second",
+                "destination"
+              ],
+              "total_distance_km": 420,
+              "total_minutes": 268.0
+            },
+            "strategy_aliases": [
+              "fastest",
+              "shortest_distance",
+              "fewest_charging_stops"
+            ]
+          },
+          {
+            "plan": {
+              "arrival_soc_pct": 30.0,
+              "charging_minutes": 32.8,
+              "charging_stops": [
+                {
+                  "arrival_soc_pct": 10.0,
+                  "charging_minutes": 18.8,
+                  "departure_soc_pct": 80.0,
+                  "energy_added_kwh": 42.0,
+                  "station_id": "first"
+                },
+                {
+                  "arrival_soc_pct": 30.0,
+                  "charging_minutes": 14.0,
+                  "departure_soc_pct": 80.0,
+                  "energy_added_kwh": 30.0,
+                  "station_id": "second"
+                }
+              ],
+              "driving_minutes": 240,
+              "node_ids": [
+                "origin",
+                "first",
+                "second",
+                "destination"
+              ],
+              "total_distance_km": 420,
+              "total_minutes": 272.8
+            },
+            "strategy_aliases": [
+              "greedy_fixed_80"
+            ]
+          }
+        ],
+        "unavailable_strategies": []
+      },
+      "runs": [
+        {
+          "algorithm": "shortest_driving_time",
+          "feasible": false,
+          "reason": "shortest-driving-time baseline path violates the reserve-SOC invariant"
+        },
+        {
+          "algorithm": "fastest",
+          "feasible": true,
+          "plan": {
+            "arrival_soc_pct": 10.0,
+            "charging_minutes": 28.0,
+            "charging_stops": [
+              {
+                "arrival_soc_pct": 10.0,
+                "charging_minutes": 14.0,
+                "departure_soc_pct": 60.0,
+                "energy_added_kwh": 30.0,
+                "station_id": "first"
+              },
+              {
+                "arrival_soc_pct": 10.0,
+                "charging_minutes": 14.0,
+                "departure_soc_pct": 60.0,
+                "energy_added_kwh": 30.0,
+                "station_id": "second"
+              }
+            ],
+            "driving_minutes": 240,
+            "node_ids": [
+              "origin",
+              "first",
+              "second",
+              "destination"
+            ],
+            "total_distance_km": 420,
+            "total_minutes": 268.0
+          },
+          "reserve_violations": 0,
+          "verified": true
+        },
+        {
+          "algorithm": "shortest_distance",
+          "feasible": true,
+          "plan": {
+            "arrival_soc_pct": 10.0,
+            "charging_minutes": 28.0,
+            "charging_stops": [
+              {
+                "arrival_soc_pct": 10.0,
+                "charging_minutes": 14.0,
+                "departure_soc_pct": 60.0,
+                "energy_added_kwh": 30.0,
+                "station_id": "first"
+              },
+              {
+                "arrival_soc_pct": 10.0,
+                "charging_minutes": 14.0,
+                "departure_soc_pct": 60.0,
+                "energy_added_kwh": 30.0,
+                "station_id": "second"
+              }
+            ],
+            "driving_minutes": 240,
+            "node_ids": [
+              "origin",
+              "first",
+              "second",
+              "destination"
+            ],
+            "total_distance_km": 420,
+            "total_minutes": 268.0
+          },
+          "reserve_violations": 0,
+          "verified": true
+        },
+        {
+          "algorithm": "fewest_charging_stops",
+          "feasible": true,
+          "plan": {
+            "arrival_soc_pct": 10.0,
+            "charging_minutes": 28.0,
+            "charging_stops": [
+              {
+                "arrival_soc_pct": 10.0,
+                "charging_minutes": 14.0,
+                "departure_soc_pct": 60.0,
+                "energy_added_kwh": 30.0,
+                "station_id": "first"
+              },
+              {
+                "arrival_soc_pct": 10.0,
+                "charging_minutes": 14.0,
+                "departure_soc_pct": 60.0,
+                "energy_added_kwh": 30.0,
+                "station_id": "second"
+              }
+            ],
+            "driving_minutes": 240,
+            "node_ids": [
+              "origin",
+              "first",
+              "second",
+              "destination"
+            ],
+            "total_distance_km": 420,
+            "total_minutes": 268.0
+          },
+          "reserve_violations": 0,
+          "verified": true
+        },
+        {
+          "algorithm": "greedy_fixed_80",
+          "feasible": true,
+          "plan": {
+            "arrival_soc_pct": 30.0,
+            "charging_minutes": 32.8,
+            "charging_stops": [
+              {
+                "arrival_soc_pct": 10.0,
+                "charging_minutes": 18.8,
+                "departure_soc_pct": 80.0,
+                "energy_added_kwh": 42.0,
+                "station_id": "first"
+              },
+              {
+                "arrival_soc_pct": 30.0,
+                "charging_minutes": 14.0,
+                "departure_soc_pct": 80.0,
+                "energy_added_kwh": 30.0,
+                "station_id": "second"
+              }
+            ],
+            "driving_minutes": 240,
+            "node_ids": [
+              "origin",
+              "first",
+              "second",
+              "destination"
+            ],
+            "total_distance_km": 420,
+            "total_minutes": 272.8
+          },
+          "reserve_violations": 0,
+          "verified": true
+        }
+      ],
+      "soc_step_pct": 5,
+      "topology_class": "multi_stop"
+    },
+    {
+      "case_id": "detour_choice",
+      "expected_feasibility_source": {
+        "kind": "hand_audited_witness",
+        "node_ids": [
+          "origin",
+          "fast_near",
+          "destination"
+        ],
+        "reason": "The fast-near corridor has two individually feasible 140 km legs with a compatible charger between them."
+      },
+      "expected_feasible": true,
+      "route_options": {
+        "distinct_option_count": 3,
+        "options": [
+          {
+            "plan": {
+              "arrival_soc_pct": 10.0,
+              "charging_minutes": 14.0,
+              "charging_stops": [
+                {
+                  "arrival_soc_pct": 10.0,
+                  "charging_minutes": 14.0,
+                  "departure_soc_pct": 60.0,
+                  "energy_added_kwh": 30.0,
+                  "station_id": "fast_near"
+                }
+              ],
+              "driving_minutes": 120,
+              "node_ids": [
+                "origin",
+                "fast_near",
+                "destination"
+              ],
+              "total_distance_km": 280,
+              "total_minutes": 134.0
+            },
+            "strategy_aliases": [
+              "fastest",
+              "fewest_charging_stops"
+            ]
+          },
+          {
+            "plan": {
+              "arrival_soc_pct": 10.0,
+              "charging_minutes": 30.8,
+              "charging_stops": [
+                {
+                  "arrival_soc_pct": 20.0,
+                  "charging_minutes": 30.8,
+                  "departure_soc_pct": 60.0,
+                  "energy_added_kwh": 24.0,
+                  "station_id": "slow_far"
+                }
+              ],
+              "driving_minutes": 145,
+              "node_ids": [
+                "origin",
+                "slow_far",
+                "destination"
+              ],
+              "total_distance_km": 270,
+              "total_minutes": 175.8
+            },
+            "strategy_aliases": [
+              "shortest_distance"
+            ]
+          },
+          {
+            "plan": {
+              "arrival_soc_pct": 30.0,
+              "charging_minutes": 18.8,
+              "charging_stops": [
+                {
+                  "arrival_soc_pct": 10.0,
+                  "charging_minutes": 18.8,
+                  "departure_soc_pct": 80.0,
+                  "energy_added_kwh": 42.0,
+                  "station_id": "fast_near"
+                }
+              ],
+              "driving_minutes": 120,
+              "node_ids": [
+                "origin",
+                "fast_near",
+                "destination"
+              ],
+              "total_distance_km": 280,
+              "total_minutes": 138.8
+            },
+            "strategy_aliases": [
+              "greedy_fixed_80"
+            ]
+          }
+        ],
+        "unavailable_strategies": []
+      },
+      "runs": [
+        {
+          "algorithm": "shortest_driving_time",
+          "feasible": false,
+          "reason": "shortest-driving-time baseline path violates the reserve-SOC invariant"
+        },
+        {
+          "algorithm": "fastest",
+          "feasible": true,
+          "plan": {
+            "arrival_soc_pct": 10.0,
+            "charging_minutes": 14.0,
+            "charging_stops": [
+              {
+                "arrival_soc_pct": 10.0,
+                "charging_minutes": 14.0,
+                "departure_soc_pct": 60.0,
+                "energy_added_kwh": 30.0,
+                "station_id": "fast_near"
+              }
+            ],
+            "driving_minutes": 120,
+            "node_ids": [
+              "origin",
+              "fast_near",
+              "destination"
+            ],
+            "total_distance_km": 280,
+            "total_minutes": 134.0
+          },
+          "reserve_violations": 0,
+          "verified": true
+        },
+        {
+          "algorithm": "shortest_distance",
+          "feasible": true,
+          "plan": {
+            "arrival_soc_pct": 10.0,
+            "charging_minutes": 30.8,
+            "charging_stops": [
+              {
+                "arrival_soc_pct": 20.0,
+                "charging_minutes": 30.8,
+                "departure_soc_pct": 60.0,
+                "energy_added_kwh": 24.0,
+                "station_id": "slow_far"
+              }
+            ],
+            "driving_minutes": 145,
+            "node_ids": [
+              "origin",
+              "slow_far",
+              "destination"
+            ],
+            "total_distance_km": 270,
+            "total_minutes": 175.8
+          },
+          "reserve_violations": 0,
+          "verified": true
+        },
+        {
+          "algorithm": "fewest_charging_stops",
+          "feasible": true,
+          "plan": {
+            "arrival_soc_pct": 10.0,
+            "charging_minutes": 14.0,
+            "charging_stops": [
+              {
+                "arrival_soc_pct": 10.0,
+                "charging_minutes": 14.0,
+                "departure_soc_pct": 60.0,
+                "energy_added_kwh": 30.0,
+                "station_id": "fast_near"
+              }
+            ],
+            "driving_minutes": 120,
+            "node_ids": [
+              "origin",
+              "fast_near",
+              "destination"
+            ],
+            "total_distance_km": 280,
+            "total_minutes": 134.0
+          },
+          "reserve_violations": 0,
+          "verified": true
+        },
+        {
+          "algorithm": "greedy_fixed_80",
+          "feasible": true,
+          "plan": {
+            "arrival_soc_pct": 30.0,
+            "charging_minutes": 18.8,
+            "charging_stops": [
+              {
+                "arrival_soc_pct": 10.0,
+                "charging_minutes": 18.8,
+                "departure_soc_pct": 80.0,
+                "energy_added_kwh": 42.0,
+                "station_id": "fast_near"
+              }
+            ],
+            "driving_minutes": 120,
+            "node_ids": [
+              "origin",
+              "fast_near",
+              "destination"
+            ],
+            "total_distance_km": 280,
+            "total_minutes": 138.8
+          },
+          "reserve_violations": 0,
+          "verified": true
+        }
+      ],
+      "soc_step_pct": 5,
+      "topology_class": "detour_choice"
+    },
+    {
+      "case_id": "connector_incompatible",
+      "expected_feasibility_source": {
+        "kind": "hand_audited_exhaustion",
+        "reason": "The only path requires energy beyond the initial usable amount and its only station is CHAdeMO while the vehicle supports CCS2 only."
+      },
+      "expected_feasible": false,
+      "route_options": {
+        "distinct_option_count": 0,
+        "options": [],
+        "unavailable_strategies": [
+          "fastest",
+          "shortest_distance",
+          "fewest_charging_stops",
+          "greedy_fixed_80"
+        ]
+      },
+      "runs": [
+        {
+          "algorithm": "shortest_driving_time",
+          "feasible": false,
+          "reason": "shortest-driving-time baseline path violates the reserve-SOC invariant"
+        },
+        {
+          "algorithm": "fastest",
+          "feasible": false,
+          "reason": "no energy-feasible route from 'origin' to 'destination'"
+        },
+        {
+          "algorithm": "shortest_distance",
+          "feasible": false,
+          "reason": "no energy-feasible route from 'origin' to 'destination'"
+        },
+        {
+          "algorithm": "fewest_charging_stops",
+          "feasible": false,
+          "reason": "no energy-feasible route from 'origin' to 'destination'"
+        },
+        {
+          "algorithm": "greedy_fixed_80",
+          "feasible": false,
+          "reason": "greedy fixed-target strategy found no route from 'hub'"
+        }
+      ],
+      "soc_step_pct": 5,
+      "topology_class": "connector_incompatible"
+    },
+    {
+      "case_id": "exact_reserve_boundary",
+      "expected_feasibility_source": {
+        "kind": "hand_audited_witness",
+        "node_ids": [
+          "origin",
+          "destination"
+        ],
+        "reason": "150 km consumes exactly ten 5 percent buckets from 60 percent and arrives at the 10 percent reserve."
+      },
+      "expected_feasible": true,
+      "route_options": {
+        "distinct_option_count": 1,
+        "options": [
+          {
+            "plan": {
+              "arrival_soc_pct": 10.0,
+              "charging_minutes": 0,
+              "charging_stops": [],
+              "driving_minutes": 90,
+              "node_ids": [
+                "origin",
+                "destination"
+              ],
+              "total_distance_km": 150,
+              "total_minutes": 90
+            },
+            "strategy_aliases": [
+              "fastest",
+              "shortest_distance",
+              "fewest_charging_stops",
+              "greedy_fixed_80"
+            ]
+          }
+        ],
+        "unavailable_strategies": []
+      },
+      "runs": [
+        {
+          "algorithm": "shortest_driving_time",
+          "feasible": true,
+          "plan": {
+            "arrival_soc_pct": 10.0,
+            "charging_minutes": 0.0,
+            "charging_stops": [],
+            "driving_minutes": 90,
+            "node_ids": [
+              "origin",
+              "destination"
+            ],
+            "total_distance_km": 150,
+            "total_minutes": 90
+          },
+          "reserve_violations": 0,
+          "verified": true
+        },
+        {
+          "algorithm": "fastest",
+          "feasible": true,
+          "plan": {
+            "arrival_soc_pct": 10.0,
+            "charging_minutes": 0,
+            "charging_stops": [],
+            "driving_minutes": 90,
+            "node_ids": [
+              "origin",
+              "destination"
+            ],
+            "total_distance_km": 150,
+            "total_minutes": 90
+          },
+          "reserve_violations": 0,
+          "verified": true
+        },
+        {
+          "algorithm": "shortest_distance",
+          "feasible": true,
+          "plan": {
+            "arrival_soc_pct": 10.0,
+            "charging_minutes": 0,
+            "charging_stops": [],
+            "driving_minutes": 90,
+            "node_ids": [
+              "origin",
+              "destination"
+            ],
+            "total_distance_km": 150,
+            "total_minutes": 90
+          },
+          "reserve_violations": 0,
+          "verified": true
+        },
+        {
+          "algorithm": "fewest_charging_stops",
+          "feasible": true,
+          "plan": {
+            "arrival_soc_pct": 10.0,
+            "charging_minutes": 0,
+            "charging_stops": [],
+            "driving_minutes": 90,
+            "node_ids": [
+              "origin",
+              "destination"
+            ],
+            "total_distance_km": 150,
+            "total_minutes": 90
+          },
+          "reserve_violations": 0,
+          "verified": true
+        },
+        {
+          "algorithm": "greedy_fixed_80",
+          "feasible": true,
+          "plan": {
+            "arrival_soc_pct": 10.0,
+            "charging_minutes": 0,
+            "charging_stops": [],
+            "driving_minutes": 90,
+            "node_ids": [
+              "origin",
+              "destination"
+            ],
+            "total_distance_km": 150,
+            "total_minutes": 90
+          },
+          "reserve_violations": 0,
+          "verified": true
+        }
+      ],
+      "soc_step_pct": 5,
+      "topology_class": "exact_reserve_boundary"
+    },
+    {
+      "case_id": "discretization_rejected",
+      "expected_feasibility_source": {
+        "kind": "hand_audited_exhaustion",
+        "reason": "At 5 percent resolution the 12 percent reserve rounds to three buckets and the 140 km leg needs ten buckets, leaving only two."
+      },
+      "expected_feasible": false,
+      "route_options": {
+        "distinct_option_count": 0,
+        "options": [],
+        "unavailable_strategies": [
+          "fastest",
+          "shortest_distance",
+          "fewest_charging_stops",
+          "greedy_fixed_80"
+        ]
+      },
+      "runs": [
+        {
+          "algorithm": "shortest_driving_time",
+          "feasible": false,
+          "reason": "shortest-driving-time baseline path violates the reserve-SOC invariant"
+        },
+        {
+          "algorithm": "fastest",
+          "feasible": false,
+          "reason": "no energy-feasible route from 'origin' to 'destination'"
+        },
+        {
+          "algorithm": "shortest_distance",
+          "feasible": false,
+          "reason": "no energy-feasible route from 'origin' to 'destination'"
+        },
+        {
+          "algorithm": "fewest_charging_stops",
+          "feasible": false,
+          "reason": "no energy-feasible route from 'origin' to 'destination'"
+        },
+        {
+          "algorithm": "greedy_fixed_80",
+          "feasible": false,
+          "reason": "greedy fixed-target strategy found no route from 'origin'"
+        }
+      ],
+      "soc_step_pct": 5,
+      "topology_class": "discretization_rejected"
+    },
+    {
+      "case_id": "infeasible",
+      "expected_feasibility_source": {
+        "kind": "hand_audited_exhaustion",
+        "reason": "The sole 200 km leg requires more energy than the initial SOC can spend while retaining reserve, and no charging station exists."
+      },
+      "expected_feasible": false,
+      "route_options": {
+        "distinct_option_count": 0,
+        "options": [],
+        "unavailable_strategies": [
+          "fastest",
+          "shortest_distance",
+          "fewest_charging_stops",
+          "greedy_fixed_80"
+        ]
+      },
+      "runs": [
+        {
+          "algorithm": "shortest_driving_time",
+          "feasible": false,
+          "reason": "shortest-driving-time baseline path violates the reserve-SOC invariant"
+        },
+        {
+          "algorithm": "fastest",
+          "feasible": false,
+          "reason": "no energy-feasible route from 'origin' to 'destination'"
+        },
+        {
+          "algorithm": "shortest_distance",
+          "feasible": false,
+          "reason": "no energy-feasible route from 'origin' to 'destination'"
+        },
+        {
+          "algorithm": "fewest_charging_stops",
+          "feasible": false,
+          "reason": "no energy-feasible route from 'origin' to 'destination'"
+        },
+        {
+          "algorithm": "greedy_fixed_80",
+          "feasible": false,
+          "reason": "greedy fixed-target strategy found no route from 'origin'"
+        }
+      ],
+      "soc_step_pct": 5,
+      "topology_class": "infeasible"
+    }
+  ],
+  "correctness_gates": {
+    "all_returned_plans_verified": true,
+    "exact_algorithms_match_reference": true,
+    "false_feasible_count": 0,
+    "input_result_counts_reconcile": true,
+    "reserve_violations": 0
+  },
+  "fixture_sha256": "b805fe43dc89d3129e1126d1d5529b9bf5058ab0b4e8a86362caeccd472b980d",
+  "manifest_sha256": "8744707588e3afbd45d676678fd1b42c1da56c783ce72fed3266887c4457f9e7",
+  "pruning_audits": [
+    {
+      "case_id": "detour_choice",
+      "eligible_candidate_count": 1,
+      "id": "detour_choice_small_graph",
+      "pruned": {
+        "algorithm": "fastest",
+        "feasible": true,
+        "plan": {
+          "arrival_soc_pct": 10.0,
+          "charging_minutes": 14.0,
+          "charging_stops": [
+            {
+              "arrival_soc_pct": 10.0,
+              "charging_minutes": 14.0,
+              "departure_soc_pct": 60.0,
+              "energy_added_kwh": 30.0,
+              "station_id": "fast_near"
+            }
+          ],
+          "driving_minutes": 120,
+          "node_ids": [
+            "origin",
+            "fast_near",
+            "destination"
+          ],
+          "total_distance_km": 280,
+          "total_minutes": 134.0
+        },
+        "reserve_violations": 0,
+        "verified": true
+      },
+      "pruned_candidate_ids": [
+        "fast_near"
+      ],
+      "pruning_time_gap_minutes": 0.0,
+      "same_plan": true,
+      "scope": "small synthetic candidate graph; no general preservation claim",
+      "selection_config": {
+        "algorithm": "equirectangular-segment-v1",
+        "candidate_cap": 5,
+        "corridor_width_km": 25.0,
+        "final_tie_break": "stable_station_id_asc",
+        "ranking_keys": [
+          "corridor_distance_km_asc",
+          "route_progress_fraction_asc",
+          "max_power_kw_desc",
+          "stable_station_id_asc"
+        ]
+      },
+      "unpruned": {
+        "algorithm": "fastest",
+        "feasible": true,
+        "plan": {
+          "arrival_soc_pct": 10.0,
+          "charging_minutes": 14.0,
+          "charging_stops": [
+            {
+              "arrival_soc_pct": 10.0,
+              "charging_minutes": 14.0,
+              "departure_soc_pct": 60.0,
+              "energy_added_kwh": 30.0,
+              "station_id": "fast_near"
+            }
+          ],
+          "driving_minutes": 120,
+          "node_ids": [
+            "origin",
+            "fast_near",
+            "destination"
+          ],
+          "total_distance_km": 280,
+          "total_minutes": 134.0
+        },
+        "reserve_violations": 0,
+        "verified": true
+      },
+      "unpruned_candidate_ids": [
+        "fast_near",
+        "slow_far"
+      ]
+    }
+  ],
+  "result_count": 40,
+  "result_serialization_version": 1,
+  "soc_grid_sensitivity": [
+    {
+      "case_id": "discretization_rejected",
+      "factor": "soc_step_pct",
+      "fixed_input_fixture_sha256": "b805fe43dc89d3129e1126d1d5529b9bf5058ab0b4e8a86362caeccd472b980d",
+      "id": "soc_grid_discretization_boundary",
+      "runs": [
+        {
+          "algorithm": "fastest",
+          "feasible": false,
+          "reason": "no energy-feasible route from 'origin' to 'destination'",
+          "soc_step_pct": 10
+        },
+        {
+          "algorithm": "fastest",
+          "feasible": false,
+          "reason": "no energy-feasible route from 'origin' to 'destination'",
+          "soc_step_pct": 5
+        },
+        {
+          "algorithm": "fastest",
+          "feasible": true,
+          "plan": {
+            "arrival_soc_pct": 12.0,
+            "charging_minutes": 0,
+            "charging_stops": [],
+            "driving_minutes": 84,
+            "node_ids": [
+              "origin",
+              "destination"
+            ],
+            "total_distance_km": 140,
+            "total_minutes": 84
+          },
+          "reserve_violations": 0,
+          "soc_step_pct": 2,
+          "verified": true
+        }
+      ]
+    }
+  ],
+  "synthetic": true
+}

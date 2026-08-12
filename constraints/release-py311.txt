@@ -1,0 +1,14 @@
+# ChargePath 0.1.0 release environment for CPython 3.11.
+# Runtime dependencies: none. The entries below pin the development and verification graph.
+colorama==0.4.6
+iniconfig==2.3.0
+librt==0.13.0
+mypy==1.20.2
+mypy_extensions==1.1.0
+packaging==26.2
+pathspec==1.1.1
+pluggy==1.6.0
+Pygments==2.20.0
+pytest==8.4.2
+ruff==0.16.1
+typing_extensions==4.16.0
