@@ -54,6 +54,9 @@ It also checks the MIT metadata, visible OpenStreetMap attribution, synthetic sa
 CI action/Python pins. `scripts/check_wheel.py` separately audits the built artifact rather than
 assuming that a source/editable install proves wheel completeness.
 
+The source checkout is normalized to LF through [`.gitattributes`](../.gitattributes), so
+checksum-pinned text fixtures and browser assets retain the same bytes in Windows and Ubuntu CI.
+
 The 15.4 MB EPDK response under ignored `data/raw/` is deliberately outside the candidate. Its reuse
 status remains unresolved. The candidate contains only the response's metadata/checksum, reviewed
 normalization code, and project-authored synthetic fixtures. The included OSRM request/response

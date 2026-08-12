@@ -466,7 +466,7 @@ Named M5 acceptance evidence:
   licenses. OpenStreetMap attribution remains visible in the UI, and unresolved EPDK redistribution
   prevents real response rows from entering the candidate.
 - **Release-content audit — passed.** `docs/evidence/m5/release-allowlist.txt` is an exact sorted
-  83-file allowlist. `scripts/audit_release.py`, now part of the canonical gate, rejects missing or
+  84-file allowlist. `scripts/audit_release.py`, now part of the canonical gate, rejects missing or
   unexpected files, raw/processed data, caches, bytecode, OSRM build artifacts, files over 1 MiB,
   high-confidence secret patterns, missing license/OSM/synthetic contracts, or unpinned CI inputs.
   The ignored 15,444,078-byte EPDK response, `.venv`, caches, and generated package metadata are not
@@ -477,6 +477,12 @@ Named M5 acceptance evidence:
 - **Git/release review — locally passed, final immutable review pending.** The current 83 candidate
   files are committed on local `main`; no remote exists. Push, CI evidence, tag, and GitHub release
   remain pending explicit remote/publication approval.
+
+### Remote CI update (2026-08-12)
+
+The candidate is committed and pushed to `origin/main`. The first Windows CI run exposed a
+cross-platform line-ending checksum mismatch; this candidate adds checkout normalization before
+the matrix is rerun. Tagging and GitHub release publication remain separately approval-gated.
 
 ## Known risks
 
@@ -494,7 +500,7 @@ Named M5 acceptance evidence:
 
 ## Git state
 
-Independent repository is on local `main` with no remote. All 83 allowlisted candidate files are
+Independent repository is on `main`, tracking `origin/main`. All 84 allowlisted candidate files are
 committed; ignored environments, caches, raw/processed EPDK data, and generated package metadata
-remain outside the candidate. Push, tag, and publication remain pending explicit remote/publication
-approval.
+remain outside the candidate. The CI correction must be green before the milestone can be marked
+complete; tag and publication remain separately approval-gated.
