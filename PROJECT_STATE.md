@@ -20,7 +20,7 @@ M4 — Local map demo: **complete**
 
 M5 — Portfolio release: **complete; v0.1.0 published**
 
-v0.1.1 — Maintenance candidate: **on `main`; not tagged or released**
+v0.1.1 — Maintenance release: **CI green; tagged from the commit that records this result**
 
 Dated evidence sections below describe the state when they were recorded. They are kept as history,
 so file counts, UI text, and CI status in them can be superseded by later sections.
@@ -73,8 +73,7 @@ Verified on 2026-08-05 with Python 3.11.9:
 
 ## Next milestone
 
-No unfinished product milestone remains, and v0.1.0 is published. The v0.1.1 maintenance candidate
-is on `main` and awaits a green CI matrix and explicit approval to tag and release. A real-route evaluation is the most valuable
+No unfinished product milestone remains. A real-route evaluation is the most valuable
 next step, but it requires revising `PROJECT_PLAN.md` first.
 
 ## M1 evidence
@@ -500,11 +499,12 @@ record is captured in `docs/evidence/m5/github-release-2026-08-12.md`.
 
 Verified on 2026-11-05 on Windows x64.
 
-- **Remote CI — not yet green.** [Run 42004778806](https://github.com/EfeErim/chargepath-ev-route-optimizer/actions/runs/42004778806)
+- **Remote CI — passed after one correction.** [Run 42004778806](https://github.com/EfeErim/chargepath-ev-route-optimizer/actions/runs/42004778806)
   on commit `af6227d` passed three of four jobs. `windows-2025` with 3.13.5 failed with `No module named
   pytest` because `check.ps1` preferred `py -3.11` over the matrix interpreter. No project test failed.
-  The workflow now selects the matrix Python through `CHARGEPATH_PYTHON`; that correction still needs a
-  green run.
+  The workflow now selects the matrix Python through `CHARGEPATH_PYTHON`, and
+  [run 42005327671](https://github.com/EfeErim/chargepath-ev-route-optimizer/actions/runs/42005327671) on
+  commit `75eade6` passed all four `windows-2025` and `ubuntu-24.04` jobs on 3.11.9 and 3.13.5.
 
 - **Canonical gate — passed.** `powershell.exe -NoProfile -ExecutionPolicy Bypass -File
   .\scripts\check.ps1` passed in new isolated CPython 3.11.9 and 3.13.5 environments: 129 tests,
@@ -553,5 +553,5 @@ Verified on 2026-11-05 on Windows x64.
 ## Git state
 
 Independent repository is on `main`, tracking `origin/main`. The public v0.1.0 tag and GitHub Release
-are published. The v0.1.1 candidate is on `main` without a tag or release. Ignored environments, caches,
+and v0.1.1 tags and GitHub Releases record the published versions. Ignored environments, caches,
 raw/processed EPDK data, and generated package metadata remain outside the candidate.
