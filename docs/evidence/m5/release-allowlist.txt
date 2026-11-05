@@ -51,6 +51,8 @@ scripts/inspect_epdk_snapshot.py
 scripts/launcher_common.ps1
 scripts/open_chargepath.ps1
 scripts/run_m3_benchmark.py
+scripts/run_m6_collect.py
+scripts/run_m6_evaluate.py
 scripts/start_custom_map.ps1
 src/chargepath/__init__.py
 src/chargepath/alternatives.py
@@ -67,6 +69,8 @@ src/chargepath/providers/base.py
 src/chargepath/providers/osrm.py
 src/chargepath/providers/static.py
 src/chargepath/real_route_benchmark.py
+src/chargepath/real_route_collection.py
+src/chargepath/real_route_evaluation.py
 src/chargepath/station_data.py
 src/chargepath/verification.py
 src/chargepath/web/__init__.py
@@ -77,6 +81,7 @@ src/chargepath/web/leaflet.css
 src/chargepath/web/leaflet.js
 tests/fixtures/epdk/observed_v1/README.md
 tests/fixtures/epdk/observed_v1/synthetic_response.json
+tests/fixtures/m6/synthetic_graph.json
 tests/fixtures/osrm/v26.7.3/backend_version.txt
 tests/fixtures/osrm/v26.7.3/manifest.json
 tests/fixtures/osrm/v26.7.3/recording_map.osm
@@ -92,4 +97,5 @@ tests/test_fixtures.py
 tests/test_optimizer.py
 tests/test_osrm.py
 tests/test_real_route_benchmark.py
+tests/test_real_route_evaluation.py
 tests/test_station_data.py
