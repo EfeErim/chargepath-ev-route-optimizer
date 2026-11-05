@@ -22,6 +22,8 @@ M5 — Portfolio release: **complete; v0.1.0 published**
 
 v0.1.1 — Maintenance release: **CI green; tagged from the commit that records this result**
 
+M6 — Real-route evaluation: **in progress; M6.0 complete, M6.1 not started**
+
 Dated evidence sections below describe the state when they were recorded. They are kept as history,
 so file counts, UI text, and CI status in them can be superseded by later sections.
 
@@ -73,8 +75,9 @@ Verified on 2026-08-05 with Python 3.11.9:
 
 ## Next milestone
 
-No unfinished product milestone remains. A real-route evaluation is the most valuable
-next step, but it requires revising `PROJECT_PLAN.md` first.
+M6 — Real-route evaluation, defined in `PROJECT_PLAN.md`. The M6.0 infrastructure spike is complete.
+The next step is M6.1, the frozen benchmark manifest, which must be committed before any evaluation
+run.
 
 ## M1 evidence
 
@@ -534,6 +537,67 @@ Verified on 2026-11-05 on Windows x64.
   captured; a favicon request is the likely source. `docs/evidence/m4/fixture-primary.png` was recaptured
   at 1280×720 (399,551 bytes; SHA-256 `bbf74f0bd96760fd7784e7537bc0ad7450547ef3a1042f9ad671d5416afe1630`),
   superseding the M4 image.
+
+## M6.0 infrastructure evidence
+
+Verified on 2026-11-05 on Windows 11 x64 (15.8 GB RAM, 12 logical CPUs) with CPython 3.11.9. These
+results prove the infrastructure works; they are not M6 evaluation results. Step commands and resource
+tables are in `docs/osrm_setup.md`.
+
+Frozen inputs, all outside Git:
+
+- **OSRM backend:** `node_osrm-v26.7.3-8-win32-x64-Release.tar.gz`, SHA-256
+  `76a686b4abf8c902262f3e39c9058677c9a9138f25abcca3841bfb6f45a0705a`, matching the M1 manifest. It
+  reports `v26.7.3`, and tag `v26.7.3` resolves to the pinned commit `0844e3a`.
+- **Profile:** `car.lua` from the pinned commit's source archive (SHA-256
+  `eac4377d27a6bb7aeee4d72a14ba35bd83d8d0f48a0c0994f96703226af224d3`). The file is LF
+  (`48bbb716c2b68ce6803a11a4151fcac050c6ea8240295e7dde111f15f8bd3984`). The M1 value `3a12ab9c…` is the
+  same file with CRLF line endings, which the conversion reproduced.
+- **Road extract:** Geofabrik `turkey-latest.osm.pbf`, 652,637,317 bytes, `Last-Modified` 2026-11-04
+  11:15:16 GMT, SHA-256 `794874509924396187de1c9f1f63ce4fb4a306a4e09d089786db79d7e7bffc11`, retrieved
+  2026-11-05T13:42:22Z, OSRM `data_version` `geofabrik-turkey-20261104-794874509924`, algorithm CH.
+- **Station snapshot:** `epdk-20261105-bb01ff406b86`, 16,093,114 bytes, SHA-256
+  `bb01ff406b8636b98e634a071761fff440c12ea310678d8a3d8efef69baa7986`, retrieved
+  2026-11-05T13:43:42Z. Reuse status stays `pending_verification` and source freshness stays unknown.
+
+Named M6.0 acceptance evidence:
+
+- **Extract processed — passed.** `osrm-extract` and `osrm-contract` both exited 0 on the recording
+  machine, in 10.6 and 31.3 minutes. Peak sampled private memory was 11.56 and 3.33 GB. The margin was
+  thin: free system RAM fell to a sampled 0.08 GB during extract, with other desktop applications open.
+- **Loopback Route and Table — passed.** The listener was `127.0.0.1:5000` only, and the server process
+  had no non-loopback connection when checked after the browser plan. Through `OsrmHttpClient`, a
+  province-center Istanbul-to-Ankara request returned Route geometry and a Table cell of 443.4 km and
+  277.6 minutes, with the `data_version` above.
+- **Real `TooBig` — passed; closes the v0.1.1 item.** With `--max-table-size 100`, 100 locations returned
+  HTTP 200 `Ok` in 296 ms and 101 returned HTTP 400 `TooBig`. Through `IntegrationPlanningService` on one
+  deliberately infeasible Istanbul-to-Van trip (20 kWh, 25% initial SOC, 20% reserve): the default limit
+  stayed within the server limit and raised `NoFeasibleRouteError`; `adaptive_candidate_cap_limit=200`
+  raised `NoFeasibleRouteError` caused by `TooBig`; and `candidate_cap=120` raised
+  `OsrmResponseError(code="TooBig")`.
+- **EPDK script download — passed; closes the v0.1.1 item.** One `scripts/fetch_epdk_snapshot.py` run
+  returned HTTP 200 with no retry and no 429. It reconciled 17,115 sites (17,115 accepted) and 50,052
+  sockets (50,051 accepted, 1 rejected), with 7,986 compatible CCS2 sites.
+- **Browser plan — passed.** The built-in browser ran integration mode against local OSRM and the frozen
+  snapshot. Map clicks chose general points near Kocaeli (40.9633, 29.8608) and Ordu (40.8471, 37.8809)
+  with the default vehicle (60 kWh, 60% SOC, 20 kWh/100 km, 150 kW, 10% reserve, 1.1 factor). `/api/plan`
+  returned HTTP 200 with no console errors and `4 strategies · 4 distinct plans`, using 50 of 597 eligible
+  corridor stations. Modeled results, which are one trip and not a benchmark result:
+
+| Strategy | Total | Driving | Distance | Stops | Arrival SOC |
+|---|---|---|---|---|---|
+| Fastest | 11 hr 4 min | 9 hr 50 min | 834 km | 5 | 10% |
+| Shortest distance | 11 hr 10 min | 9 hr 48 min | 834 km | 5 | 10% |
+| Fewest charging stops | 11 hr 4 min | 9 hr 48 min | 834 km | 4 | 10% |
+| Fixed 80% | 11 hr 46 min | 9 hr 51 min | 837 km | 6 | 40% |
+
+Limits of this evidence:
+
+- Memory values are periodic samples, because OSRM does not report its peak on Windows.
+- Extract and contract ran with 8 threads at below-normal priority, so their times are not a best case.
+- A `--max-table-size 202` server, which E3 needs, has not been started.
+- Only `tests/test_demo.py`, `tests/test_osrm.py`, and `tests/test_station_data.py` were rerun (74
+  passed). No source code changed, and the full repository gate was not run for this step.
 
 ## Known risks
 

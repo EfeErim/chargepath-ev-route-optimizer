@@ -239,3 +239,151 @@ Acceptance:
 - limitations and readiness boundary are visible;
 - Git status and release contents are reviewed against an explicit allowlist;
 - commit, push, tag, and GitHub release happen only after explicit approval.
+
+### M6 — Real-route evaluation
+
+Status: planned on 2026-11-05; M6.0 complete on 2026-11-05 (evidence in `PROJECT_STATE.md`); M6.1 not
+started.
+
+M3 validates the software on eight small synthetic cases. M6 measures what the planner does on real
+Turkish road legs and real static station locations, on inputs frozen before the first result exists.
+
+Decision question: under one frozen road graph and station snapshot, how much modeled trip time does
+exact optimization save over the fixed-80 greedy strategy, and how much do that result and feasibility
+depend on the SOC grid, the candidate cap, and the vehicle inputs?
+
+M6 measures the model on real geography. It does not establish real-world SOC accuracy, arrival time,
+or charger availability, because no trip is driven and no live data is used.
+
+#### Boundaries
+
+- No optimizer, energy-model, or charging-model change. A defect found during M6 is fixed separately,
+  and the affected results are regenerated.
+- No elevation, weather, traffic, AC charging, or new vehicle catalogue.
+- The public OSRM server is not used for M6 evidence: its graph is not pinned, its use has no quota
+  guarantee, and it cannot serve the full candidate range.
+- Real station rows stay out of Git while EPDK reuse status is unresolved. Committed evidence contains
+  metrics, identifiers of frozen inputs, and checksums, but no station names, coordinates, source
+  identifiers, or per-trip station sequences.
+
+#### M6.0 — Infrastructure spike
+
+Deliverables:
+
+- local OSRM from the same native `node_osrm-v26.7.3-8-win32-x64-Release` asset, checksum, and `car.lua`
+  pinned by the M1 fixture, so no container runtime is required;
+- one dated Geofabrik Turkey extract (652,637,317 bytes when checked on 2026-11-05) outside Git, with
+  its SHA-256 and OSRM `data_version` recorded;
+- one EPDK snapshot retrieved once with `scripts/fetch_epdk_snapshot.py`, then frozen for all of M6;
+- `docs/osrm_setup.md` updated with the verified native commands, including peak memory, disk use, and
+  processing time on the recording machine.
+
+Acceptance:
+
+- the extract is processed on the recording machine (15.8 GB RAM), or the failure and its peak memory
+  are recorded and M6 stops for a decision before any fallback is chosen;
+- `osrm-routed` answers Route and Table requests on loopback only;
+- a real `--max-table-size 100` server returns `TooBig` above 100 locations and ChargePath handles it as
+  v0.1.1 claims, closing that unverified item;
+- `scripts/fetch_epdk_snapshot.py` completes one live download, closing that unverified item; an HTTP
+  429 is waited out rather than retried in a loop;
+- one browser plan runs through local OSRM and the frozen snapshot, recorded with its result.
+
+#### M6.1 — Frozen benchmark manifest
+
+Deliverables:
+
+- `data/benchmarks/m6/v1/manifest.json`, committed before the first evaluation run;
+- 24 origin/destination pairs using general province-center coordinates, never a person's location: six
+  each in the 150–300, 300–600, 600–1000, and over 1000 km bands, with the selection rule recorded and
+  the eastern, lower-density regions represented;
+- three declared parameter sets of 40 kWh/50 kW/16, 60 kWh/150 kW/18, and 80 kWh/250 kW/20 kWh per
+  100 km, all at 80% initial SOC, 10% reserve, and a 1.1 safety factor. These are parameter sets, not
+  claims about any real car;
+- the experiment list below, with every value and the route subset fixed.
+
+Acceptance:
+
+- the manifest commit precedes every result commit in Git history;
+- routes are not added, removed, or replaced after the first run; a snap, routing, or infeasibility
+  failure is a reported outcome, and any correction creates a new manifest version with the old results
+  kept.
+
+#### M6.2 — Collection and evaluation tooling
+
+Deliverables:
+
+- a collection stage that uses the existing corridor selector and `CandidateGraphBuilder` against local
+  OSRM, and stores each candidate graph under the Git-ignored `data/processed/m6/`;
+- an offline evaluation stage that needs no network, runs every strategy and the road-only baseline
+  from those graphs, independently replays every plan, and writes normalized evidence;
+- a synthetic graph fixture and fake provider, so the repository gate covers both stages with no OSRM,
+  EPDK, or network access.
+
+Acceptance:
+
+- repeated evaluation from the same stored graphs is byte-for-byte stable;
+- stored graph checksums are recorded in the committed evidence;
+- a test proves committed evidence contains no station name, coordinate, or source identifier;
+- input and outcome counts reconcile, and each outcome is a plan, an infeasible result, or a provider
+  failure, with none dropped.
+
+#### M6.3 — Experiments
+
+| Experiment | Changes | Held fixed | Trips |
+|---|---|---|---|
+| E1 Strategy comparison | exact strategies, greedy, road-only | 5% grid, 25 km, cap 50 | 24 routes × 3 sets |
+| E2 SOC grid | 10%, 5%, 2% | 25 km, cap 50 | 24 routes × 3 sets |
+| E3 Candidate cap | 12, 24, 50, 98, 200 | 5% grid, 25 km, 60 kWh set | 24 routes |
+| E4 Corridor width | 10, 25, 50 km | 5% grid, cap 50, 60 kWh set | 24 routes |
+| E5 Vehicle inputs | one factor at a time, below | 5% grid, 25 km, cap 50 | 8 declared routes |
+| E6 Runtime | planner and OSRM timed separately | E1 inputs | 3 warm-ups, 20 repetitions |
+
+E5 varies usable battery (40/60/80 kWh), initial SOC (50/80/100%), consumption (±20%), reserve
+(5/10/20%), safety factor (1.0/1.1/1.25), and vehicle maximum DC power (50/150/250 kW). It covers the
+dimensions promised in `docs/experiment_plan.md`, replacing the fixed station-power dimension because
+real stations supply their own power. E3 at cap 200 requires a server started with
+`--max-table-size 202`; its result is the reference for the cap gap and is not a global optimum.
+
+Reported metrics: feasibility rate, valid-plan rate, reserve violations, total and charging time, stops,
+detour distance, distinct options, greedy failure rate, SOC-grid gap, and cap gap. Exact-versus-greedy
+savings are reported in minutes and percent as median, p90, minimum, and maximum, overall and per
+distance band, over trips where both strategies return a plan.
+
+#### M6.4 — Results and publication
+
+Deliverables:
+
+- `docs/evidence/m6/` with normalized results, the machine-specific runtime artifact, and frozen-input
+  checksums;
+- a real-route section in `docs/results.md` generated from those artifacts, and README claims that
+  match them, including results that are unflattering or show no meaningful gain;
+- `docs/experiment_plan.md`, `docs/limitations.md`, and the release allowlist updated;
+- a release candidate, published only after explicit approval.
+
+Acceptance:
+
+- every returned plan passes independent replay with zero reserve violations;
+- on every trip where both return a plan at the same grid and candidate set, exact fastest is no slower
+  than greedy; any violation is treated as a defect, not reported as a result;
+- no savings threshold is required for M6 to pass, and the measured result is published as found;
+- results state their boundary: modeled minutes on one OSM extract, one static snapshot, and declared
+  parameter sets, with visible OpenStreetMap attribution;
+- anyone without the frozen snapshot is told they can rerun the tooling on their own snapshot but cannot
+  reproduce the exact bytes;
+- every named check is recorded in `PROJECT_STATE.md`, and the canonical gate passes without network
+  access.
+
+#### Known risks
+
+- **Memory:** processing the extract may exceed what the recording machine has free. M6.0 measures this
+  first, before any later work depends on it.
+- **EPDK access:** the quota is undocumented and HTTP 429 has been observed. M6 needs only one successful
+  download, and the frozen snapshot removes any further dependency.
+- **Road-graph meaning:** OSRM Table distance belongs to the fastest route, so "shortest distance" means
+  shortest among those legs. Results must say so.
+- **Reproducibility:** real inputs cannot be redistributed, so outsiders can inspect method and metrics
+  but cannot verify the exact numbers. Synthetic tests cover the tooling, not the real values.
+- **Reuse conditions:** publishing aggregate metrics derived from EPDK data is treated as lower risk than
+  publishing rows, but it is not confirmed permission. Asking EPDK remains open and does not block
+  M6.0–M6.3; its answer should be reviewed before M6.4 if one has arrived.
