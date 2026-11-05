@@ -34,4 +34,7 @@ jobs:
           python -m pip list --format=freeze
       - name: Run project gate
         shell: pwsh
-        run: ./scripts/check.ps1
+        run: |
+          # Otherwise check.ps1 prefers `py -3.11`, which skips the matrix Python on Windows.
+          $env:CHARGEPATH_PYTHON = (Get-Command python).Source
+          ./scripts/check.ps1
