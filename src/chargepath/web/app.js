@@ -442,7 +442,9 @@ function renderResults() {
   });
   const selectedEntry = tabEntries[state.selectedOption];
   const option = state.result.options[selectedEntry.optionIndex];
-  els.strategyLabel.textContent = strategyNames[selectedEntry.strategy] || selectedEntry.strategy;
+  els.strategyLabel.textContent = option.strategies
+    .map((name) => strategyNames[name] || name)
+    .join(" · ");
   els.routeTitle.textContent = option.nodes.map(prettyNode).join(" → ");
   els.totalTime.textContent = formatMinutes(option.total_minutes);
   els.distance.textContent = `${option.total_distance_km.toFixed(0)} km`;
@@ -478,8 +480,9 @@ function renderResults() {
   }
   els.modelBoundary.textContent = modelNotes.join(" ");
   renderRoute(option);
+  const distinctPlans = state.result.options.length;
   setMapStatus(
-    `${tabEntries.length} route strategies ready`,
+    `${tabEntries.length} strategies · ${distinctPlans} distinct ${distinctPlans === 1 ? "plan" : "plans"}`,
   );
 }
 
