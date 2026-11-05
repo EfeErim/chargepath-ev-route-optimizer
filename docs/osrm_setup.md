@@ -42,6 +42,13 @@ request:
 curl.exe "http://127.0.0.1:5000/route/v1/driving/29.0,41.0;29.1,41.1?overview=false"
 ```
 
+`osrm-routed` rejects Table requests above 100 locations unless it is started with a higher
+`--max-table-size`. ChargePath's automatic candidate widening therefore stops at 98 stations by
+default, because each request also carries the origin and destination. To search further, raise both
+limits together, for example `osrm-routed --max-table-size 202 ...` with
+`python -m chargepath.demo --adaptive-candidate-cap-limit 200 ...`. If a widened request is still
+refused with `TooBig`, ChargePath reports the infeasible result from the last search it completed.
+
 The profile and processed OSM snapshot determine travel times and routes. OSRM output is not live
 traffic, and a self-hosted instance has only the freshness and operational guarantees supplied by
 its operator.

@@ -25,7 +25,7 @@ from chargepath.demo import (
 from chargepath.fixtures import load_synthetic_scenario
 from chargepath.models import GeoJsonLineString, NoFeasibleRouteError
 from chargepath.providers.base import CoordinateLike
-from chargepath.providers.osrm import OsrmTableCost, OsrmTableResult
+from chargepath.providers.osrm import OsrmResponseError, OsrmTableCost, OsrmTableResult
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 SYNTHETIC_FIXTURE = REPOSITORY_ROOT / "data/sample/synthetic_corridor.json"
@@ -277,7 +277,7 @@ def test_explicit_integration_mode_uses_checksum_snapshot_and_injected_osrm_boun
         "osrm_endpoint": "http://127.0.0.1:5000",
         "coordinates_leave_device": False,
         "candidate_cap": 50,
-        "adaptive_candidate_cap_limit": 200,
+        "adaptive_candidate_cap_limit": 98,
         "adaptive_expansion_enabled": True,
     }
     result_options = result["options"]
@@ -287,6 +287,142 @@ def test_explicit_integration_mode_uses_checksum_snapshot_and_injected_osrm_boun
         feature["geometry"]["type"] == "LineString"
         for feature in result_options[0]["geometry"]["features"]
     )
+
+
+class TableLimitedOsrmClient:
+    """Offline stand-in enforcing osrm-routed's default --max-table-size of 100."""
+
+    largest_table = 0
+
+    def __init__(self, *, endpoint: str, allow_remote_endpoint: bool = False) -> None:
+        assert allow_remote_endpoint is False
+
+    def table(self, coordinates: tuple[CoordinateLike, ...]) -> OsrmTableResult:
+        size = len(coordinates)
+        if size > 100:
+            raise OsrmResponseError("OSRM TooBig: table is too large", code="TooBig")
+        type(self).largest_table = max(type(self).largest_table, size)
+        unreachable = OsrmTableCost(5_000, 5_000)
+        cells = tuple(
+            tuple(OsrmTableCost(0, 0) if row == col else unreachable for col in range(size))
+            for row in range(size)
+        )
+        return OsrmTableResult(cells=cells, data_version="offline-test")
+
+    def route_geometry(
+        self, origin: CoordinateLike, destination: CoordinateLike
+    ) -> GeoJsonLineString:
+        return GeoJsonLineString(
+            ((origin.longitude, origin.latitude), (destination.longitude, destination.latitude))
+        )
+
+
+def _many_site_snapshot(tmp_path: Path, *, site_count: int) -> tuple[Path, Path]:
+    source = REPOSITORY_ROOT / "tests/fixtures/epdk/observed_v1/synthetic_response.json"
+    payload = json.loads(source.read_text(encoding="utf-8"))
+    template = payload["data"][0]
+    rows = []
+    for index in range(site_count):
+        row = json.loads(json.dumps(template))
+        row["sarjIstasyonuNo"] = f"SYN-MANY-{index:03d}"
+        row["enlem"] = 39.0
+        row["boylam"] = 31.0 + 2.0 * index / site_count
+        rows.append(row)
+    payload["data"] = rows
+    payload["numRows"] = site_count
+    snapshot_bytes = json.dumps(payload).encode("utf-8")
+    snapshot = tmp_path / "snapshot.json"
+    snapshot.write_bytes(snapshot_bytes)
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "snapshot_id": "synthetic-table-limit-test",
+                "source": "EPDK fixture",
+                "source_url": "https://example.invalid/epdk-fixture",
+                "retrieved_at": "2026-11-05T00:00:00Z",
+                "response_sha256": hashlib.sha256(snapshot_bytes).hexdigest(),
+                "reuse_status": "pending_verification",
+                "source_freshness": "unknown",
+            }
+        ),
+        encoding="utf-8",
+    )
+    return snapshot, manifest
+
+
+def _long_trip_request() -> PlanRequest:
+    return PlanRequest.from_payload(
+        {
+            "origin": {"id": "origin", "longitude": 31.0, "latitude": 39.0},
+            "destination": {"id": "destination", "longitude": 33.0, "latitude": 39.0},
+            "vehicle": {
+                "usable_battery_kwh": 60,
+                "initial_soc_pct": 60,
+                "consumption_kwh_per_100km": 20,
+                "max_dc_power_kw": 150,
+                "reserve_soc_pct": 10,
+                "energy_safety_factor": 1,
+            },
+        }
+    )
+
+
+def test_default_widening_stays_within_default_osrm_table_limit(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    snapshot, manifest = _many_site_snapshot(tmp_path, site_count=150)
+    monkeypatch.setattr(TableLimitedOsrmClient, "largest_table", 0)
+    monkeypatch.setattr(demo_module, "OsrmHttpClient", TableLimitedOsrmClient)
+    service = IntegrationPlanningService(
+        snapshot_path=snapshot,
+        manifest_path=manifest,
+        osrm_endpoint="http://127.0.0.1:5000",
+        tile_url=DEFAULT_TILE_URL,
+    )
+
+    with pytest.raises(NoFeasibleRouteError):
+        service.plan(_long_trip_request())
+
+    assert TableLimitedOsrmClient.largest_table == 100
+
+
+def test_widening_past_the_provider_table_limit_reports_the_infeasible_result(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    snapshot, manifest = _many_site_snapshot(tmp_path, site_count=150)
+    monkeypatch.setattr(demo_module, "OsrmHttpClient", TableLimitedOsrmClient)
+    service = IntegrationPlanningService(
+        snapshot_path=snapshot,
+        manifest_path=manifest,
+        osrm_endpoint="http://127.0.0.1:5000",
+        tile_url=DEFAULT_TILE_URL,
+        adaptive_candidate_cap_limit=140,
+    )
+
+    with pytest.raises(NoFeasibleRouteError):
+        service.plan(_long_trip_request())
+
+
+def test_initial_table_rejection_remains_a_provider_error(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    snapshot, manifest = _many_site_snapshot(tmp_path, site_count=150)
+    monkeypatch.setattr(demo_module, "OsrmHttpClient", TableLimitedOsrmClient)
+    service = IntegrationPlanningService(
+        snapshot_path=snapshot,
+        manifest_path=manifest,
+        osrm_endpoint="http://127.0.0.1:5000",
+        tile_url=DEFAULT_TILE_URL,
+        candidate_cap=120,
+        adaptive_candidate_cap_limit=120,
+    )
+
+    with pytest.raises(OsrmResponseError, match="TooBig"):
+        service.plan(_long_trip_request())
 
 
 def test_integration_mode_rejects_snapshot_marked_prohibited(tmp_path: Path) -> None:
@@ -468,7 +604,8 @@ def test_ui_contract_keeps_basemap_optional_and_avoids_public_geocoding() -> Non
     assert "refined_after_coarse_infeasible" in script
     assert "expanded_after_infeasible" in script
     assert "function strategyTabEntries()" in script
-    assert "${tabEntries.length} route strategies ready" in script
+    assert "${tabEntries.length} strategies · ${distinctPlans} distinct" in script
+    assert "option.strategies\n    .map((name)" in script
     assert 'button.addEventListener("keydown"' in script
     assert "button.tabIndex = index === state.selectedOption ? 0 : -1" in script
     assert ".map {\n  position: absolute;" in stylesheet
@@ -482,3 +619,16 @@ def test_windows_launcher_contract_matches_current_health_and_public_cap() -> No
     assert '$Payload.service -eq "chargepath-demo"' in open_script
     assert "$Payload.api_version -eq 3" in open_script
     assert "[int]$PublicCandidateCap = 24" in start_script
+
+
+def test_windows_launcher_never_sends_coordinates_without_visible_consent() -> None:
+    open_script = OPEN_SCRIPT.read_text(encoding="utf-8")
+    common_script = (REPOSITORY_ROOT / "scripts/launcher_common.ps1").read_text(encoding="utf-8")
+
+    assert "Read-Host" in open_script
+    assert "--allow-remote-osrm" in open_script
+    assert "RedirectStandardError" in open_script
+    assert "Another or outdated process" not in open_script
+    assert "scripts/fetch_epdk_snapshot.py" in common_script
+    assert "2026-08-09" not in common_script
+    assert "2026-08-09" not in START_SCRIPT.read_text(encoding="utf-8")

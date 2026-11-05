@@ -17,8 +17,10 @@ ChargePath is a planning demonstration, not safety-certified navigation. It does
 
 ## Station data
 
-- The 2026-08-09 EPDK spike verified access and one observed schema, but quota, update cadence,
-  cross-snapshot identifier behavior, and redistribution conditions remain undocumented.
+- The 2026-08-09 EPDK spike verified access and one observed schema, and a 2026-11-05 response
+  still matched it. A later request that day returned HTTP 429, so a rate limit exists, but quota,
+  update cadence, cross-snapshot identifier behavior, and redistribution conditions remain
+  undocumented.
 - Static station presence does not prove availability, access, compatibility, price, or working status at arrival.
 - A coordinate can represent the site rather than the correct road entrance or carriageway.
 - The current public EPDK Swagger does not publish a response schema. The implemented ingestion layer

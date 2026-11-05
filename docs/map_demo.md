@@ -19,7 +19,8 @@ those road legs.
 
 ## What the UI shows
 
-- every unique feasible route option and all strategy aliases that selected it;
+- one tab per available strategy, the number of distinct plans, and every strategy alias that
+  selected the shown plan;
 - unavailable strategies without manufacturing a partial result;
 - selected route geometry and charging-stop markers;
 - driving, charging, total-time, and arrival-SOC estimates;
@@ -56,8 +57,10 @@ request. The optimizer has no one-stop or fixed stop-count rule, but this pool n
 plan to those 24 distinct station nodes. Candidate selection is prefix-monotonic and spreads that set
 across route progress while letting corridor quality resolve close coverage choices. In loopback OSRM
 mode, an infeasible capped search widens the same deterministic selection up to
-`--adaptive-candidate-cap-limit` (default: 200) before reporting no feasible route. The service never
-performs that automatic widening against a remote OSRM endpoint.
+`--adaptive-candidate-cap-limit` (default: 98, which fits `osrm-routed`'s default 100-location Table
+limit once the origin and destination are included) before reporting no feasible route. See
+[local OSRM setup](osrm_setup.md) to raise both limits together. The service never performs that
+automatic widening against a remote OSRM endpoint.
 
 The planner first evaluates the configured 5% SOC grid. If every route strategy is infeasible at that
 coarse resolution, it retries once at 2% and returns a `model_resolution` label with the response.
@@ -67,8 +70,12 @@ The real response and processed rows remain outside Git while redistribution sta
 The browser receives manifest freshness context and only the selected plan's station presentation;
 it does not receive the source snapshot or the full normalized station set.
 
-For this checkout's locally retained 2026-08-09 snapshot, the convenience launcher enables arbitrary
-map clicks. It uses loopback OSRM by default:
+A snapshot is retrieved once, on request, with `python scripts/fetch_epdk_snapshot.py`. The script
+performs no retry or polling and refuses to replace a snapshot from the same day. The service's quota
+is undocumented and it has returned HTTP 429 to a repeat request, so retrieve snapshots sparingly.
+
+The convenience launcher uses the newest complete local snapshot to enable arbitrary map clicks. It
+uses loopback OSRM by default:
 
 ```powershell
 .\scripts\start_custom_map.ps1
@@ -83,6 +90,18 @@ choice:
 
 The remote form warns that selected origin/destination coordinates leave the machine. It is a public
 demo dependency without a project-owned availability guarantee, not the default release path.
+
+## Double-click launcher
+
+`ChargePath.cmd` runs the server in the background and opens the browser. It uses `.venv` when present
+and otherwise any Python 3.11+ directly from `src/`. Without a local snapshot it opens the synthetic
+demo. With one, it asks in its console window before using the public OSRM server, and any answer other
+than yes opens the synthetic demo. If startup fails, it prints the server's error. The background
+server keeps running after the window closes; stop it with:
+
+```powershell
+Get-NetTCPConnection -LocalPort 8743 -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess }
+```
 
 ## Map and network boundary
 
@@ -113,6 +132,6 @@ internal tracebacks.
 ## Captured evidence
 
 The verified fixture flow is captured at
-[`docs/evidence/m4/fixture-primary.png`](evidence/m4/fixture-primary.png). The browser check exercised
-all three selectable options and separately forced tile failure, confirming that route paths, three
-markers, and the replay-verified explanation remained visible.
+[`docs/evidence/m4/fixture-primary.png`](evidence/m4/fixture-primary.png), recaptured from the current
+interface for 0.1.1. The earlier M4 browser check separately forced tile failure, confirming that route
+paths, three markers, and the replay-verified explanation remained visible.

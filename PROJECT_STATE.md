@@ -1,6 +1,6 @@
 # Project State
 
-Last updated: 2026-08-12
+Last updated: 2026-11-05
 
 ## Current milestone
 
@@ -18,11 +18,16 @@ M3 — Planner evaluation: **complete**
 
 M4 — Local map demo: **complete**
 
-M5 — Portfolio release: **complete; v0.1.0 external validation passed**
+M5 — Portfolio release: **complete; v0.1.0 published**
+
+v0.1.1 — Maintenance candidate: **prepared locally; not committed, pushed, or released**
+
+Dated evidence sections below describe the state when they were recorded. They are kept as history,
+so file counts, UI text, and CI status in them can be superseded by later sections.
 
 ## Confirmed decisions
 
-- Repository: `D:\kişisel projeler\03-ev-route-optimizer`
+- Repository: <https://github.com/EfeErim/chargepath-ev-route-optimizer>
 - Product: local portfolio project, not a commercial navigation service.
 - Problem class: single-EV resource-constrained shortest path with charging nodes.
 - Road boundary: OSRM supplies road-network legs; ChargePath selects charging sequence and amount.
@@ -68,8 +73,9 @@ Verified on 2026-08-05 with Python 3.11.9:
 
 ## Next milestone
 
-No unfinished product milestone remains. The v0.1.0 candidate is pushed and externally validated;
-the release tag and GitHub Release are the remaining publication actions.
+No unfinished product milestone remains, and v0.1.0 is published. The v0.1.1 maintenance candidate
+awaits explicit approval to commit, push, and release. A real-route evaluation is the most valuable
+next step, but it requires revising `PROJECT_PLAN.md` first.
 
 ## M1 evidence
 
@@ -490,11 +496,46 @@ the rerun passed both matrix jobs. See `docs/evidence/m5/ci-run-2026-08-12.md` f
 published GitHub Release for commit `629abcd335d41ec276851ade7ccebd1f90787cae`. Its public release
 record is captured in `docs/evidence/m5/github-release-2026-08-12.md`.
 
+## v0.1.1 maintenance candidate evidence
+
+Verified on 2026-11-05 on Windows x64. Nothing here is committed or published yet, and the remote CI
+matrix, including its new CPython 3.13.5 jobs, has not run on this candidate.
+
+- **Canonical gate — passed.** `powershell.exe -NoProfile -ExecutionPolicy Bypass -File
+  .\scripts\check.ps1` passed in new isolated CPython 3.11.9 and 3.13.5 environments: 129 tests,
+  byte-compilation, the offline demo, Ruff lint/format, strict mypy, `pip check`, wheel build/install
+  smoke, and the 88-file release audit. `optimizer.py`, `alternatives.py`, `verification.py`,
+  `energy.py`, and the M3 evidence are unchanged.
+- **OSRM Table limit — fixed; not run against a real OSRM.** Backend `v26.7.3` defaults
+  `--max-table-size` to 100, while widening from 50 to 100 candidates requested 102 locations and turned
+  an infeasible trip into a provider error. Failing tests first reproduced this with an offline client
+  enforcing that limit. The default widening limit is now 98. A `TooBig` refusal of a widened table
+  reports the last completed infeasible result; a refusal of the initial table stays a provider error.
+- **Clean-clone launcher — passed by direct execution.** Without `.venv`, `scripts/open_chargepath.ps1`
+  resolved a system Python and served fixture mode. An occupied port surfaced the server's real error.
+  With a snapshot and no consent it stayed in fixture mode. Explicit `-UsePublicOsrm` started integration
+  mode at cap 24, and `scripts/start_custom_map.ps1` started integration mode at cap 50 with coordinates
+  staying local. No plan was requested, so no coordinates were sent. The interactive `Read-Host` yes path
+  and a double-click of `ChargePath.cmd` itself were not exercised.
+- **EPDK retrieval — partly verified.** One `curl.exe` request returned HTTP 200 with 16,075,121 bytes:
+  17,100 sites, 49,964 sockets (49,963 accepted, 1 rejected for
+  `inconsistent_current_and_connector_type`), and 7,972 compatible CCS2 sites, under snapshot
+  `epdk-20261105-2a40d15eaa6e`. A later single request from `scripts/fetch_epdk_snapshot.py` returned
+  HTTP 429 and was not retried, so that script has not completed a live download. Its storage path was
+  run on the earlier response, and its request and 429 handling are tested offline. The cause of the 429
+  was not determined. All snapshot files used for these checks were removed from the checkout.
+- **UI labels and screenshot — passed.** A headless Edge run showed `4 strategies · 3 distinct plans` and
+  a shared `Fastest · Fewest charging stops` label. Its one console error was a 404 whose URL was not
+  captured; a favicon request is the likely source. `docs/evidence/m4/fixture-primary.png` was recaptured
+  at 1280×720 (399,551 bytes; SHA-256 `bbf74f0bd96760fd7784e7537bc0ad7450547ef3a1042f9ad671d5416afe1630`),
+  superseding the M4 image.
+
 ## Known risks
 
-- EPDK's endpoint and one observed schema were verified on 2026-08-09, but the public Swagger still
-  has no response definition; quota, source freshness, cross-snapshot identifier behavior, and
-  redistribution permission remain integration/release risks.
+- EPDK's endpoint and observed schema were verified on 2026-08-09 and 2026-11-05, but the public
+  Swagger still has no response definition. A rate limit exists (HTTP 429 observed on 2026-11-05)
+  with an undocumented quota; source freshness, cross-snapshot identifier behavior, and redistribution
+  permission remain integration/release risks.
 - A constant-consumption model can underestimate route energy under speed, grade, temperature, and
   weather variation.
 - Discrete SOC buckets may reject a narrowly feasible continuous solution.
@@ -506,7 +547,6 @@ record is captured in `docs/evidence/m5/github-release-2026-08-12.md`.
 
 ## Git state
 
-Independent repository is on `main`, tracking `origin/main`. All 84 allowlisted candidate files are
-committed; ignored environments, caches, raw/processed EPDK data, and generated package metadata
-remain outside the candidate. The final CI correction is green; v0.1.0 publication is in progress.
-The public v0.1.0 tag and GitHub Release are published.
+Independent repository is on `main`, tracking `origin/main`. The public v0.1.0 tag and GitHub Release
+are published. The v0.1.1 candidate is uncommitted in the working tree. Ignored environments, caches,
+raw/processed EPDK data, and generated package metadata remain outside the candidate.
