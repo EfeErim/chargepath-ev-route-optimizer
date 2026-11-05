@@ -1,6 +1,6 @@
 # Third-party notices
 
-ChargePath 0.1.0 has no third-party Python runtime package dependency. The standard-library server
+ChargePath 0.1.1 has no third-party Python runtime package dependency. The standard-library server
 loads the following optional browser or provider components at runtime; none of their source or data
 is copied into the release.
 

@@ -35,6 +35,7 @@ from chargepath.providers.osrm import (
     Coordinate,
     OsrmHttpClient,
     OsrmProviderError,
+    OsrmResponseError,
     fetch_selected_plans_geometry,
 )
 from chargepath.providers.static import StaticRoadNetwork
@@ -50,7 +51,10 @@ DEFAULT_TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
 TILE_ATTRIBUTION = "© OpenStreetMap contributors"
 SOC_STEP_PCT = 5
 REFINED_SOC_STEP_PCT = 2
-DEFAULT_ADAPTIVE_CANDIDATE_CAP_LIMIT = 200
+# osrm-routed rejects larger Table requests unless it is started with a higher --max-table-size.
+OSRM_DEFAULT_MAX_TABLE_LOCATIONS = 100
+# The Table request also carries the origin and destination.
+DEFAULT_ADAPTIVE_CANDIDATE_CAP_LIMIT = OSRM_DEFAULT_MAX_TABLE_LOCATIONS - 2
 HEALTH_API_VERSION = 3
 
 
@@ -420,6 +424,7 @@ class IntegrationPlanningService:
         int,
     ]:
         selected = initial_selection
+        last_infeasible: NoFeasibleRouteError | None = None
         while True:
             candidate_options = tuple(candidate.option for candidate in selected.candidates)
             nodes = (
@@ -433,7 +438,13 @@ class IntegrationPlanningService:
                 ),
                 CandidateNode("destination", destination),
             )
-            graph = CandidateGraphBuilder(self._client).build(nodes)
+            try:
+                graph = CandidateGraphBuilder(self._client).build(nodes)
+            except OsrmResponseError as error:
+                # A widened table the provider refuses leaves the last search's result standing.
+                if error.code != "TooBig" or last_infeasible is None:
+                    raise
+                raise last_infeasible from error
             stations = {option.station.id: option.station for option in candidate_options}
             try:
                 result, soc_step_pct = _plan_with_soc_refinement(
@@ -443,7 +454,8 @@ class IntegrationPlanningService:
                     stations=stations,
                     road_network=graph,
                 )
-            except NoFeasibleRouteError:
+            except NoFeasibleRouteError as error:
+                last_infeasible = error
                 next_cap = _next_candidate_cap(
                     selected=selected,
                     cap_limit=self._adaptive_candidate_cap_limit,

@@ -1,8 +1,13 @@
 import hashlib
+import importlib.util
 import json
+import urllib.error
 from dataclasses import replace
+from datetime import UTC, datetime
+from email.message import Message
 from pathlib import Path
-from typing import cast
+from types import ModuleType, TracebackType
+from typing import Any, cast
 
 import pytest
 
@@ -447,3 +452,80 @@ def test_corridor_precomputes_route_lengths_once(
 
     assert len(result.candidates) == 5
     assert calls == len(route.coordinates) - 1
+
+
+def _fetch_script() -> ModuleType:
+    path = Path(__file__).resolve().parents[1] / "scripts/fetch_epdk_snapshot.py"
+    spec = importlib.util.spec_from_file_location("fetch_epdk_snapshot", path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+class _FakeResponse:
+    status = 200
+
+    def __init__(self, body: bytes) -> None:
+        self._body = body
+
+    def __enter__(self) -> "_FakeResponse":
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
+        return None
+
+    def read(self, limit: int) -> bytes:
+        return self._body[:limit]
+
+
+def test_fetch_makes_one_get_request_with_the_observed_empty_json_body() -> None:
+    requests: list[Any] = []
+
+    def opener(request: Any, *, timeout: int) -> _FakeResponse:
+        requests.append(request)
+        assert timeout > 0
+        return _FakeResponse(b"{}")
+
+    status, body = _fetch_script().fetch_response(opener=opener)
+
+    assert (status, body) == (200, b"{}")
+    assert len(requests) == 1
+    assert requests[0].get_method() == "GET"
+    assert requests[0].data == b"{}"
+    assert requests[0].full_url == EPDK_SOURCE_URL
+
+
+def test_fetch_reports_a_rate_limit_status_without_a_body_or_retry() -> None:
+    calls = 0
+
+    def opener(request: Any, *, timeout: int) -> _FakeResponse:
+        nonlocal calls
+        calls += 1
+        raise urllib.error.HTTPError(EPDK_SOURCE_URL, 429, "Too Many Requests", Message(), None)
+
+    assert _fetch_script().fetch_response(opener=opener) == (429, b"")
+    assert calls == 1
+
+
+def test_stored_snapshot_gets_a_matching_manifest_and_is_never_replaced(tmp_path: Path) -> None:
+    source = Path(__file__).parent / "fixtures/epdk/observed_v1/synthetic_response.json"
+    body = source.read_bytes()
+    retrieved_at = datetime(2026, 11, 5, 12, 0, tzinfo=UTC)
+    script = _fetch_script()
+
+    raw_path, manifest_path = script.store_snapshot(
+        root=tmp_path, status=200, body=body, retrieved_at=retrieved_at
+    )
+
+    assert raw_path == tmp_path / "data/raw/epdk/2026-11-05/response.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert manifest["response_sha256"] == hashlib.sha256(body).hexdigest()
+    assert manifest["reuse_status"] == "pending_verification"
+    with pytest.raises(FileExistsError):
+        script.store_snapshot(root=tmp_path, status=200, body=body, retrieved_at=retrieved_at)

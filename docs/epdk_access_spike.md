@@ -57,7 +57,7 @@ and schema drift without internet access.
 | Official access | HTTP 200 from the endpoint listed by EPDK | Acquisition remains an explicit operational step, never a unit-test dependency. |
 | Request/filter behavior | `{}` returned one 16,539-row response; Swagger advertises filter fields | Pagination is not declared. Filters were not exhaustively probed to avoid unnecessary requests. |
 | Response schema | Observed and checksum-pinned; Swagger has no response model | Exact envelope and row/socket fields are fixture-tested and unreviewed drift fails closed. |
-| Quota/retry | No official quota or retry contract was found | No automatic retries or bulk polling are implemented. `quota_status` remains unknown. |
+| Quota/retry | No official quota or retry contract was found. On 2026-11-05 one request returned HTTP 200 and a later request from the same machine returned HTTP 429, so a rate limit exists | No automatic retries or bulk polling are implemented. The quota's size and window, and `quota_status`, remain unknown. |
 | Freshness/update cadence | No source timestamp was present in the response | Freshness remains `unknown_not_supplied_by_response`; retrieval time is not substituted for source freshness. |
 | Reuse/redistribution | Public access was confirmed, but an explicit redistribution licence was not found | `reuse_status` remains `pending_verification`; no real raw or normalized row is committed. |
 | Stable identifiers | Station and socket identifier fields were observed in one snapshot | They are retained verbatim, but cross-snapshot update/deletion stability remains unproven. |

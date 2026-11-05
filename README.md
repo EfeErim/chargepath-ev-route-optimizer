@@ -2,20 +2,22 @@
 
 ChargePath is a local-first portfolio project that chooses feasible charging stops and charging amounts for a single battery-electric car, while delegating road-network geometry to a configured OpenStreetMap routing engine.
 
-> **Status:** M0 through M5 are complete; 0.1.0 has passed the exact Windows and Ubuntu CI matrix. The deterministic optimization core, competitive route
+> **Status:** M0 through M5 are complete and [v0.1.0](https://github.com/EfeErim/chargepath-ev-route-optimizer/releases/tag/v0.1.0) is published. The deterministic optimization core, competitive route
 > options, independent replay, schema-versioned synthetic demo, explicit OSRM route/table adapter,
 > observed-schema EPDK normalizer, static public CCS2 DC projection, and deterministic corridor
 > selector are runnable. The fixture-first loopback Leaflet demo exposes verified route options,
-> charging actions, and estimated SOC without requiring OSRM or EPDK network access. Final M5 status
-> is independently verified by the [published CI run](https://github.com/EfeErim/chargepath-ev-route-optimizer/actions/runs/31600469029).
+> charging actions, and estimated SOC without requiring OSRM or EPDK network access. M5 was
+> independently verified by the [published CI run](https://github.com/EfeErim/chargepath-ev-route-optimizer/actions/runs/31600469029).
 
 ## Demo
 
-Windows'ta tek tıkla açmak için kökteki `ChargePath.cmd` dosyasına çift tıklayın. Bu başlatıcı
-halka açık OSRM modunu arka planda çalıştırır ve uygulamayı doğru yerel adreste tarayıcıda açar.
-`src/chargepath/web/index.html` tek başına açılmaz; sayfa planlama API'sini yerel sunucudan alır.
+On Windows, double-click `ChargePath.cmd` in the repository root. It needs only Python 3.11 or newer
+and opens the offline synthetic demo in your browser. If a local EPDK snapshot exists, it first asks
+whether your selected coordinates may be sent to the public OSRM demo server; any answer other than
+yes opens the synthetic demo. `src/chargepath/web/index.html` does not work on its own because the
+page gets its plans from the local server.
 
-Start the local map demo and open `http://127.0.0.1:8743`:
+From a configured environment, start the same demo and open `http://127.0.0.1:8743`:
 
 ```powershell
 python -m chargepath.demo
@@ -27,9 +29,16 @@ selectable verified route options, charging actions, estimated SOC, explicit sta
 an inspectable route even when the basemap is unavailable. See the [map demo guide](docs/map_demo.md)
 for integration-mode inputs and network boundaries.
 
-To select arbitrary origin and destination points in this checkout, start the explicit integration
-launcher. It uses local OSRM by default; `-UsePublicOsrm` is an explicit remote-provider opt-in that
-warns before selected coordinates leave the machine:
+To select arbitrary origin and destination points, first retrieve a station snapshot. Real station
+rows are not distributed with this repository, so the script makes one request to the official
+service and stores the response under the Git-ignored data directories:
+
+```powershell
+python scripts/fetch_epdk_snapshot.py
+```
+
+Then start the explicit integration launcher. It uses local OSRM by default; `-UsePublicOsrm` is an
+explicit remote-provider opt-in that warns before selected coordinates leave the machine:
 
 ```powershell
 .\scripts\start_custom_map.ps1 -UsePublicOsrm
@@ -67,8 +76,10 @@ strategies. Every returned option includes:
 - driving, charging, and total trip time; and
 - an explicit infeasible result when the reserve constraint cannot be satisfied.
 
-Different strategies may select the same actionable plan. In that case the plan appears once with
-multiple strategy aliases; the project does not manufacture cosmetic alternatives.
+Different strategies may select the same actionable plan. The planner then returns it once with
+multiple strategy aliases, and the project does not manufacture cosmetic alternatives. The map UI
+keeps one tab per strategy so each objective can be inspected, labels a shared plan with every
+strategy that selected it, and states how many distinct plans exist.
 
 ## Architecture
 
@@ -137,8 +148,8 @@ synthetic-suite result, not a real-world superiority claim. See the
 
 ## Setup
 
-The reviewed release environments are CPython 3.11.9 on Windows 2025 and Ubuntu 24.04 x64. Create a
-fresh environment and install the exact verification graph.
+The reviewed release environments are CPython 3.11.9 and 3.13.5 on Windows 2025 and Ubuntu 24.04
+x64. Create a fresh environment and install the exact verification graph.
 
 Windows PowerShell:
 
@@ -189,8 +200,7 @@ MIT/third-party notices, installs it non-editably into a new environment, and ru
 from outside the repository.
 
 The commands above are locally verified on Windows. The checked-in CI uses the same gate on the exact
-`windows-2025` and `ubuntu-24.04` runner labels; green remote results are not claimed before the
-candidate is explicitly committed and published. See the [release evidence and procedure](docs/release.md).
+`windows-2025` and `ubuntu-24.04` runner labels. See the [release evidence and procedure](docs/release.md).
 
 Optional self-hosted OSRM setup and its loopback-default boundary are documented in
 [local OSRM setup](docs/osrm_setup.md). Explicit map integration configuration is documented in the
@@ -208,8 +218,9 @@ require OSRM or EPDK network access.
   third-party requests.
 - The energy model uses constant consumption with a configurable safety factor; elevation, weather, speed, temperature, and regenerative braking are not modeled.
 - Charging power is a simplified piecewise curve, not a vehicle-specific measured curve.
-- EPDK access and one observed schema were verified on 2026-08-09; quota, source freshness,
-  cross-snapshot identifier behavior, and data-reuse conditions remain explicitly unresolved.
+- EPDK access and the observed schema were verified on 2026-08-09 and again on 2026-11-05, when a
+  later request the same day returned HTTP 429. The quota is undocumented; source freshness,
+  cross-snapshot identifier behavior, and data-reuse conditions also remain unresolved.
 - The first release models CCS2 DC charging only.
 - No live occupancy, outage, price, traffic, or route replanning is claimed.
 - A discrete SOC grid trades precision for a small and explainable state space. The demo first uses
@@ -233,9 +244,9 @@ See [limitations](docs/limitations.md) for the full boundary.
   median/p95 runtime evidence.
 - **M4 — Map demo (complete):** loopback-only fixture-first Leaflet interface, explicit static-data
   and estimate labels, selectable route options, failure states, and captured UI evidence.
-- **M5 — Portfolio release candidate:** clean install, pinned cross-platform CI, evidence, final
-  README/media, licensing/attribution, and a fail-closed release-content audit. Publication and remote
-  CI remain approval-gated.
+- **M5 — Portfolio release (complete):** clean install, pinned cross-platform CI, evidence, final
+  README/media, licensing/attribution, a fail-closed release-content audit, and the published v0.1.0
+  release.
 
 Detailed gates are in [PROJECT_PLAN.md](PROJECT_PLAN.md); current evidence is in [PROJECT_STATE.md](PROJECT_STATE.md).
 
