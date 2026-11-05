@@ -22,7 +22,7 @@ M5 — Portfolio release: **complete; v0.1.0 published**
 
 v0.1.1 — Maintenance release: **CI green; tagged from the commit that records this result**
 
-M6 — Real-route evaluation: **in progress; M6.0 complete, M6.1 not started**
+M6 — Real-route evaluation: **in progress; M6.0 and M6.1 complete, M6.2 not started**
 
 Dated evidence sections below describe the state when they were recorded. They are kept as history,
 so file counts, UI text, and CI status in them can be superseded by later sections.
@@ -75,9 +75,9 @@ Verified on 2026-08-05 with Python 3.11.9:
 
 ## Next milestone
 
-M6 — Real-route evaluation, defined in `PROJECT_PLAN.md`. The M6.0 infrastructure spike is complete.
-The next step is M6.1, the frozen benchmark manifest, which must be committed before any evaluation
-run.
+M6 — Real-route evaluation, defined in `PROJECT_PLAN.md`. The M6.0 infrastructure spike and the M6.1
+frozen manifest are complete. The next step is M6.2, the collection and evaluation tooling. No
+evaluation run has happened.
 
 ## M1 evidence
 
@@ -598,6 +598,37 @@ Limits of this evidence:
 - A `--max-table-size 202` server, which E3 needs, has not been started.
 - Only `tests/test_demo.py`, `tests/test_osrm.py`, and `tests/test_station_data.py` were rerun (74
   passed). No source code changed, and the full repository gate was not run for this step.
+
+## M6.1 frozen manifest evidence
+
+Prepared on 2026-11-05. `data/benchmarks/m6/v1/manifest.json` is committed before any evaluation run; no
+planner strategy has run on these routes.
+
+- **Reproducible selection — passed.** `scripts/build_m6_manifest.py` measured an 81-province road table
+  on local OSRM and applied `select_routes`. It reads only province metadata and road distances, so it
+  cannot depend on station data or planner output. `tests/test_real_route_benchmark.py` reproduces the
+  committed routes offline from the stored distances and checks their checksums.
+- **Route contract — passed.** 24 routes: six in each of the 150–300, 300–600, 600–1000, and over 1000 km
+  bands. Each band reserves its first two slots for routes touching Doğu or Güneydoğu Anadolu. Pairs are
+  ranked by `sha256(chargepath-m6-v1|origin_plate|destination_plate)`, and a province appears at most
+  twice.
+- **Endpoints — audited.** The 81 centers are project-authored approximate values rounded to 0.01 degree.
+  Every point snapped to a road within 188 m (median 14 m), and no pair was unreachable. As a one-time
+  check, the median position of stations whose address names the province was a median of 3.4 km from
+  the center. The largest differences (Muğla 64.7 km, Aydın 38.5 km, Hatay 36.7 km) are all below 65 km.
+  The first Van value of 741.4 km was a false substring match; a word-boundary match agreed with the
+  center. This audit was not committed as a repeatable test.
+- **Experiments and parameter sets — passed.** The manifest declares the three parameter sets and E1–E6
+  with every value and route subset, and a test compares them with `PROJECT_PLAN.md`.
+- **Decisions the plan left open.** E5 uses `set-60kwh` as its base. Its eight routes are slots 0 and 2 of
+  each band. The evaluation does not use the demo's SOC-grid refinement or adaptive widening, so each
+  trip has exactly its declared grid, width, and cap.
+- **Boundary.** The stored road distances derive from OpenStreetMap and carry ODbL attribution. The
+  manifest contains no station row, name, coordinate, or source identifier.
+- **Checks — passed.** Rebuilding produced identical manifest bytes (SHA-256
+  `1c637e15d52fb053ac52d7721a4223b294927729cae6aa9bdb7d82724f76cadf`). `.\scripts\check.ps1` passed with
+  139 collected tests, byte-compilation, the offline demo, Ruff lint/format, strict mypy, `pip check`, the
+  wheel smoke, and the 94-file release audit, with no OSRM server running.
 
 ## Known risks
 

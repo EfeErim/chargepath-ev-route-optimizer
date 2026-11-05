@@ -1,0 +1,869 @@
+{
+  "attribution": "Road distances derive from OpenStreetMap data, © OpenStreetMap contributors, ODbL.",
+  "benchmark_id": "chargepath-m6-real-route-v1",
+  "decision_question": "Under one frozen road graph and station snapshot, how much modeled trip time does exact optimization save over the fixed-80 greedy strategy, and how much do that result and feasibility depend on the SOC grid, the candidate cap, and the vehicle inputs?",
+  "experiments": {
+    "E1": {
+      "algorithms": [
+        "shortest_driving_time",
+        "fastest",
+        "shortest_distance",
+        "fewest_charging_stops",
+        "greedy_fixed_80"
+      ],
+      "candidate_cap": 50,
+      "corridor_width_km": 25,
+      "name": "Strategy comparison",
+      "parameter_sets": [
+        "set-40kwh",
+        "set-60kwh",
+        "set-80kwh"
+      ],
+      "routes": [
+        "m6-r01",
+        "m6-r02",
+        "m6-r03",
+        "m6-r04",
+        "m6-r05",
+        "m6-r06",
+        "m6-r07",
+        "m6-r08",
+        "m6-r09",
+        "m6-r10",
+        "m6-r11",
+        "m6-r12",
+        "m6-r13",
+        "m6-r14",
+        "m6-r15",
+        "m6-r16",
+        "m6-r17",
+        "m6-r18",
+        "m6-r19",
+        "m6-r20",
+        "m6-r21",
+        "m6-r22",
+        "m6-r23",
+        "m6-r24"
+      ],
+      "soc_step_pct": 5
+    },
+    "E2": {
+      "candidate_cap": 50,
+      "corridor_width_km": 25,
+      "name": "SOC grid",
+      "parameter_sets": [
+        "set-40kwh",
+        "set-60kwh",
+        "set-80kwh"
+      ],
+      "routes": [
+        "m6-r01",
+        "m6-r02",
+        "m6-r03",
+        "m6-r04",
+        "m6-r05",
+        "m6-r06",
+        "m6-r07",
+        "m6-r08",
+        "m6-r09",
+        "m6-r10",
+        "m6-r11",
+        "m6-r12",
+        "m6-r13",
+        "m6-r14",
+        "m6-r15",
+        "m6-r16",
+        "m6-r17",
+        "m6-r18",
+        "m6-r19",
+        "m6-r20",
+        "m6-r21",
+        "m6-r22",
+        "m6-r23",
+        "m6-r24"
+      ],
+      "soc_step_pct": [
+        10,
+        5,
+        2
+      ]
+    },
+    "E3": {
+      "candidate_cap": [
+        12,
+        24,
+        50,
+        98,
+        200
+      ],
+      "corridor_width_km": 25,
+      "name": "Candidate cap",
+      "parameter_sets": [
+        "set-60kwh"
+      ],
+      "reference": "Cap 200 is the reference for the cap gap; it is not a global optimum.",
+      "routes": [
+        "m6-r01",
+        "m6-r02",
+        "m6-r03",
+        "m6-r04",
+        "m6-r05",
+        "m6-r06",
+        "m6-r07",
+        "m6-r08",
+        "m6-r09",
+        "m6-r10",
+        "m6-r11",
+        "m6-r12",
+        "m6-r13",
+        "m6-r14",
+        "m6-r15",
+        "m6-r16",
+        "m6-r17",
+        "m6-r18",
+        "m6-r19",
+        "m6-r20",
+        "m6-r21",
+        "m6-r22",
+        "m6-r23",
+        "m6-r24"
+      ],
+      "server_requirement": "cap 200 needs osrm-routed --max-table-size 202",
+      "soc_step_pct": 5
+    },
+    "E4": {
+      "candidate_cap": 50,
+      "corridor_width_km": [
+        10,
+        25,
+        50
+      ],
+      "name": "Corridor width",
+      "parameter_sets": [
+        "set-60kwh"
+      ],
+      "routes": [
+        "m6-r01",
+        "m6-r02",
+        "m6-r03",
+        "m6-r04",
+        "m6-r05",
+        "m6-r06",
+        "m6-r07",
+        "m6-r08",
+        "m6-r09",
+        "m6-r10",
+        "m6-r11",
+        "m6-r12",
+        "m6-r13",
+        "m6-r14",
+        "m6-r15",
+        "m6-r16",
+        "m6-r17",
+        "m6-r18",
+        "m6-r19",
+        "m6-r20",
+        "m6-r21",
+        "m6-r22",
+        "m6-r23",
+        "m6-r24"
+      ],
+      "soc_step_pct": 5
+    },
+    "E5": {
+      "base_parameter_set": "set-60kwh",
+      "candidate_cap": 50,
+      "corridor_width_km": 25,
+      "factors": {
+        "consumption_kwh_per_100km": [
+          14.4,
+          18,
+          21.6
+        ],
+        "energy_safety_factor": [
+          1.0,
+          1.1,
+          1.25
+        ],
+        "initial_soc_pct": [
+          50,
+          80,
+          100
+        ],
+        "max_dc_power_kw": [
+          50,
+          150,
+          250
+        ],
+        "reserve_soc_pct": [
+          5,
+          10,
+          20
+        ],
+        "usable_battery_kwh": [
+          40,
+          60,
+          80
+        ]
+      },
+      "name": "Vehicle inputs, one factor at a time",
+      "routes": [
+        "m6-r01",
+        "m6-r03",
+        "m6-r07",
+        "m6-r09",
+        "m6-r13",
+        "m6-r15",
+        "m6-r19",
+        "m6-r21"
+      ],
+      "soc_step_pct": 5
+    },
+    "E6": {
+      "inputs": "E1",
+      "name": "Runtime",
+      "repetitions": 20,
+      "summary": [
+        "median",
+        "p95"
+      ],
+      "timing": "planner and OSRM timed separately",
+      "warmups": 3
+    }
+  },
+  "freeze_policy": "Committed before the first evaluation run. Routes are not added, removed, or replaced after that run. A snap, routing, or infeasibility failure is a reported outcome. Any correction creates a new manifest version and keeps the old results.",
+  "frozen_inputs": {
+    "provinces_sha256": "42d2a26f7ecff2e54a540aa827564c99cb6c63c7339b8e78ea2159f416e65270",
+    "road_graph": {
+      "bytes": 652637317,
+      "data_version": "geofabrik-turkey-20261104-794874509924",
+      "last_modified": "2026-11-04T11:15:16Z",
+      "osrm_algorithm": "CH",
+      "osrm_backend": "v26.7.3",
+      "osrm_commit": "0844e3af77896d11998ef6db356a553056652c8e",
+      "profile": "car.lua",
+      "profile_sha256_lf": "48bbb716c2b68ce6803a11a4151fcac050c6ea8240295e7dde111f15f8bd3984",
+      "sha256": "794874509924396187de1c9f1f63ce4fb4a306a4e09d089786db79d7e7bffc11",
+      "source": "Geofabrik turkey-latest.osm.pbf"
+    },
+    "selection_distances_sha256": "94530117ead0c7ee61e7d49171da488c59107a938b21a416b73c1f7f94bc8d16",
+    "station_snapshot": {
+      "retrieved_at": "2026-11-05T13:43:42Z",
+      "reuse_status": "pending_verification",
+      "sha256": "bb01ff406b8636b98e634a071761fff440c12ea310678d8a3d8efef69baa7986",
+      "snapshot_id": "epdk-20261105-bb01ff406b86",
+      "stored_in_repository": false
+    }
+  },
+  "manifest_version": 1,
+  "metrics": [
+    "feasibility_rate",
+    "valid_plan_rate",
+    "reserve_violations",
+    "total_time_minutes",
+    "charging_time_minutes",
+    "charging_stops",
+    "detour_distance_km",
+    "distinct_options",
+    "greedy_failure_rate",
+    "soc_grid_gap",
+    "candidate_cap_gap",
+    "exact_vs_greedy_savings_minutes_and_percent"
+  ],
+  "outcome_classes": [
+    "plan",
+    "infeasible",
+    "provider_failure"
+  ],
+  "parameter_sets": {
+    "note": "Declared parameter sets, not claims about any real car.",
+    "set-40kwh": {
+      "consumption_kwh_per_100km": 16,
+      "energy_safety_factor": 1.1,
+      "initial_soc_pct": 80,
+      "max_dc_power_kw": 50,
+      "reserve_soc_pct": 10,
+      "usable_battery_kwh": 40
+    },
+    "set-60kwh": {
+      "consumption_kwh_per_100km": 18,
+      "energy_safety_factor": 1.1,
+      "initial_soc_pct": 80,
+      "max_dc_power_kw": 150,
+      "reserve_soc_pct": 10,
+      "usable_battery_kwh": 60
+    },
+    "set-80kwh": {
+      "consumption_kwh_per_100km": 20,
+      "energy_safety_factor": 1.1,
+      "initial_soc_pct": 80,
+      "max_dc_power_kw": 250,
+      "reserve_soc_pct": 10,
+      "usable_battery_kwh": 80
+    }
+  },
+  "result_boundary": "Modeled minutes on one OSM extract, one static snapshot, and declared parameter sets. Not real-world SOC accuracy, arrival time, or charger availability.",
+  "routes": [
+    {
+      "band": "150-300",
+      "destination": {
+        "latitude": 40.91,
+        "longitude": 38.39,
+        "name": "Giresun",
+        "plate": 28,
+        "region": "Karadeniz"
+      },
+      "eastern": true,
+      "id": "m6-r01",
+      "origin": {
+        "latitude": 39.75,
+        "longitude": 39.49,
+        "name": "Erzincan",
+        "plate": 24,
+        "region": "Doğu Anadolu"
+      },
+      "selection_road_km": 288.5,
+      "slot": 0
+    },
+    {
+      "band": "150-300",
+      "destination": {
+        "latitude": 37.88,
+        "longitude": 41.13,
+        "name": "Batman",
+        "plate": 72,
+        "region": "Güneydoğu Anadolu"
+      },
+      "eastern": true,
+      "id": "m6-r02",
+      "origin": {
+        "latitude": 37.16,
+        "longitude": 38.79,
+        "name": "Şanlıurfa",
+        "plate": 63,
+        "region": "Güneydoğu Anadolu"
+      },
+      "selection_road_km": 270.2,
+      "slot": 1
+    },
+    {
+      "band": "150-300",
+      "destination": {
+        "latitude": 37.22,
+        "longitude": 28.36,
+        "name": "Muğla",
+        "plate": 48,
+        "region": "Ege"
+      },
+      "eastern": false,
+      "id": "m6-r03",
+      "origin": {
+        "latitude": 37.76,
+        "longitude": 30.55,
+        "name": "Isparta",
+        "plate": 32,
+        "region": "Akdeniz"
+      },
+      "selection_road_km": 272.1,
+      "slot": 2
+    },
+    {
+      "band": "150-300",
+      "destination": {
+        "latitude": 39.85,
+        "longitude": 33.52,
+        "name": "Kırıkkale",
+        "plate": 71,
+        "region": "İç Anadolu"
+      },
+      "eastern": false,
+      "id": "m6-r04",
+      "origin": {
+        "latitude": 40.55,
+        "longitude": 34.95,
+        "name": "Çorum",
+        "plate": 19,
+        "region": "Karadeniz"
+      },
+      "selection_road_km": 165.6,
+      "slot": 3
+    },
+    {
+      "band": "150-300",
+      "destination": {
+        "latitude": 37.22,
+        "longitude": 28.36,
+        "name": "Muğla",
+        "plate": 48,
+        "region": "Ege"
+      },
+      "eastern": false,
+      "id": "m6-r05",
+      "origin": {
+        "latitude": 38.42,
+        "longitude": 27.14,
+        "name": "İzmir",
+        "plate": 35,
+        "region": "Ege"
+      },
+      "selection_road_km": 208.0,
+      "slot": 4
+    },
+    {
+      "band": "150-300",
+      "destination": {
+        "latitude": 42.03,
+        "longitude": 35.15,
+        "name": "Sinop",
+        "plate": 57,
+        "region": "Karadeniz"
+      },
+      "eastern": false,
+      "id": "m6-r06",
+      "origin": {
+        "latitude": 41.38,
+        "longitude": 33.78,
+        "name": "Kastamonu",
+        "plate": 37,
+        "region": "Karadeniz"
+      },
+      "selection_road_km": 183.1,
+      "slot": 5
+    },
+    {
+      "band": "300-600",
+      "destination": {
+        "latitude": 39.92,
+        "longitude": 44.05,
+        "name": "Iğdır",
+        "plate": 76,
+        "region": "Doğu Anadolu"
+      },
+      "eastern": true,
+      "id": "m6-r07",
+      "origin": {
+        "latitude": 37.52,
+        "longitude": 42.46,
+        "name": "Şırnak",
+        "plate": 73,
+        "region": "Güneydoğu Anadolu"
+      },
+      "selection_road_km": 523.5,
+      "slot": 0
+    },
+    {
+      "band": "300-600",
+      "destination": {
+        "latitude": 38.73,
+        "longitude": 41.49,
+        "name": "Muş",
+        "plate": 49,
+        "region": "Doğu Anadolu"
+      },
+      "eastern": true,
+      "id": "m6-r08",
+      "origin": {
+        "latitude": 41.18,
+        "longitude": 41.82,
+        "name": "Artvin",
+        "plate": 8,
+        "region": "Karadeniz"
+      },
+      "selection_road_km": 395.2,
+      "slot": 1
+    },
+    {
+      "band": "300-600",
+      "destination": {
+        "latitude": 38.37,
+        "longitude": 34.03,
+        "name": "Aksaray",
+        "plate": 68,
+        "region": "İç Anadolu"
+      },
+      "eastern": false,
+      "id": "m6-r09",
+      "origin": {
+        "latitude": 40.6,
+        "longitude": 33.62,
+        "name": "Çankırı",
+        "plate": 18,
+        "region": "İç Anadolu"
+      },
+      "selection_road_km": 325.5,
+      "slot": 2
+    },
+    {
+      "band": "300-600",
+      "destination": {
+        "latitude": 37.18,
+        "longitude": 33.22,
+        "name": "Karaman",
+        "plate": 70,
+        "region": "İç Anadolu"
+      },
+      "eastern": false,
+      "id": "m6-r10",
+      "origin": {
+        "latitude": 38.68,
+        "longitude": 29.41,
+        "name": "Uşak",
+        "plate": 64,
+        "region": "Ege"
+      },
+      "selection_road_km": 449.3,
+      "slot": 3
+    },
+    {
+      "band": "300-600",
+      "destination": {
+        "latitude": 41.2,
+        "longitude": 32.62,
+        "name": "Karabük",
+        "plate": 78,
+        "region": "Karadeniz"
+      },
+      "eastern": false,
+      "id": "m6-r11",
+      "origin": {
+        "latitude": 37.76,
+        "longitude": 30.55,
+        "name": "Isparta",
+        "plate": 32,
+        "region": "Akdeniz"
+      },
+      "selection_road_km": 581.1,
+      "slot": 4
+    },
+    {
+      "band": "300-600",
+      "destination": {
+        "latitude": 38.42,
+        "longitude": 27.14,
+        "name": "İzmir",
+        "plate": 35,
+        "region": "Ege"
+      },
+      "eastern": false,
+      "id": "m6-r12",
+      "origin": {
+        "latitude": 39.78,
+        "longitude": 30.52,
+        "name": "Eskişehir",
+        "plate": 26,
+        "region": "İç Anadolu"
+      },
+      "selection_road_km": 417.0,
+      "slot": 5
+    },
+    {
+      "band": "600-1000",
+      "destination": {
+        "latitude": 36.72,
+        "longitude": 37.12,
+        "name": "Kilis",
+        "plate": 79,
+        "region": "Güneydoğu Anadolu"
+      },
+      "eastern": true,
+      "id": "m6-r13",
+      "origin": {
+        "latitude": 40.91,
+        "longitude": 38.39,
+        "name": "Giresun",
+        "plate": 28,
+        "region": "Karadeniz"
+      },
+      "selection_road_km": 743.1,
+      "slot": 0
+    },
+    {
+      "band": "600-1000",
+      "destination": {
+        "latitude": 39.85,
+        "longitude": 33.52,
+        "name": "Kırıkkale",
+        "plate": 71,
+        "region": "İç Anadolu"
+      },
+      "eastern": true,
+      "id": "m6-r14",
+      "origin": {
+        "latitude": 37.93,
+        "longitude": 41.94,
+        "name": "Siirt",
+        "plate": 56,
+        "region": "Güneydoğu Anadolu"
+      },
+      "selection_road_km": 987.2,
+      "slot": 1
+    },
+    {
+      "band": "600-1000",
+      "destination": {
+        "latitude": 39.15,
+        "longitude": 34.16,
+        "name": "Kırşehir",
+        "plate": 40,
+        "region": "İç Anadolu"
+      },
+      "eastern": false,
+      "id": "m6-r15",
+      "origin": {
+        "latitude": 40.15,
+        "longitude": 26.41,
+        "name": "Çanakkale",
+        "plate": 17,
+        "region": "Marmara"
+      },
+      "selection_road_km": 939.4,
+      "slot": 2
+    },
+    {
+      "band": "600-1000",
+      "destination": {
+        "latitude": 39.42,
+        "longitude": 29.98,
+        "name": "Kütahya",
+        "plate": 43,
+        "region": "Ege"
+      },
+      "eastern": false,
+      "id": "m6-r16",
+      "origin": {
+        "latitude": 36.2,
+        "longitude": 36.16,
+        "name": "Hatay",
+        "plate": 31,
+        "region": "Akdeniz"
+      },
+      "selection_road_km": 849.0,
+      "slot": 3
+    },
+    {
+      "band": "600-1000",
+      "destination": {
+        "latitude": 41.38,
+        "longitude": 33.78,
+        "name": "Kastamonu",
+        "plate": 37,
+        "region": "Karadeniz"
+      },
+      "eastern": false,
+      "id": "m6-r17",
+      "origin": {
+        "latitude": 41.68,
+        "longitude": 26.56,
+        "name": "Edirne",
+        "plate": 22,
+        "region": "Marmara"
+      },
+      "selection_road_km": 754.9,
+      "slot": 4
+    },
+    {
+      "band": "600-1000",
+      "destination": {
+        "latitude": 37.88,
+        "longitude": 41.13,
+        "name": "Batman",
+        "plate": 72,
+        "region": "Güneydoğu Anadolu"
+      },
+      "eastern": true,
+      "id": "m6-r18",
+      "origin": {
+        "latitude": 39.82,
+        "longitude": 34.81,
+        "name": "Yozgat",
+        "plate": 66,
+        "region": "İç Anadolu"
+      },
+      "selection_road_km": 791.7,
+      "slot": 5
+    },
+    {
+      "band": "over-1000",
+      "destination": {
+        "latitude": 36.72,
+        "longitude": 37.12,
+        "name": "Kilis",
+        "plate": 79,
+        "region": "Güneydoğu Anadolu"
+      },
+      "eastern": true,
+      "id": "m6-r19",
+      "origin": {
+        "latitude": 39.65,
+        "longitude": 27.88,
+        "name": "Balıkesir",
+        "plate": 10,
+        "region": "Marmara"
+      },
+      "selection_road_km": 1333.1,
+      "slot": 0
+    },
+    {
+      "band": "over-1000",
+      "destination": {
+        "latitude": 41.63,
+        "longitude": 32.34,
+        "name": "Bartın",
+        "plate": 74,
+        "region": "Karadeniz"
+      },
+      "eastern": true,
+      "id": "m6-r20",
+      "origin": {
+        "latitude": 37.58,
+        "longitude": 43.74,
+        "name": "Hakkari",
+        "plate": 30,
+        "region": "Doğu Anadolu"
+      },
+      "selection_road_km": 1668.5,
+      "slot": 1
+    },
+    {
+      "band": "over-1000",
+      "destination": {
+        "latitude": 37.52,
+        "longitude": 42.46,
+        "name": "Şırnak",
+        "plate": 73,
+        "region": "Güneydoğu Anadolu"
+      },
+      "eastern": true,
+      "id": "m6-r21",
+      "origin": {
+        "latitude": 41.74,
+        "longitude": 27.22,
+        "name": "Kırklareli",
+        "plate": 39,
+        "region": "Marmara"
+      },
+      "selection_road_km": 1855.0,
+      "slot": 2
+    },
+    {
+      "band": "over-1000",
+      "destination": {
+        "latitude": 39.78,
+        "longitude": 30.52,
+        "name": "Eskişehir",
+        "plate": 26,
+        "region": "İç Anadolu"
+      },
+      "eastern": false,
+      "id": "m6-r22",
+      "origin": {
+        "latitude": 41.18,
+        "longitude": 41.82,
+        "name": "Artvin",
+        "plate": 8,
+        "region": "Karadeniz"
+      },
+      "selection_road_km": 1205.3,
+      "slot": 3
+    },
+    {
+      "band": "over-1000",
+      "destination": {
+        "latitude": 38.5,
+        "longitude": 43.38,
+        "name": "Van",
+        "plate": 65,
+        "region": "Doğu Anadolu"
+      },
+      "eastern": true,
+      "id": "m6-r23",
+      "origin": {
+        "latitude": 42.03,
+        "longitude": 35.15,
+        "name": "Sinop",
+        "plate": 57,
+        "region": "Karadeniz"
+      },
+      "selection_road_km": 1075.0,
+      "slot": 4
+    },
+    {
+      "band": "over-1000",
+      "destination": {
+        "latitude": 41.45,
+        "longitude": 31.8,
+        "name": "Zonguldak",
+        "plate": 67,
+        "region": "Karadeniz"
+      },
+      "eastern": true,
+      "id": "m6-r24",
+      "origin": {
+        "latitude": 38.4,
+        "longitude": 42.11,
+        "name": "Bitlis",
+        "plate": 13,
+        "region": "Doğu Anadolu"
+      },
+      "selection_road_km": 1202.0,
+      "slot": 5
+    }
+  ],
+  "savings_summary": {
+    "groups": [
+      "overall",
+      "per_distance_band"
+    ],
+    "population": "trips where both strategies return a plan",
+    "statistics": [
+      "median",
+      "p90",
+      "minimum",
+      "maximum"
+    ]
+  },
+  "selection_rule": {
+    "band_distance": "OSRM Table road distance from origin to destination, rounded to 0.1 km, on the graph with data_version geofabrik-turkey-20261104-794874509924",
+    "bands_km": [
+      {
+        "maximum_exclusive": 300.0,
+        "minimum_inclusive": 150.0,
+        "name": "150-300"
+      },
+      {
+        "maximum_exclusive": 600.0,
+        "minimum_inclusive": 300.0,
+        "name": "300-600"
+      },
+      {
+        "maximum_exclusive": 1000.0,
+        "minimum_inclusive": 600.0,
+        "name": "600-1000"
+      },
+      {
+        "maximum_exclusive": null,
+        "minimum_inclusive": 1000.0,
+        "name": "over-1000"
+      }
+    ],
+    "e5_subset": "slot 0 and slot 2 of each band",
+    "eastern_regions": [
+      "Doğu Anadolu",
+      "Güneydoğu Anadolu"
+    ],
+    "eastern_slots_per_band": 2,
+    "inputs_not_read": [
+      "station data",
+      "planner output"
+    ],
+    "max_routes_per_province": 2,
+    "orientation": "lower plate number is the origin",
+    "rank_key": "sha256(seed|origin_plate|destination_plate) ascending",
+    "routes_per_band": 6,
+    "seed": "chargepath-m6-v1"
+  },
+  "shared_configuration": {
+    "corridor_algorithm": "equirectangular-segment-farthest-progress-v3",
+    "planner_retries": "None. The demo's SOC-grid refinement and adaptive candidate widening are not used, so each trip has exactly its declared grid, width, and cap."
+  }
+}
