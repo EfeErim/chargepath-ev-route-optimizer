@@ -1,4 +1,4 @@
-# ChargePath 0.1.0 exact source-release allowlist. Keep sorted; no glob patterns.
+# ChargePath 0.1.1 exact source-release allowlist. Keep sorted; no glob patterns.
 .env.example
 .gitattributes
 .github/workflows/ci.yml
@@ -42,7 +42,9 @@ pyproject.toml
 scripts/audit_release.py
 scripts/check.ps1
 scripts/check_wheel.py
+scripts/fetch_epdk_snapshot.py
 scripts/inspect_epdk_snapshot.py
+scripts/launcher_common.ps1
 scripts/open_chargepath.ps1
 scripts/run_m3_benchmark.py
 scripts/start_custom_map.ps1

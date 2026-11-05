@@ -26,7 +26,7 @@ Read these before changing scope or declaring a milestone complete:
 - Mark every bundled sample as synthetic unless it is accompanied by source, retrieval time, and license/provenance metadata.
 - Use conservative energy rounding and enforce the reserve-SOC invariant on every driven leg.
 - Do not add a framework, database, frontend, or container until its milestone requires it.
-- Preserve unrelated dirty work under `D:\kişisel projeler`.
+- Preserve unrelated dirty work in this checkout and in neighboring projects.
 - Do not commit, push, tag, or publish without an explicit user request.
 
 ## Verification

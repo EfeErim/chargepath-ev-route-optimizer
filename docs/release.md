@@ -2,9 +2,9 @@
 
 ## Candidate identity
 
-- project version: `0.1.0`;
-- release candidate date: 2026-08-10;
-- Python: CPython 3.11.9;
+- project version: `0.1.1` (maintenance candidate; `0.1.0` is the published release);
+- release candidate date: 2026-11-05;
+- Python: CPython 3.11.9 and 3.13.5;
 - supported CI environments: `windows-2025` x64 and `ubuntu-24.04` x64;
 - Python runtime dependencies: none;
 - verification graph: [`constraints/release-py311.txt`](../constraints/release-py311.txt);
@@ -40,7 +40,7 @@ The Windows clean-install transcript is recorded in
 validated by the same repository gate in GitHub Actions; a local Windows result is not presented as
 Linux evidence.
 
-The canonical gate additionally builds the `0.1.0` wheel without build isolation, verifies that its
+The canonical gate additionally builds the `0.1.1` wheel without build isolation, verifies that its
 web assets, exact synthetic fixture, MIT license, and third-party notices are present, installs that
 wheel non-editably into another new environment, and loads the default fixture from outside the
 repository. Generated wheel and environment files remain temporary and are not release-source files.
@@ -89,7 +89,16 @@ passed the canonical gate on both `ubuntu-24.04` and `windows-2025` in [GitHub A
 The immutable run and job URLs are also recorded in
 [`docs/evidence/m5/ci-run-2026-08-12.md`](evidence/m5/ci-run-2026-08-12.md).
 
-## Approval-gated finalization
+## 0.1.1 maintenance candidate
+
+0.1.1 changes no optimizer behavior. It makes the Windows launcher work from a clean clone and ask
+before using public OSRM, adds a one-shot EPDK snapshot script, keeps candidate widening within the
+default OSRM Table limit, labels distinct plans in the UI, recaptures the primary screenshot, adds
+CPython 3.13.5 to the CI matrix, and corrects stale status text. The remote matrix runs only once the
+candidate is pushed; until then it is not claimed. Commit, push, tag, and release remain
+approval-gated. The evidence is recorded in [`PROJECT_STATE.md`](../PROJECT_STATE.md).
+
+## Approval-gated finalization of 0.1.0
 
 M5 is complete: the candidate was committed and pushed, both matrix jobs are green, immutable
 commit/run evidence is recorded, and the allowlist was rechecked locally. The v0.1.0 tag and GitHub

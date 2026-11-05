@@ -7,15 +7,15 @@ param(
 
 $ErrorActionPreference = "Stop"
 $RepoRoot = Split-Path -Parent $PSScriptRoot
-$PythonExe = Join-Path $RepoRoot ".venv\Scripts\python.exe"
-$Snapshot = Join-Path $RepoRoot "data\raw\epdk\2026-08-09\response.json"
-$Manifest = Join-Path $RepoRoot "data\processed\epdk\2026-08-09\manifest.json"
+. (Join-Path $PSScriptRoot "launcher_common.ps1")
 
-if (-not (Test-Path -LiteralPath $PythonExe)) {
-    throw "Project Python was not found at $PythonExe"
+$Python = Resolve-ChargePathPython -RepoRoot $RepoRoot
+if ($null -eq $Python) {
+    throw (Get-PythonHelp)
 }
-if (-not (Test-Path -LiteralPath $Snapshot) -or -not (Test-Path -LiteralPath $Manifest)) {
-    throw "The local EPDK snapshot and manifest are required for custom-point planning."
+$Snapshot = Resolve-EpdkSnapshot -RepoRoot $RepoRoot
+if ($null -eq $Snapshot) {
+    throw (Get-SnapshotHelp)
 }
 
 $OsrmEndpoint = "http://127.0.0.1:5000"
@@ -23,8 +23,8 @@ $DemoArguments = @(
     "-m", "chargepath.demo",
     "--mode", "integration",
     "--port", $Port,
-    "--station-snapshot", $Snapshot,
-    "--station-manifest", $Manifest
+    "--station-snapshot", $Snapshot.Snapshot,
+    "--station-manifest", $Snapshot.Manifest
 )
 
 if ($UsePublicOsrm) {
@@ -37,8 +37,12 @@ if ($UsePublicOsrm) {
 }
 
 $DemoArguments += @("--osrm-endpoint", $OsrmEndpoint)
+if ($Python.FromSource) {
+    $env:PYTHONPATH = Join-Path $RepoRoot "src"
+}
 
 Write-Host "ChargePath custom map: http://127.0.0.1:$Port"
+Write-Host "EPDK snapshot: $($Snapshot.Date)"
 Write-Host "OSRM endpoint: $OsrmEndpoint"
-& $PythonExe @DemoArguments
+& $Python.Executable @DemoArguments
 exit $LASTEXITCODE

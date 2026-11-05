@@ -151,7 +151,7 @@ def _audit_contracts() -> None:
         'license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md", '
         '"licenses/leaflet-BSD-2-Clause.txt"]',
         '"share/chargepath" = ["data/sample/synthetic_corridor.json"]',
-        'version = "0.1.0"',
+        'version = "0.1.1"',
     )
     if not all(value in pyproject for value in required_pyproject):
         raise ValueError("pyproject release version or license contract is missing")
@@ -165,7 +165,7 @@ def _audit_contracts() -> None:
     workflow_pins = (
         "actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd",
         "actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405",
-        'python-version: "3.11.9"',
+        'python: ["3.11.9", "3.13.5"]',
     )
     if not all(value in workflow for value in workflow_pins):
         raise ValueError("CI actions or Python are not pinned to the reviewed release versions")
