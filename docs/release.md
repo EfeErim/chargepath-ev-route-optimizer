@@ -2,8 +2,8 @@
 
 ## Candidate identity
 
-- project version: `0.1.1` (maintenance candidate; `0.1.0` is the published release);
-- release candidate date: 2026-11-05;
+- project version: `0.1.1` (maintenance release following `0.1.0`);
+- release date: 2026-11-05;
 - Python: CPython 3.11.9 and 3.13.5;
 - supported CI environments: `windows-2025` x64 and `ubuntu-24.04` x64;
 - Python runtime dependencies: none;
@@ -89,14 +89,14 @@ passed the canonical gate on both `ubuntu-24.04` and `windows-2025` in [GitHub A
 The immutable run and job URLs are also recorded in
 [`docs/evidence/m5/ci-run-2026-08-12.md`](evidence/m5/ci-run-2026-08-12.md).
 
-## 0.1.1 maintenance candidate
+## 0.1.1 maintenance release
 
 0.1.1 changes no optimizer behavior. It makes the Windows launcher work from a clean clone and ask
 before using public OSRM, adds a one-shot EPDK snapshot script, keeps candidate widening within the
 default OSRM Table limit, labels distinct plans in the UI, recaptures the primary screenshot, adds
-CPython 3.13.5 to the CI matrix, and corrects stale status text. The remote matrix runs only once the
-candidate is pushed; until then it is not claimed. Commit, push, tag, and release remain
-approval-gated. The evidence is recorded in [`PROJECT_STATE.md`](../PROJECT_STATE.md).
+CPython 3.13.5 to the CI matrix, and corrects stale status text. All four matrix jobs passed in
+[run 42005327671](https://github.com/EfeErim/chargepath-ev-route-optimizer/actions/runs/42005327671). The
+evidence and the checks that remain unverified are recorded in [`PROJECT_STATE.md`](../PROJECT_STATE.md).
 
 ## Approval-gated finalization of 0.1.0
 
