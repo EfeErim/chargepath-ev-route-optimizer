@@ -13,6 +13,9 @@ THIRD_PARTY_NOTICES.md
 constraints/release-py311.txt
 data/benchmarks/m3/v1/cases.json
 data/benchmarks/m3/v1/manifest.json
+data/benchmarks/m6/v1/manifest.json
+data/benchmarks/m6/v1/provinces.json
+data/benchmarks/m6/v1/selection_distances.json
 data/sample/synthetic_corridor.json
 docs/algorithm.md
 docs/architecture.md
@@ -40,6 +43,7 @@ examples/run_synthetic_demo.py
 licenses/leaflet-BSD-2-Clause.txt
 pyproject.toml
 scripts/audit_release.py
+scripts/build_m6_manifest.py
 scripts/check.ps1
 scripts/check_wheel.py
 scripts/fetch_epdk_snapshot.py
@@ -62,6 +66,7 @@ src/chargepath/providers/__init__.py
 src/chargepath/providers/base.py
 src/chargepath/providers/osrm.py
 src/chargepath/providers/static.py
+src/chargepath/real_route_benchmark.py
 src/chargepath/station_data.py
 src/chargepath/verification.py
 src/chargepath/web/__init__.py
@@ -86,4 +91,5 @@ tests/test_evaluation.py
 tests/test_fixtures.py
 tests/test_optimizer.py
 tests/test_osrm.py
+tests/test_real_route_benchmark.py
 tests/test_station_data.py
