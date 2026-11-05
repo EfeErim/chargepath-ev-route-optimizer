@@ -22,7 +22,7 @@ M5 — Portfolio release: **complete; v0.1.0 published**
 
 v0.1.1 — Maintenance release: **CI green; tagged from the commit that records this result**
 
-M6 — Real-route evaluation: **in progress; M6.0 and M6.1 complete, M6.2 not started**
+M6 — Real-route evaluation: **in progress; M6.0, M6.1, and M6.2 complete, M6.3 not started**
 
 Dated evidence sections below describe the state when they were recorded. They are kept as history,
 so file counts, UI text, and CI status in them can be superseded by later sections.
@@ -75,9 +75,9 @@ Verified on 2026-08-05 with Python 3.11.9:
 
 ## Next milestone
 
-M6 — Real-route evaluation, defined in `PROJECT_PLAN.md`. The M6.0 infrastructure spike and the M6.1
-frozen manifest are complete. The next step is M6.2, the collection and evaluation tooling. No
-evaluation run has happened.
+M6 — Real-route evaluation, defined in `PROJECT_PLAN.md`. The M6.0 infrastructure spike, the M6.1
+frozen manifest, and the M6.2 tooling are complete. The next step is M6.3, which runs the tooling on the
+frozen real inputs. No evaluation run on real inputs has happened.
 
 ## M1 evidence
 
@@ -629,6 +629,40 @@ planner strategy has run on these routes.
   `1c637e15d52fb053ac52d7721a4223b294927729cae6aa9bdb7d82724f76cadf`). `.\scripts\check.ps1` passed with
   139 collected tests, byte-compilation, the offline demo, Ruff lint/format, strict mypy, `pip check`, the
   wheel smoke, and the 94-file release audit, with no OSRM server running.
+
+## M6.2 tooling evidence
+
+Prepared on 2026-11-05. All of this is verified on synthetic inputs only; the tooling has not yet run on
+the frozen real inputs or against a real OSRM server. The manifest commit (`7ac5b1d`) precedes it.
+
+- **Stage separation — passed.** `chargepath.real_route_collection` and `scripts/run_m6_collect.py` are the
+  only M6 parts that call OSRM. They use the existing corridor selector and `CandidateGraphBuilder`, and
+  store graphs under the ignored `data/processed/m6/`. They refuse a road graph whose `data_version`, or a
+  snapshot whose checksum, differs from the manifest. `chargepath.real_route_evaluation` and
+  `scripts/run_m6_evaluate.py` read only those stored graphs.
+- **Stable evaluation — passed.** Repeated evaluation of the same stored graphs is byte-for-byte equal.
+- **Graph checksums — passed.** The summary records the SHA-256 and outcome of every stored graph.
+- **No station data — passed.** `assert_no_station_data` rejects station fields, identifiers, names, and
+  precise coordinates. Tests prove that it rejects each kind, that evaluation output passes it, and
+  `run_m6_evaluate.py` applies it before writing evidence.
+- **Reconciliation — passed.** Evaluated trips equal the manifest's expansion, and each algorithm's plan,
+  infeasible, and provider-failure counts sum to the trip count. A provider failure is stored as an
+  outcome without its message, which can quote request coordinates.
+- **Defect gates — passed.** Replay runs on every returned plan. A replay failure, an exact plan slower
+  than any other plan on the same inputs, or a plan where exact fastest found none stops the run.
+- **Fixture and fake provider — passed.** `tests/fixtures/m6/synthetic_graph.json` is explicitly synthetic.
+  `tests/test_real_route_evaluation.py` (18 tests, 18 s) drives both stages through a fake provider with
+  no OSRM, EPDK, or network access.
+- **Decisions the plan left open.** E2–E5 run the same five algorithms as E1. Gaps are reported against 2%
+  for E2, cap 200 for E3, and the 50 km width for E4; the manifest fixes only E3's reference. Identical
+  inputs shared by experiments are computed once. Trip records are rounded to three decimals, while gates
+  use unrounded values. E6 times each algorithm over complete E1 passes.
+- **Repository gate — passed with no OSRM server running.** `.\scripts\check.ps1` passed with 157 tests,
+  byte-compilation, the offline demo, Ruff lint/format, strict mypy, `pip check`, the wheel smoke, and the
+  100-file release audit.
+- **Not yet exercised.** A real 202-location Table request, real runtime of the slowest trips, and the size
+  of the real evidence against the 1 MiB release-file limit are all unmeasured until M6.3. The audit's text
+  scan does not yet cover the `.jsonl` trip file; that must be added with the evidence.
 
 ## Known risks
 

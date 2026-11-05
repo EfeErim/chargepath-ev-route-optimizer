@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "synthetic": true,
+  "description": "Project-authored stored-graph fixture; every station and leg is invented.",
+  "route_id": "m6-synthetic",
+  "corridor_width_km": 25,
+  "candidate_cap": 50,
+  "outcome": "graph",
+  "corridor_algorithm": "equirectangular-segment-farthest-progress-v3",
+  "data_version": "synthetic",
+  "snapshot_id": "synthetic",
+  "eligible_count": 2,
+  "stations": [
+    {
+      "id": "synthetic:fast",
+      "name": "Synthetic Fast Hub",
+      "latitude": 39.123456,
+      "longitude": 33.654321,
+      "max_power_kw": 150,
+      "connector_type": "CCS2"
+    },
+    {
+      "id": "synthetic:slow",
+      "name": "Synthetic Slow Hub",
+      "latitude": 39.234567,
+      "longitude": 33.765432,
+      "max_power_kw": 50,
+      "connector_type": "CCS2"
+    }
+  ],
+  "legs": [
+    ["origin", "destination", 300.0, 190.0],
+    ["origin", "synthetic:fast", 150.0, 100.0],
+    ["origin", "synthetic:slow", 140.0, 90.0],
+    ["synthetic:fast", "destination", 150.0, 100.0],
+    ["synthetic:slow", "destination", 150.0, 95.0]
+  ]
+}
