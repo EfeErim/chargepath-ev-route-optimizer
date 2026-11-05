@@ -15,6 +15,54 @@ backend asset, car-profile checksum, CH preparation algorithm, synthetic input m
 data version, retrieval time, and response checksums. The small OSM XML input is project-authored
 synthetic test data, not a real road extract.
 
+## Native Windows setup (verified for M6.0)
+
+This path needs no container runtime. It was run on 2026-11-05 on Windows 11 x64 with 15.8 GB RAM and
+12 logical CPUs. The paths are examples; everything stays outside Git.
+
+The release asset contains the executables but no Lua profile, so `profiles/` comes from the source
+archive of the pinned commit. The GitHub archive and raw file serve `car.lua` with LF line endings
+(SHA-256 `48bbb716c2b68ce6803a11a4151fcac050c6ea8240295e7dde111f15f8bd3984`). The M1 manifest's
+`3a12ab9c194c4b4c869710e9e7756247aa2b7b102c68b6fd6d0c52a2dd8152e9` is the same file with CRLF line
+endings; converting the LF file to CRLF reproduces that value.
+
+```powershell
+$Commit = "0844e3af77896d11998ef6db356a553056652c8e"
+$Asset = "node_osrm-v26.7.3-8-win32-x64-Release.tar.gz"
+New-Item -ItemType Directory -Force D:\osrm-data\bin, D:\osrm-data\profiles, D:\osrm-data\extract
+
+curl.exe -fsSL -o D:\osrm-data\$Asset "https://github.com/Project-OSRM/osrm-backend/releases/download/v26.7.3/$Asset"
+(Get-FileHash D:\osrm-data\$Asset -Algorithm SHA256).Hash  # 76A686B4...0705A
+tar.exe -xzf D:\osrm-data\$Asset -C D:\osrm-data\bin
+
+curl.exe -fsSL -o D:\osrm-data\src.tar.gz "https://github.com/Project-OSRM/osrm-backend/archive/$Commit.tar.gz"
+tar.exe -xzf D:\osrm-data\src.tar.gz -C D:\osrm-data\profiles --strip-components=2 "osrm-backend-$Commit/profiles"
+
+curl.exe -fsSL -o D:\osrm-data\extract\turkey-latest.osm.pbf https://download.geofabrik.de/europe/turkey-latest.osm.pbf
+
+$Bin = "D:\osrm-data\bin\binding_napi_v8"
+& $Bin\osrm-extract.exe -p D:\osrm-data\profiles\car.lua -d <data-version> -t 8 D:\osrm-data\extract\turkey-latest.osm.pbf
+& $Bin\osrm-contract.exe -t 8 D:\osrm-data\extract\turkey-latest.osrm
+& $Bin\osrm-routed.exe --algorithm CH --ip 127.0.0.1 --port 5000 --max-table-size 100 D:\osrm-data\extract\turkey-latest.osrm
+```
+
+Pass `--ip 127.0.0.1` explicitly: `osrm-routed` binds `0.0.0.0` by default.
+
+Measured on the 652,637,317-byte Turkey extract, with 8 threads, below-normal priority, and other
+desktop applications open:
+
+| Step | Elapsed | Peak private memory | Peak working set | Lowest free system RAM |
+|---|---|---|---|---|
+| `osrm-extract` | 10.6 min | 11.56 GB | 7.34 GB | 0.08 GB |
+| `osrm-contract` | 31.3 min | 3.33 GB | 2.63 GB | 3.07 GB |
+| `osrm-routed` (serving) | not applicable | 2.57 GB | 2.56 GB | 3.18 GB |
+
+Memory values are periodic samples (5 s for extract, 15 s for contract, 10 s for routed), because OSRM
+reports `RAM: peak bytes used: <not implemented on Windows>`; true peaks can be somewhat higher. Page-file
+use peaked at a sampled 3.44 GB during extract. `osrm-extract` left almost no free RAM on this 15.8 GB
+machine, so close other applications first. Generated `.osrm*` files take 3.74 GB; with the extract, the
+total is 4.39 GB.
+
 ## Self-hosted Docker example
 
 Use a legally obtained OpenStreetMap extract and keep the `.osm.pbf` plus generated `.osrm*` files
