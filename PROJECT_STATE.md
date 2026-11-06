@@ -1,6 +1,6 @@
 # Project State
 
-Last updated: 2026-11-05
+Last updated: 2026-11-06
 
 ## Current milestone
 
@@ -22,7 +22,7 @@ M5 — Portfolio release: **complete; v0.1.0 published**
 
 v0.1.1 — Maintenance release: **CI green; tagged from the commit that records this result**
 
-M6 — Real-route evaluation: **in progress; M6.0, M6.1, and M6.2 complete, M6.3 not started**
+M6 — Real-route evaluation: **local acceptance passed; 0.2.0rc1 publication pending**
 
 Dated evidence sections below describe the state when they were recorded. They are kept as history,
 so file counts, UI text, and CI status in them can be superseded by later sections.
@@ -75,9 +75,9 @@ Verified on 2026-08-05 with Python 3.11.9:
 
 ## Next milestone
 
-M6 — Real-route evaluation, defined in `PROJECT_PLAN.md`. The M6.0 infrastructure spike, the M6.1
-frozen manifest, and the M6.2 tooling are complete. The next step is M6.3, which runs the tooling on the
-frozen real inputs. No evaluation run on real inputs has happened.
+M6.4 publication requires explicit approval. The release candidate and local acceptance evidence
+are recorded below. EPDK's public FAQ confirms system-to-system access. Explicit terms for
+redistributing snapshot data or derived results remain unconfirmed.
 
 ## M1 evidence
 
@@ -663,6 +663,110 @@ the frozen real inputs or against a real OSRM server. The manifest commit (`7ac5
 - **Not yet exercised.** A real 202-location Table request, real runtime of the slowest trips, and the size
   of the real evidence against the 1 MiB release-file limit are all unmeasured until M6.3. The audit's text
   scan does not yet cover the `.jsonl` trip file; that must be added with the evidence.
+
+## M6.3 experiment evidence
+
+Run on 2026-11-05 with CPython 3.11.9 on Windows AMD64, from manifest commit `7ac5b1d`. All values are
+modeled minutes on one OSM extract, one static snapshot, and declared parameter sets. They do not measure
+real-world SOC accuracy, arrival time, or charger availability.
+
+Commands: `scripts/run_m6_collect.py --osrm-runtime-out ...` against `osrm-routed --max-table-size 202`, then
+`scripts/run_m6_evaluate.py --osrm-runtime ... --runtime-out docs/evidence/m6/runtime_2026-11-05.json`.
+
+Evidence SHA-256:
+
+- `docs/evidence/m6/summary_v1.json`: `62ceb4789697bdcaf3efa2b7166a89ed1a1ccbf7723cb7fa4f06cf7a887464b1`
+- `docs/evidence/m6/trips_v1.jsonl`: `59d13008c2d732810618f7c2ae9d72345762b7ccbc495aca952c9afe9b8df8fb`
+- `docs/evidence/m6/runtime_2026-11-05.json`: `e755510bfddd2a509b3b41546d636fbb40d4004f4f072840c4893982836211c8`
+
+**Defect found and fixed during the run.** The first collection stored 10 of 168 graphs as provider
+failures, all at caps 98 and 200, while OSRM logged no HTTP error. OSRM returned distances down to -0.5 m
+with zero duration between points metres apart, and the adapter accepted only -0.1 m. The distance
+tolerance is now 1 m and the duration tolerance stays 0.1 s; larger negatives remain provider errors. The
+fix also applies to the demo's integration mode. Recollecting produced 168 graphs and 0 failures: the 10
+failed files changed and the other 158 stayed byte-identical. The optimizer, energy, and charging models
+did not change. A failing test preceded the fix. The earlier evaluation output was discarded.
+
+Outcomes reconciled across 624 trips:
+
+| Algorithm | Plan | Infeasible | Provider failure |
+|---|---|---|---|
+| Road-only shortest driving time | 37 | 587 | 0 |
+| Exact fastest | 624 | 0 | 0 |
+| Exact shortest distance | 624 | 0 | 0 |
+| Exact fewest charging stops | 624 | 0 | 0 |
+| Greedy fixed-80 | 616 | 8 | 0 |
+
+- **Gates — passed.** All 2,525 returned plan outcomes carry independent replay and zero reserve violations.
+  Identical inputs shared by experiments are computed and replayed once. Exact fastest was no slower than
+  any other plan on any trip, and never missed a plan another strategy found.
+- **E1 exact versus greedy.** Over the 71 of 72 trips where both planned, exact fastest saved a median of
+  24.7 minutes (4.2%), p90 60.9 minutes (9.5%), minimum 0, and maximum 98.5 minutes (16.0%). Six trips
+  saved 0. Greedy failed on 1 of 72 trips. Median minutes by band: 10.3 (150–300 km), 19.8 (300–600 km),
+  28.7 (600–1000 km), and 40.0 (over 1000 km). Median percent is flatter at 4.4, 4.6, 3.8, and 3.7.
+  Medians of each algorithm's own plans are not comparable where greedy has a different trip population.
+- **E2 SOC grid.** Against the 2% grid, the median exact-fastest gap at 5% was 3.3, 1.0, and 0.8 minutes
+  for the 40, 60, and 80 kWh sets, and 8.0, 2.5, and 2.6 minutes at 10%. Feasibility did not change. Gaps
+  reached -0.5 minutes at 5%: the 5% and 2% grids are not nested, so a coarser grid can be slightly faster.
+- **E3 candidate cap.** Against cap 200, the median gap was 2.7, 0.9, 0, and 0 minutes at caps 12, 24, 50,
+  and 98, with maxima of 92.0, 18.9, 5.8, and 1.3 minutes. Exact search stayed feasible at every cap; greedy
+  failed on 4 of 24 trips at cap 12 and none above it. Cap 200 is a reference, not a global optimum.
+- **E4 corridor width.** Against 50 km, the median gap was 0 at 10 and 25 km. Differences ranged from -5.1 to
+  2.7 minutes, so a wider corridor was sometimes slower at the fixed cap of 50. A denser spread of the same
+  cap over a narrower corridor is a likely cause, but this run did not test that.
+- **E5 vehicle inputs.** On the eight routes, exact search stayed feasible at every value. Maximum charging
+  power had the largest effect on median total time: 617.9 minutes at 50 kW, 551.0 at 150 kW, and 542.5 at
+  250 kW. Consumption from 14.4 to 21.6 kWh/100 km moved it from 536.9 to 564.7 minutes.
+- **E6 runtime.** Over 72 E1 trips per pass, with three warm-ups and 20 repetitions, median and p95 pass times
+  were 21.3 and 27.5 s for exact fastest, 3.9 and 4.8 s for greedy, and 0.32 and 0.56 s for road-only. OSRM,
+  timed separately over 24 requests per pass, took a median of 0.65 s for Route and 1.15 s for 52-location
+  Table. These came from a desktop with other applications open and are not production latency. OSRM timing
+  ran before the adapter fix, on cap 50 requests the fix did not change.
+- **Limits.** Road-only infeasibility reflects 80% initial SOC on long routes rather than a road failure.
+  Greedy is one declared policy, not a model of real drivers, so savings against it do not measure savings
+  against human planning. Exact search being feasible on all 624 trips depends on treating every static
+  snapshot station as usable.
+- **Candidate release checks.** `tests/test_real_route_evaluation.py` checks the committed evidence against
+  the manifest, reconciles its counts, reapplies the gates, and rejects station data. The release audit now
+  scans `.jsonl` text. The largest evidence file is 734,601 bytes, below the 1 MiB limit.
+
+## M6.4 results and local release acceptance
+
+Verified locally on 2026-11-06.
+
+- **Results and documentation — passed.** The README and [M6 results](docs/results.md#m6-real-route-benchmark)
+  link the frozen manifest, normalized summary, trip outcomes, and machine timings. They report the
+  paired population, ties and failures, modeled-minutes boundary, static snapshot, and OSM attribution.
+  The experiment plan, limitations, third-party notices, and source allowlist describe the same scope.
+- **Replay and comparison — passed.** Offline evaluation of the 168 stored graphs regenerated both
+  v1 result files byte-for-byte. All 2,525 returned plan outcomes passed replay with zero modeled
+  reserve violations. Exact fastest was at least as fast as greedy on each paired scenario.
+- **Rerun with independent inputs — passed.** The documented builder accepts reviewed road and
+  station metadata and writes a separate manifest. A local OSRM smoke run using the frozen metadata
+  reproduced the province, distance, and manifest files byte-for-byte in an independent directory.
+  The collector retains station checksum and road data-version checks. Without the original private
+  inputs a rerun uses a different manifest and does not reproduce v1 bytes.
+- **Canonical gate — passed.** 161 tests, byte-compilation, synthetic demo, Ruff lint and formatting,
+  strict mypy, `pip check`, non-editable wheel install and fixture smoke, and a 109-file source audit.
+  The gate used local resources and the wheel smoke served only on loopback.
+- **Data and publication — pending review.** Source station rows, graphs, OSM extracts, and telemetry
+  files remain ignored. The evidence export checks for station data, and the source audit checks JSONL.
+  [EPDK's FAQ](https://epdk.gov.tr/Detay/Icerik/3-0-211/lisans) confirms public web-service access.
+  No explicit reuse term covering this release was identified there. The 0.2.0rc1 candidate
+  awaits publication approval.
+
+## Follow-up experiments and public telemetry pilots
+
+- **Fixed path and stress cases — verified.** The 72 E1 scenarios were rerun against checksum-verified
+  graphs. The 71 paired cases showed a median 9.6 minutes gained by reoptimizing charging on the
+  greedy path and 10.5 minutes gained by freeing the path and charging-site choices. The 12-candidate
+  cap lost feasibility in four cases. Removing the first charging action's site left one of 66
+  applicable cases infeasible. All returned plans replayed, and a rerun produced identical evidence.
+- **Field pilot — verified at the stated scope.** Public TUM ID1 and BMW i3 winter data were processed
+  offline with pinned input checksums and held-out evaluation. Both aggregate outputs were reproduced
+  byte-for-byte. The ID.3 pilot uses SOC-derived energy and inferred charging windows. The BMW pilot
+  integrates recorded pack power and includes three hillier held-out sections. The measured
+  improvements vary across models and cohorts. See [results](docs/results.md#field-pilot--volkswagen-id3).
 
 ## Known risks
 

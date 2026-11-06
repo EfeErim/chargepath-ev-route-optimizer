@@ -40,7 +40,7 @@ The Windows clean-install transcript is recorded in
 validated by the same repository gate in GitHub Actions; a local Windows result is not presented as
 Linux evidence.
 
-The canonical gate additionally builds the `0.1.1` wheel without build isolation, verifies that its
+The canonical gate additionally builds the current candidate wheel without build isolation, verifies that its
 web assets, exact synthetic fixture, MIT license, and third-party notices are present, installs that
 wheel non-editably into another new environment, and loads the default fixture from outside the
 repository. Generated wheel and environment files remain temporary and are not release-source files.
@@ -97,6 +97,19 @@ default OSRM Table limit, labels distinct plans in the UI, recaptures the primar
 CPython 3.13.5 to the CI matrix, and corrects stale status text. All four matrix jobs passed in
 [run 42005327671](https://github.com/EfeErim/chargepath-ev-route-optimizer/actions/runs/42005327671). The
 evidence and the checks that remain unverified are recorded in [`PROJECT_STATE.md`](../PROJECT_STATE.md).
+
+## 0.2.0rc1 real-route evaluation candidate
+
+The candidate adds the [M6 evaluation](results.md#m6-real-route-benchmark), its frozen manifest
+and result files, and the OSRM adapter's sub-meter negative-distance handling found during the
+collection run. The default wheel demo uses the project-authored synthetic fixture. The source
+candidate includes derived scenario outcomes and provenance metadata. EPDK station rows, local
+graphs, and OSM extract files stay in ignored data directories.
+
+The [EPDK FAQ](https://epdk.gov.tr/Detay/Icerik/3-0-211/lisans) describes public access and
+system integration through its web services. It does not specify reuse terms for distributing the
+station snapshot or derived statistics. Review reuse status before public release. Publication
+requires explicit approval.
 
 ## Approval-gated finalization of 0.1.0
 
