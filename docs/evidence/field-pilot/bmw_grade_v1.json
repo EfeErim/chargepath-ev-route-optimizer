@@ -1,0 +1,105 @@
+{
+  "accepted_trips": 35,
+  "one_km_sections": {
+    "calibration_count": 509,
+    "constant": {
+      "bias_kwh": -0.0034646663425973107,
+      "energy_underestimated": 78,
+      "flatter_mae_kwh": 0.06908742063623423,
+      "hillier_mae_kwh": 0.22459476313238597,
+      "mae_kwh": 0.07147984129002118,
+      "max_underestimate_kwh": 0.39771426793603626
+    },
+    "fitted_constant_rate": 18.781759285515705,
+    "full_grade_coefficient": 4.310081834818659,
+    "full_speed_coefficient": 2.2480553932598637,
+    "full_vertical_coefficient": 0.7435006604075994,
+    "grade_center": 0.018256167308654276,
+    "hillier_threshold_m_per_km": 12.0,
+    "holdout_count": 195,
+    "holdout_grade_pct_max": 3.867568658662098,
+    "holdout_grade_pct_min": -1.8034693817827534,
+    "holdout_hillier_count": 3,
+    "holdout_vertical_m_per_km_max": 50.44640937962076,
+    "holdout_vertical_m_per_km_min": 0.0,
+    "speed": {
+      "bias_kwh": -0.005412620067071218,
+      "energy_underestimated": 82,
+      "flatter_mae_kwh": 0.06842433233256931,
+      "hillier_mae_kwh": 0.2338568201751484,
+      "mae_kwh": 0.07096944753014746,
+      "max_underestimate_kwh": 0.40830768718445476
+    },
+    "speed_and_grade": {
+      "bias_kwh": -0.004849885822023744,
+      "energy_underestimated": 75,
+      "flatter_mae_kwh": 0.06982999993888019,
+      "hillier_mae_kwh": 0.2253864825261295,
+      "mae_kwh": 0.07222317659406863,
+      "max_underestimate_kwh": 0.43011524645830534
+    },
+    "speed_and_grade_grade_coefficient": 4.536891099577822,
+    "speed_and_grade_speed_coefficient": 1.7838686169603164,
+    "speed_and_terrain": {
+      "bias_kwh": -0.011757719043705001,
+      "energy_underestimated": 86,
+      "flatter_mae_kwh": 0.06898738719436477,
+      "hillier_mae_kwh": 0.1484629604942557,
+      "mae_kwh": 0.0702100883220554,
+      "max_underestimate_kwh": 0.4244345562386823
+    },
+    "speed_center": 0.7028370617090417,
+    "speed_only_coefficient": 1.7807172531746749,
+    "vertical_center": 3.630556504770829
+  },
+  "source_sha256": "fb59fa697344794321319c7e9d73968d563ee78500f2b173d445f78ff3cc40f5",
+  "whole_trip": {
+    "calibration_count": 24,
+    "constant": {
+      "bias_kwh": 0.0022020251426304593,
+      "energy_underestimated": 7,
+      "flatter_mae_kwh": 0.2817379144660321,
+      "mae_kwh": 0.2817379144660321,
+      "max_underestimate_kwh": 0.3723512512412821
+    },
+    "fitted_constant_rate": 18.990602942358187,
+    "full_grade_coefficient": 3.681715218624233,
+    "full_speed_coefficient": 5.423512264743073,
+    "full_vertical_coefficient": -0.11871960825026491,
+    "grade_center": 0.01992528078599264,
+    "hillier_threshold_m_per_km": 12.0,
+    "holdout_count": 11,
+    "holdout_grade_pct_max": 0.20145258216582188,
+    "holdout_grade_pct_min": -0.23994173625313295,
+    "holdout_hillier_count": 0,
+    "holdout_vertical_m_per_km_max": 4.977766911928357,
+    "holdout_vertical_m_per_km_min": 0.7832830001479518,
+    "speed": {
+      "bias_kwh": -0.08244976982286144,
+      "energy_underestimated": 9,
+      "flatter_mae_kwh": 0.28082916882102266,
+      "mae_kwh": 0.28082916882102266,
+      "max_underestimate_kwh": 0.5898568669170423
+    },
+    "speed_and_grade": {
+      "bias_kwh": -0.0909936289138607,
+      "energy_underestimated": 8,
+      "flatter_mae_kwh": 0.33811956568362317,
+      "mae_kwh": 0.33811956568362317,
+      "max_underestimate_kwh": 0.6619334790209486
+    },
+    "speed_and_grade_grade_coefficient": 3.815821380940472,
+    "speed_and_grade_speed_coefficient": 5.183579633506652,
+    "speed_and_terrain": {
+      "bias_kwh": -0.08686723966854339,
+      "energy_underestimated": 8,
+      "flatter_mae_kwh": 0.3185124383050062,
+      "mae_kwh": 0.3185124383050062,
+      "max_underestimate_kwh": 0.6443924844582503
+    },
+    "speed_center": 0.6868750658899904,
+    "speed_only_coefficient": 4.472983738441358,
+    "vertical_center": 3.1439022095423854
+  },
+  "winter_trips": 38
+}
