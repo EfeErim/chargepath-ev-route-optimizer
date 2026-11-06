@@ -677,7 +677,8 @@ Evidence SHA-256:
 
 - `docs/evidence/m6/summary_v1.json`: `62ceb4789697bdcaf3efa2b7166a89ed1a1ccbf7723cb7fa4f06cf7a887464b1`
 - `docs/evidence/m6/trips_v1.jsonl`: `59d13008c2d732810618f7c2ae9d72345762b7ccbc495aca952c9afe9b8df8fb`
-- `docs/evidence/m6/runtime_2026-11-05.json`: `e755510bfddd2a509b3b41546d636fbb40d4004f4f072840c4893982836211c8`
+- `docs/evidence/m6/runtime_2026-11-05.json` (Git-normalized LF):
+  `9c7e3917ac6009a5a0eb85de7e935452cf614e6136f86674fe5c474d8c7241b4`
 
 **Defect found and fixed during the run.** The first collection stored 10 of 168 graphs as provider
 failures, all at caps 98 and 200, while OSRM logged no HTTP error. OSRM returned distances down to -0.5 m
