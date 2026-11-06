@@ -187,6 +187,32 @@ def test_table_clamps_only_osrm_single_decimal_negative_zero() -> None:
         OsrmHttpClient(transport=material_negative).table((Coordinate(0, 0), Coordinate(0.1, 0.1)))
 
 
+def test_table_clamps_near_coincident_negative_distance_but_rejects_a_material_one() -> None:
+    # A local Turkey graph returned distances down to -0.5 m with zero duration between points
+    # about 5 m apart, at several candidate caps.
+    near_coincident = FakeTransport(
+        {
+            "code": "Ok",
+            "durations": [[0, 0], [1, 0]],
+            "distances": [[0, -0.5], [1, 0]],
+        }
+    )
+    result = OsrmHttpClient(transport=near_coincident).table(
+        (Coordinate(0, 0), Coordinate(0.1, 0.1))
+    )
+    assert result.cells[0][1] == OsrmTableCost(distance_km=0.0, duration_minutes=0.0)
+
+    material_negative = FakeTransport(
+        {
+            "code": "Ok",
+            "durations": [[0, 0], [1, 0]],
+            "distances": [[0, -1.1], [1, 0]],
+        }
+    )
+    with pytest.raises(OsrmResponseError, match="must not be negative"):
+        OsrmHttpClient(transport=material_negative).table((Coordinate(0, 0), Coordinate(0.1, 0.1)))
+
+
 def test_table_rejects_mismatched_duration_distance_nullability() -> None:
     transport = FakeTransport(
         {

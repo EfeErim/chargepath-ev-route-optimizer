@@ -1,0 +1,57 @@
+{
+  "charging": {
+    "calibration_count": 16,
+    "fitted": {
+      "duration_underestimated_count": 5,
+      "mae_minutes": 2.7238814814814827,
+      "signed_bias_minutes": -2.253125925925925
+    },
+    "fitted_effective_cap_kw": 75.0,
+    "fitted_taper_factor": 0.5,
+    "fitted_taper_start_pct": 65.0,
+    "generic": {
+      "duration_underestimated_count": 8,
+      "mae_minutes": 8.620859259259259,
+      "signed_bias_minutes": -8.613362962962961
+    },
+    "holdout_count": 9
+  },
+  "driving": {
+    "calibration_count": 240,
+    "constant_rate": 19.38787270528953,
+    "fitted_constant": {
+      "arrival_soc_overestimated_count": 72,
+      "mae_kwh": 1.0895915796138522,
+      "max_arrival_soc_overestimate_points": 12.557674511313518,
+      "signed_bias_kwh": -0.45582583451814485,
+      "soc_mae_points": 1.878606171748021
+    },
+    "fitted_speed": {
+      "arrival_soc_overestimated_count": 70,
+      "mae_kwh": 0.8660415816520826,
+      "max_arrival_soc_overestimate_points": 7.177614648932454,
+      "signed_bias_kwh": -0.23193198004143656,
+      "soc_mae_points": 1.4931751407794527
+    },
+    "holdout_count": 121,
+    "nominal_18": {
+      "arrival_soc_overestimated_count": 83,
+      "mae_kwh": 1.271391483471076,
+      "max_arrival_soc_overestimate_points": 16.240151724137874,
+      "signed_bias_kwh": -0.9019344669421485,
+      "soc_mae_points": 2.192054281846683
+    },
+    "nominal_18_with_margin": {
+      "arrival_soc_overestimated_count": 69,
+      "mae_kwh": 1.0463632553719018,
+      "max_arrival_soc_overestimate_points": 11.46416689655166,
+      "signed_bias_kwh": -0.3233543599173547,
+      "soc_mae_points": 1.8040745782274168
+    },
+    "speed_model": {
+      "feature_mean": 0.7529254392590666,
+      "slope": 3.8366453526851596
+    }
+  },
+  "source_sha256": "76788d07fe5bb0b0af81ef9041fd7854e05de00b9ef34f616584ce623385e6c8"
+}

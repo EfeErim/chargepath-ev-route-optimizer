@@ -1,5 +1,133 @@
 # Results
 
+## M6 real-route benchmark
+
+The 2026-11-05 run used 24 routes across four distance bands, three declared vehicle parameter
+sets, and a single frozen road graph and station snapshot. Routes were selected before running the
+planner, using only province metadata and road distances. Road distances derive from OpenStreetMap
+data, © OpenStreetMap contributors, ODbL. Results are modeled minutes on that graph and a static
+EPDK snapshot. SOC, arrival time, and charger availability require separate field evidence.
+
+The [frozen manifest](../data/benchmarks/m6/v1/manifest.json) defines E1–E6. The
+[normalized summary](evidence/m6/summary_v1.json), [scenario outcomes](evidence/m6/trips_v1.jsonl),
+and [machine timings](evidence/m6/runtime_2026-11-05.json) are the sources for these tables.
+
+| Strategy | Plan outcomes | Infeasible | Provider failures |
+|---|---:|---:|---:|
+| Exact fastest | 624 | 0 | 0 |
+| Exact shortest distance | 624 | 0 | 0 |
+| Exact fewest charging sessions | 624 | 0 | 0 |
+| Greedy fixed-80 | 616 | 8 | 0 |
+| Road-only shortest driving time | 37 | 587 | 0 |
+
+The 624 cases include multiple configurations of the same 24 routes. All 2,525 returned plan
+outcomes passed independent replay with zero reserve violations. Shared inputs were computed and
+replayed once. Exact fastest was at least as fast as every other returned plan on the same graph and
+SOC grid. Road-only infeasibility means insufficient modeled battery for that path at the declared
+starting SOC. The shortest-distance objective compares the distances of the legs supplied by OSRM.
+
+| Experiment | Observed result |
+|---|---|
+| E1 · Strategy comparison | On 71 paired plans, median savings versus fixed-80 greedy were 24.7 min (4.2%), p90 60.9 min (9.5%), and maximum 98.5 min (16.0%). Six ties and one greedy failure out of 72 scenarios. |
+| E2 · SOC grid | Versus 2%, the 5% grid added a median 3.3, 1.0, and 0.8 min for the 40, 60, and 80 kWh sets. The 10% grid added 8.0, 2.5, and 2.6 min. Exact feasibility stayed the same. The 5% and 2% grids are non-nested, and the minimum 5% gap was −0.5 min. |
+| E3 · Candidate cap | Versus cap 200, median gaps for caps 12, 24, 50, and 98 were 2.7, 0.9, 0, and 0 min. Maxima were 92.0, 18.9, 5.8, and 1.3 min. Cap 200 is a finite reference. Greedy missed four plans at cap 12. |
+| E4 · Corridor width | With cap 50, widths 10 and 25 km both had a median gap of 0 versus 50 km. Gaps ranged from −5.1 to 2.7 min. A wider corridor can change which stations survive the cap. |
+| E5 · Vehicle inputs | On eight routes, exact search stayed feasible at every tested value. Median total times at the 50, 150, and 250 kW vehicle limits were 617.9, 551.0, and 542.5 min. |
+| E6 · Runtime | Over 72 scenarios per pass, median/p95 were 21.3/27.5 s for exact fastest, 3.9/4.8 s for greedy, and 0.32/0.56 s for road-only. OSRM was timed separately over 24 requests per pass, with medians of 0.65 s for Route and 1.15 s for Table. These are machine-specific batch timings. |
+
+Median E1 savings by distance band were 10.3, 19.8, 28.7, and 40.0 minutes, from the shortest to the
+longest band. The paired comparison measures the effect of replacing one specified heuristic and
+combines changes in stop selection and charging amounts.
+
+The exact v1 output requires its original frozen inputs. The repository distributes derived results
+and provenance metadata. See the [rerun procedure](experiment_plan.md#m6-rerun-procedure).
+
+### Follow-up · Fixed-path charging and stress cases
+
+The [follow-up artifact](evidence/m6/followup_v1.json) uses the E1 scenarios and verifies each
+loaded graph against the recorded M6 checksum. The intermediate strategy keeps every greedy road
+leg in order and optimizes how much to charge at the visits where greedy charged. The solver may
+skip a charging session there. Every returned plan is replayed, and for paired cases the script
+checks the modeled time ordering from greedy through fixed-path to joint optimization.
+
+| Comparison on the 71 paired scenarios | Median saving | Maximum saving |
+|---|---:|---:|
+| Fixed-80 to optimized charging on the same path | 9.6 min | 47.2 min |
+| Fixed-path optimization to joint optimization | 10.5 min | 92.5 min |
+| Fixed-80 to joint optimization | 24.7 min | 98.5 min |
+
+The two gains add per scenario. Their separate medians need not add to the median joint gain.
+The second row measures the value of freeing the path and charging-site choices together.
+
+| Stress case | Feasible | Median added time among feasible plans | Maximum added time |
+|---|---:|---:|---:|
+| Initial SOC lowered from 80% to 30% | 72/72 | 16.3 min | 29.4 min |
+| Candidate cap lowered from 50 to 12 | 68/72 | 3.5 min | 91.1 min |
+| First selected charger disabled before planning | 65/66 | 1.0 min | 5.2 min |
+
+The outage scenario keeps road legs and removes charging at the first selected site. The six
+plans without charging are outside its denominator. This tests replanning with advance notice
+and retains the original candidate set. It does not simulate discovering the outage on arrival.
+A single pass across 72 nominal inputs measured median/p95 of 165/268 ms per exact search with
+replay on the recording machine, excluding graph loading, OSRM, and browser work.
+
+```powershell
+python scripts/run_m6_followup.py --output data/processed/m6/v1/followup-rerun.json
+```
+
+## Field pilot · Volkswagen ID.3
+
+The pilot uses one Volkswagen ID.3 Pro Performance from the [TUM usage dataset](https://github.com/TUMFTM/electric-vehicle-uds-dataset)
+by Schreiber et al. ([eTransportation paper](https://doi.org/10.1016/j.etran.2025.100518)).
+The [aggregate artifact](evidence/field-pilot/tum_id1_v1.json) records a chronological split.
+There are 240 calibration and 121 held-out driving windows, and 16 calibration and nine held-out
+likely DC charging windows. These are separately screened windows from the same vehicle.
+
+| Driving model | Energy proxy MAE | Arrival SOC MAE | Arrival SOC overestimated |
+|---|---:|---:|---:|
+| 18 kWh/100 km, raw | 1.27 kWh | 2.19 pp | 83/121 |
+| 18 kWh/100 km, 10% margin | 1.05 kWh | 1.80 pp | 69/121 |
+| Fitted constant rate | 1.09 kWh | 1.88 pp | 72/121 |
+| Fitted speed model | 0.87 kWh | 1.49 pp | 70/121 |
+
+The largest SOC overestimate fell from 11.46 pp with the nominal margin to 7.18 pp with the
+speed model. The speed model still overestimated SOC in 70 held-out windows.
+
+| Charging model | Duration MAE | Mean signed error | Duration underestimated |
+|---|---:|---:|---:|
+| Generic taper with 100 kW assumed cap | 8.62 min | −8.61 min | 8/9 |
+| Fitted effective cap and taper | 2.72 min | −2.25 min | 5/9 |
+
+Observed kWh is a proxy computed from the measured SOC change and nominal 58 kWh usable capacity.
+Distance comes from integrated recorded speed. The speed model therefore has access to actual
+driving speed during evaluation. Route elevation and charger-type labels are absent. Charging
+windows are screened from stationary SOC rises, and the inferred DC classification may be wrong.
+The fitted effective cap of 75 kW and taper at 65% can reflect the sampled chargers and battery
+conditions. Timing excludes setup and queueing. The results motivate testing on additional vehicles,
+planned rather than recorded speeds, elevation, and labeled DC sessions before changing planner
+defaults. See [pilot procedure](experiment_plan.md#field-pilot-procedure).
+
+### BMW i3 · Speed and elevation
+
+The [BMW pilot artifact](evidence/field-pilot/bmw_grade_v1.json) uses the winter portion of
+Steinstraeter et al.'s [Battery and Heating Data in Real Driving Cycles](https://ieee-dataport.org/open-access/battery-and-heating-data-real-driving-cycles).
+It compares predictions with net battery energy integrated from recorded voltage and current.
+Of 38 winter trips, 35 passed screening. Eleven complete trips were held out from fitting.
+The held-out trips also provided 195 approximately one-kilometer sections. Three sections
+exceeded the declared hillier threshold of 12 m of vertical change per km.
+
+| Model | Whole-trip MAE, 11 trips | Section MAE, 195 sections | Hillier MAE, 3 sections |
+|---|---:|---:|---:|
+| Fitted constant | 0.282 kWh | 0.0715 kWh | 0.225 kWh |
+| Speed | 0.281 kWh | 0.0710 kWh | 0.234 kWh |
+| Speed and net grade | 0.338 kWh | 0.0722 kWh | 0.225 kWh |
+| Speed, net grade, and total vertical change | 0.319 kWh | 0.0702 kWh | 0.148 kWh |
+
+The full terrain model lowered error on the three hillier sections, but raised whole-trip error
+versus the constant model. It underestimated energy on 86/195 sections versus 78/195 for the
+constant model. The comparison holds out trips from one car and uses observed speed and elevation.
+The hillier sample is too small to generalize the observed improvement to other routes.
+
 ## M3 synthetic benchmark
 
 M3 was evaluated on 2026-08-09 with Python 3.11.9 using the offline, project-authored

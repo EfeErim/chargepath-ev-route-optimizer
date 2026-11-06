@@ -101,8 +101,9 @@ states. It does not calculate feasibility or advance the optimizer.
 - `StaticRoadNetwork` is the deterministic optimizer-facing graph provider;
 - `OsrmHttpClient` implements separate route/table protocols behind an injected HTTP transport;
 - `CandidateGraphBuilder` converts asymmetric Table cells into optimizer road legs and leaves `null`
-  pairs unreachable; OSRM's single-decimal `-0.1` negative-zero artifact is clamped to zero, and
-  rounded zero-length non-diagonal cells are omitted rather than becoming invalid drive legs;
+  pairs unreachable; OSRM's negative artifacts between near-coincident points (distance to -1 m,
+  duration to -0.1 s) are clamped to zero, larger negatives are provider errors, and zero-length
+  non-diagonal cells are omitted rather than becoming invalid drive legs;
 - the table client supplies fastest-route distance/duration pairs, while selected-plan geometry is
   fetched after optimization; each distinct directed leg is requested at most once across options,
   with at most four independent geometry requests in flight;

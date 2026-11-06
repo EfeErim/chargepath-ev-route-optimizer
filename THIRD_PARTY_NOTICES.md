@@ -1,6 +1,6 @@
 # Third-party notices
 
-ChargePath 0.1.1 has no third-party Python runtime package dependency. The standard-library server
+ChargePath has no third-party Python runtime package dependency. The standard-library server
 loads the following optional browser or provider components at runtime; none of their source or data
 is copied into the release.
 
@@ -36,7 +36,19 @@ CI uses `actions/checkout` 6.0.2 and `actions/setup-python` 6.2.0, both MIT-lice
 full commit SHAs in the workflow. Their code is executed by GitHub Actions and is not distributed in
 the ChargePath package.
 
-All files under `data/sample/`, `data/benchmarks/`, and `tests/fixtures/` are project-authored and
-explicitly synthetic. The recorded OSRM fixture was produced from the included synthetic OSM ring;
-it contains no real OpenStreetMap extract. Research papers and official service documentation are
-references only; no third-party implementation code or paper text is copied into the project.
+Files under `data/sample/`, `data/benchmarks/m3/`, and `tests/fixtures/` are project-authored
+synthetic fixtures. The recorded OSRM fixture was produced from the included synthetic OSM ring.
+The M6 selection distances and model results derive from OpenStreetMap data, © OpenStreetMap
+contributors, ODbL. Source extracts and station rows stay outside Git.
+
+## Field-pilot data
+
+The research pilot uses the [TUM Electric Vehicle Usage Data Set](https://github.com/TUMFTM/electric-vehicle-uds-dataset)
+by Schreiber et al. ([paper](https://doi.org/10.1016/j.etran.2025.100518)). The data source is
+licensed [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/). The raw source stays
+outside the release. The repository carries the method and aggregate pilot statistics.
+
+The BMW grade pilot uses winter recordings from Steinstraeter, Buberger, and Trifonov,
+[Battery and Heating Data in Real Driving Cycles](https://ieee-dataport.org/open-access/battery-and-heating-data-real-driving-cycles),
+from a [Kaggle mirror](https://www.kaggle.com/datasets/atechnohazard/battery-and-heating-data-in-real-driving-cycles).
+The pinned ZIP stays local. The release carries aggregate statistics and analysis code.

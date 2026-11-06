@@ -133,8 +133,8 @@ external evidence indexed in the [source registry](docs/source_registry.md).
 
 The runnable option planner currently compares:
 
-1. exact fastest total trip time;
-2. exact shortest feasible road distance;
+1. exact fastest total trip time within the candidate graph;
+2. exact shortest feasible distance within that graph, using the distances of OSRM's fastest road legs;
 3. exact fewest charging sessions, with time and distance tie-breaks; and
 4. a deterministic greedy policy that charges once toward a fixed 80% target.
 
@@ -143,8 +143,14 @@ strategy is a separate heuristic and can explicitly fail when exact search succe
 covers eight hand-audited synthetic topology/boundary cases. All 22 returned plans replayed with zero
 reserve violations and no false-feasible result. On the three charging cases, exact fastest-time was
 4.8 modeled minutes faster than fixed-80 greedy because it stopped charging earlier. This is a narrow
-synthetic-suite result, not a real-world superiority claim. See the
-[experiment plan](docs/experiment_plan.md) and generated [results](docs/results.md).
+synthetic-suite result.
+
+The local M6 evaluation used 24 routes on Türkiye's road network and three vehicle parameter sets.
+On the 71 of 72 baseline scenarios where both strategies found a plan, exact fastest saved a median
+of **24.7 modeled minutes (4.2%)** against fixed-80 greedy. Six scenarios tied and greedy missed one
+scenario. Across all M6 experiments, 2,525 returned plan outcomes passed replay with zero modeled
+reserve violations. These figures use one OpenStreetMap extract (© OpenStreetMap contributors, ODbL)
+and one static EPDK snapshot. See [M6 results and limits](docs/results.md#m6-real-route-benchmark).
 
 ## Setup
 

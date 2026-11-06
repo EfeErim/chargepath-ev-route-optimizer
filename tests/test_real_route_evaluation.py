@@ -370,3 +370,58 @@ def test_runtime_measurements_follow_the_declared_protocol(tmp_path: Path) -> No
     assert len(osrm["route"]["samples_ms"]) == len(osrm["table"]["samples_ms"]) == 2
     assert client.route_calls - route_calls == 3 * 3
     assert len(client.table_sizes) - table_calls == 3 * 3
+
+
+def _committed_evidence() -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    evidence_dir = REPOSITORY_ROOT / "docs/evidence/m6"
+    summary: dict[str, Any] = json.loads(
+        (evidence_dir / "summary_v1.json").read_text(encoding="utf-8")
+    )
+    lines = (evidence_dir / "trips_v1.jsonl").read_text(encoding="utf-8").splitlines()
+    return summary, [json.loads(line) for line in lines]
+
+
+def _real_manifest_bytes() -> bytes:
+    return (REPOSITORY_ROOT / "data/benchmarks/m6/v1/manifest.json").read_bytes()
+
+
+def test_committed_evidence_belongs_to_the_frozen_manifest() -> None:
+    summary, trips = _committed_evidence()
+    manifest_bytes = _real_manifest_bytes()
+    manifest = json.loads(manifest_bytes)
+    assert summary["manifest_sha256"] == hashlib.sha256(manifest_bytes).hexdigest()
+    assert summary["reconciliation"]["evaluated_trips"] == len(trips)
+    assert len(trips) == len(enumerate_trips(manifest))
+    assert [(t["experiment"], t["variant"], t["route_id"]) for t in trips] == [
+        (trip.experiment, trip.variant, trip.route_id) for trip in enumerate_trips(manifest)
+    ]
+    assert len(summary["stored_graphs"]) == len(required_graph_keys(manifest))
+
+
+def test_committed_evidence_reconciles_and_passes_every_gate() -> None:
+    summary, trips = _committed_evidence()
+    check_gates(trips)
+    for algorithm in ALGORITHMS:
+        counts = Counter(trip["results"][algorithm]["outcome"] for trip in trips)
+        assert dict(counts) == {
+            key: value
+            for key, value in summary["reconciliation"]["outcomes_per_algorithm"][algorithm].items()
+            if value
+        }
+    plans = [
+        result
+        for trip in trips
+        for result in trip["results"].values()
+        if result["outcome"] == "plan"
+    ]
+    assert plans
+    assert all(result["reserve_violations"] == 0 for result in plans)
+
+
+def test_committed_evidence_contains_no_station_data() -> None:
+    summary, trips = _committed_evidence()
+    assert_no_station_data({"summary": summary, "trips": trips}, {})
+    for name in ("summary_v1.json", "trips_v1.jsonl", "runtime_2026-11-05.json"):
+        text = (REPOSITORY_ROOT / "docs/evidence/m6" / name).read_text(encoding="utf-8")
+        for forbidden in ("epdk:", "ŞRJ/", "sarjIstasyonu", "latitude", "longitude"):
+            assert forbidden not in text

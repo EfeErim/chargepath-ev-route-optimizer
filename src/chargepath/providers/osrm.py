@@ -21,6 +21,8 @@ DEFAULT_OSRM_ENDPOINT = "http://127.0.0.1:5000"
 DEFAULT_OSRM_PROFILE = "driving"
 DEFAULT_OSRM_TIMEOUT_SECONDS = 10.0
 OSRM_DECIMAL_ROUNDING_TOLERANCE = 0.1
+# OSRM returned distances down to -0.5 m between near-coincident points on a real Turkey graph.
+OSRM_NEGATIVE_DISTANCE_TOLERANCE_METERS = 1.0
 MAX_GEOMETRY_WORKERS = 4
 
 
@@ -264,7 +266,7 @@ class OsrmHttpClient(RoadTableClient, RoadRouteClient):
                 assert distance is not None
                 if (
                     duration < -OSRM_DECIMAL_ROUNDING_TOLERANCE
-                    or distance < -OSRM_DECIMAL_ROUNDING_TOLERANCE
+                    or distance < -OSRM_NEGATIVE_DISTANCE_TOLERANCE_METERS
                 ):
                     raise OsrmResponseError("OSRM table values must not be negative")
                 row.append(
