@@ -1,0 +1,721 @@
+{
+  "initial_soc_stress_pct": 30,
+  "input_benchmark": "chargepath-m6-real-route-v1",
+  "manifest_sha256": "1c637e15d52fb053ac52d7721a4223b294927729cae6aa9bdb7d82724f76cadf",
+  "reserve_violations_on_returned_plans": 0,
+  "scenarios": [
+    {
+      "first_stop_outage_min": 264.56333333333333,
+      "fixed_path_min": 265.7683333333333,
+      "greedy_min": 270.16833333333335,
+      "low_soc_min": 291.7683333333333,
+      "nominal_min": 263.36833333333334,
+      "profile": "set-40kwh",
+      "route": "m6-r01",
+      "sparse_candidates_min": 264.56333333333333
+    },
+    {
+      "first_stop_outage_min": 224.30166666666668,
+      "fixed_path_min": 221.32999999999998,
+      "greedy_min": 230.92999999999998,
+      "low_soc_min": 249.73,
+      "nominal_min": 221.32999999999998,
+      "profile": "set-40kwh",
+      "route": "m6-r02",
+      "sparse_candidates_min": 225.79666666666668
+    },
+    {
+      "first_stop_outage_min": 267.765,
+      "fixed_path_min": 267.765,
+      "greedy_min": 272.565,
+      "low_soc_min": 294.16999999999996,
+      "nominal_min": 265.365,
+      "profile": "set-40kwh",
+      "route": "m6-r03",
+      "sparse_candidates_min": 267.765
+    },
+    {
+      "first_stop_outage_min": 127.57666666666668,
+      "fixed_path_min": 127.42666666666666,
+      "greedy_min": 127.42666666666666,
+      "low_soc_min": 151.42666666666665,
+      "nominal_min": 127.42666666666666,
+      "profile": "set-40kwh",
+      "route": "m6-r04",
+      "sparse_candidates_min": 127.57666666666668
+    },
+    {
+      "first_stop_outage_min": 170.8,
+      "fixed_path_min": 173.2,
+      "greedy_min": 185.2,
+      "low_soc_min": 196.8,
+      "nominal_min": 170.8,
+      "profile": "set-40kwh",
+      "route": "m6-r05",
+      "sparse_candidates_min": 173.20000000000002
+    },
+    {
+      "first_stop_outage_min": 155.6033333333333,
+      "fixed_path_min": 164.3383333333333,
+      "greedy_min": 180.73833333333332,
+      "low_soc_min": 176.49,
+      "nominal_min": 152.49,
+      "profile": "set-40kwh",
+      "route": "m6-r06",
+      "sparse_candidates_min": 152.49
+    },
+    {
+      "first_stop_outage_min": 538.0216666666666,
+      "fixed_path_min": 555.345,
+      "greedy_min": 557.7449999999999,
+      "low_soc_min": 564.1766666666666,
+      "nominal_min": 534.935,
+      "profile": "set-40kwh",
+      "route": "m6-r07",
+      "sparse_candidates_min": 537.6183333333333
+    },
+    {
+      "first_stop_outage_min": 404.8683333333333,
+      "fixed_path_min": 409.4766666666667,
+      "greedy_min": 419.0766666666667,
+      "low_soc_min": 428.86833333333334,
+      "nominal_min": 404.7566666666666,
+      "profile": "set-40kwh",
+      "route": "m6-r08",
+      "sparse_candidates_min": 404.8683333333333
+    },
+    {
+      "first_stop_outage_min": 275.98,
+      "fixed_path_min": 285.495,
+      "greedy_min": 299.895,
+      "low_soc_min": 304.25,
+      "nominal_min": 275.615,
+      "profile": "set-40kwh",
+      "route": "m6-r09",
+      "sparse_candidates_min": 275.615
+    },
+    {
+      "first_stop_outage_min": 397.21999999999997,
+      "fixed_path_min": 399.85333333333335,
+      "greedy_min": 399.85333333333335,
+      "low_soc_min": 424.87500000000006,
+      "nominal_min": 397.09499999999997,
+      "profile": "set-40kwh",
+      "route": "m6-r10",
+      "sparse_candidates_min": 399.72833333333335
+    },
+    {
+      "first_stop_outage_min": 529.3033333333334,
+      "fixed_path_min": 564.575,
+      "greedy_min": 564.575,
+      "low_soc_min": 555.3033333333334,
+      "nominal_min": 529.3033333333334,
+      "profile": "set-40kwh",
+      "route": "m6-r11",
+      "sparse_candidates_min": 538.19
+    },
+    {
+      "first_stop_outage_min": 374.915,
+      "fixed_path_min": 402.1716666666666,
+      "greedy_min": 430.97166666666664,
+      "low_soc_min": 398.915,
+      "nominal_min": 374.91499999999996,
+      "profile": "set-40kwh",
+      "route": "m6-r12",
+      "sparse_candidates_min": 378.9766666666667
+    },
+    {
+      "first_stop_outage_min": 711.0683333333333,
+      "fixed_path_min": 712.2916666666667,
+      "greedy_min": 729.0916666666667,
+      "low_soc_min": 735.0683333333334,
+      "nominal_min": 710.8183333333334,
+      "profile": "set-40kwh",
+      "route": "m6-r13",
+      "sparse_candidates_min": 715.4716666666666
+    },
+    {
+      "first_stop_outage_min": 923.6916666666666,
+      "fixed_path_min": 943.5216666666668,
+      "greedy_min": 955.5216666666668,
+      "low_soc_min": 947.6916666666666,
+      "nominal_min": 923.6916666666666,
+      "profile": "set-40kwh",
+      "route": "m6-r14",
+      "sparse_candidates_min": 928.6516666666666
+    },
+    {
+      "first_stop_outage_min": 773.175,
+      "fixed_path_min": 794.8016666666667,
+      "greedy_min": 797.2016666666667,
+      "low_soc_min": 797.1750000000001,
+      "nominal_min": 772.5083333333334,
+      "profile": "set-40kwh",
+      "route": "m6-r15",
+      "sparse_candidates_min": 863.2166666666667
+    },
+    {
+      "first_stop_outage_min": 764.3016666666665,
+      "fixed_path_min": 772.9566666666667,
+      "greedy_min": 782.5566666666667,
+      "low_soc_min": 788.6899999999999,
+      "nominal_min": 763.5416666666667,
+      "profile": "set-40kwh",
+      "route": "m6-r16",
+      "sparse_candidates_min": 778.9300000000001
+    },
+    {
+      "first_stop_outage_min": 618.97,
+      "fixed_path_min": 636.9533333333334,
+      "greedy_min": 656.1533333333333,
+      "low_soc_min": 643.1166666666667,
+      "nominal_min": 613.76,
+      "profile": "set-40kwh",
+      "route": "m6-r17",
+      "sparse_candidates_min": 625.7516666666668
+    },
+    {
+      "first_stop_outage_min": 739.79,
+      "fixed_path_min": 751.5283333333334,
+      "greedy_min": 767.9283333333334,
+      "low_soc_min": 763.7900000000001,
+      "nominal_min": 739.79,
+      "profile": "set-40kwh",
+      "route": "m6-r18",
+      "sparse_candidates_min": 746.8883333333333
+    },
+    {
+      "first_stop_outage_min": 1092.9050000000002,
+      "fixed_path_min": 1103.1333333333332,
+      "greedy_min": 1119.9333333333334,
+      "low_soc_min": 1118.7366666666665,
+      "nominal_min": 1089.5033333333333,
+      "profile": "set-40kwh",
+      "route": "m6-r19",
+      "sparse_candidates_min": null
+    },
+    {
+      "first_stop_outage_min": null,
+      "low_soc_min": 1494.8516666666667,
+      "nominal_min": 1470.8516666666667,
+      "profile": "set-40kwh",
+      "route": "m6-r20",
+      "sparse_candidates_min": null
+    },
+    {
+      "first_stop_outage_min": 1550.0416666666665,
+      "fixed_path_min": 1553.5949999999998,
+      "greedy_min": 1555.995,
+      "low_soc_min": 1572.6966666666667,
+      "nominal_min": 1546.6966666666667,
+      "profile": "set-40kwh",
+      "route": "m6-r21",
+      "sparse_candidates_min": null
+    },
+    {
+      "first_stop_outage_min": 1119.8066666666666,
+      "fixed_path_min": 1130.3733333333332,
+      "greedy_min": 1130.3733333333332,
+      "low_soc_min": 1143.7066666666667,
+      "nominal_min": 1117.7066666666667,
+      "profile": "set-40kwh",
+      "route": "m6-r22",
+      "sparse_candidates_min": 1142.6933333333332
+    },
+    {
+      "first_stop_outage_min": 1064.71,
+      "fixed_path_min": 1138.9883333333335,
+      "greedy_min": 1150.9883333333335,
+      "low_soc_min": 1091.315,
+      "nominal_min": 1063.9133333333334,
+      "profile": "set-40kwh",
+      "route": "m6-r23",
+      "sparse_candidates_min": 1075.8083333333334
+    },
+    {
+      "first_stop_outage_min": 1164.4516666666666,
+      "fixed_path_min": 1213.3083333333334,
+      "greedy_min": 1237.3083333333334,
+      "low_soc_min": 1188.6266666666666,
+      "nominal_min": 1164.4516666666666,
+      "profile": "set-40kwh",
+      "route": "m6-r24",
+      "sparse_candidates_min": null
+    },
+    {
+      "first_stop_outage_min": 243.795,
+      "fixed_path_min": 246.09666666666666,
+      "greedy_min": 255.6966666666667,
+      "low_soc_min": 258.485,
+      "nominal_min": 242.59666666666664,
+      "profile": "set-60kwh",
+      "route": "m6-r01",
+      "sparse_candidates_min": 242.59666666666664
+    },
+    {
+      "first_stop_outage_min": 202.98000000000002,
+      "fixed_path_min": 203.81,
+      "greedy_min": 213.41,
+      "low_soc_min": 216.99,
+      "nominal_min": 202.35666666666668,
+      "profile": "set-60kwh",
+      "route": "m6-r02",
+      "sparse_candidates_min": 202.35666666666668
+    },
+    {
+      "first_stop_outage_min": 247.36499999999998,
+      "fixed_path_min": 250.99499999999998,
+      "greedy_min": 259.395,
+      "low_soc_min": 262.48333333333335,
+      "nominal_min": 247.365,
+      "profile": "set-60kwh",
+      "route": "m6-r03",
+      "sparse_candidates_min": 247.365
+    },
+    {
+      "fixed_path_min": 123.02666666666666,
+      "greedy_min": 123.02666666666666,
+      "low_soc_min": 134.62666666666667,
+      "nominal_min": 123.02666666666666,
+      "profile": "set-60kwh",
+      "route": "m6-r04",
+      "sparse_candidates_min": 123.02666666666667
+    },
+    {
+      "fixed_path_min": 161.2,
+      "greedy_min": 169.6,
+      "low_soc_min": 175.29999999999998,
+      "nominal_min": 156.8,
+      "profile": "set-60kwh",
+      "route": "m6-r05",
+      "sparse_candidates_min": 156.8
+    },
+    {
+      "fixed_path_min": 141.46999999999997,
+      "greedy_min": 141.46999999999997,
+      "low_soc_min": 154.60500000000002,
+      "nominal_min": 141.46999999999997,
+      "profile": "set-60kwh",
+      "route": "m6-r06",
+      "sparse_candidates_min": 141.46999999999997
+    },
+    {
+      "first_stop_outage_min": 480.6916666666667,
+      "fixed_path_min": 477.26,
+      "greedy_min": 484.46000000000004,
+      "low_soc_min": 496.6016666666667,
+      "nominal_min": 477.26,
+      "profile": "set-60kwh",
+      "route": "m6-r07",
+      "sparse_candidates_min": 477.26
+    },
+    {
+      "first_stop_outage_min": 354.81000000000006,
+      "fixed_path_min": 361.3433333333333,
+      "greedy_min": 382.21,
+      "low_soc_min": 370.93833333333333,
+      "nominal_min": 354.81,
+      "profile": "set-60kwh",
+      "route": "m6-r08",
+      "sparse_candidates_min": 354.81000000000006
+    },
+    {
+      "first_stop_outage_min": 249.27499999999998,
+      "fixed_path_min": 250.06499999999997,
+      "greedy_min": 257.265,
+      "low_soc_min": 263.60333333333335,
+      "nominal_min": 249.06166666666667,
+      "profile": "set-60kwh",
+      "route": "m6-r09",
+      "sparse_candidates_min": 250.15833333333333
+    },
+    {
+      "first_stop_outage_min": 351.0983333333333,
+      "fixed_path_min": 352.885,
+      "greedy_min": 367.885,
+      "low_soc_min": 367.17999999999995,
+      "nominal_min": 351.06833333333327,
+      "profile": "set-60kwh",
+      "route": "m6-r10",
+      "sparse_candidates_min": 351.0983333333333
+    },
+    {
+      "first_stop_outage_min": 465.9166666666667,
+      "fixed_path_min": 480.1883333333334,
+      "greedy_min": 481.3883333333334,
+      "low_soc_min": 481.68666666666667,
+      "nominal_min": 465.8366666666666,
+      "profile": "set-60kwh",
+      "route": "m6-r11",
+      "sparse_candidates_min": 469.90500000000003
+    },
+    {
+      "first_stop_outage_min": 332.5083333333333,
+      "fixed_path_min": 342.945,
+      "greedy_min": 356.145,
+      "low_soc_min": 345.36833333333334,
+      "nominal_min": 330.9783333333333,
+      "profile": "set-60kwh",
+      "route": "m6-r12",
+      "sparse_candidates_min": 334.88666666666666
+    },
+    {
+      "first_stop_outage_min": 625.7966666666667,
+      "fixed_path_min": 666.2216666666667,
+      "greedy_min": 667.4216666666667,
+      "low_soc_min": 639.2666666666668,
+      "nominal_min": 624.6500000000001,
+      "profile": "set-60kwh",
+      "route": "m6-r13",
+      "sparse_candidates_min": 625.4849999999999
+    },
+    {
+      "first_stop_outage_min": 800.77,
+      "fixed_path_min": 807.2183333333334,
+      "greedy_min": 822.8183333333334,
+      "low_soc_min": 815.2666666666667,
+      "nominal_min": 800.0666666666666,
+      "profile": "set-60kwh",
+      "route": "m6-r14",
+      "sparse_candidates_min": 808.36
+    },
+    {
+      "first_stop_outage_min": 648.125,
+      "fixed_path_min": 657.3283333333334,
+      "greedy_min": 662.1283333333333,
+      "low_soc_min": 662.6700000000001,
+      "nominal_min": 647.78,
+      "profile": "set-60kwh",
+      "route": "m6-r15",
+      "sparse_candidates_min": 659.6766666666667
+    },
+    {
+      "first_stop_outage_min": 657.735,
+      "fixed_path_min": 661.23,
+      "greedy_min": 670.53,
+      "low_soc_min": 670.685,
+      "nominal_min": 656.3166666666667,
+      "profile": "set-60kwh",
+      "route": "m6-r16",
+      "sparse_candidates_min": 662.485
+    },
+    {
+      "first_stop_outage_min": 518.55,
+      "fixed_path_min": 541.1533333333333,
+      "greedy_min": 544.4533333333333,
+      "low_soc_min": 531.9066666666666,
+      "nominal_min": 517.3133333333334,
+      "profile": "set-60kwh",
+      "route": "m6-r17",
+      "sparse_candidates_min": 523.9933333333333
+    },
+    {
+      "first_stop_outage_min": 647.0416666666666,
+      "fixed_path_min": 691.3349999999999,
+      "greedy_min": 707.435,
+      "low_soc_min": 658.4416666666666,
+      "nominal_min": 646.4416666666666,
+      "profile": "set-60kwh",
+      "route": "m6-r18",
+      "sparse_candidates_min": 647.1216666666667
+    },
+    {
+      "first_stop_outage_min": 912.6133333333332,
+      "fixed_path_min": 918.0783333333333,
+      "greedy_min": 922.2783333333333,
+      "low_soc_min": 924.6133333333332,
+      "nominal_min": 911.9616666666666,
+      "profile": "set-60kwh",
+      "route": "m6-r19",
+      "sparse_candidates_min": 1003.0683333333334
+    },
+    {
+      "first_stop_outage_min": 1228.7316666666666,
+      "fixed_path_min": 1250.3799999999999,
+      "greedy_min": 1287.5466666666666,
+      "low_soc_min": 1243.3616666666667,
+      "nominal_min": 1226.6616666666669,
+      "profile": "set-60kwh",
+      "route": "m6-r20",
+      "sparse_candidates_min": 1310.7283333333332
+    },
+    {
+      "first_stop_outage_min": 1289.3100000000002,
+      "fixed_path_min": 1304.5859523809522,
+      "greedy_min": 1324.9383333333333,
+      "low_soc_min": 1298.9350000000002,
+      "nominal_min": 1284.9350000000002,
+      "profile": "set-60kwh",
+      "route": "m6-r21",
+      "sparse_candidates_min": 1302.195
+    },
+    {
+      "first_stop_outage_min": 971.1366666666665,
+      "fixed_path_min": 986.7366666666667,
+      "greedy_min": 1033.9366666666667,
+      "low_soc_min": 984.0700000000002,
+      "nominal_min": 970.9016666666666,
+      "profile": "set-60kwh",
+      "route": "m6-r22",
+      "sparse_candidates_min": 975.0316666666666
+    },
+    {
+      "first_stop_outage_min": 930.895,
+      "fixed_path_min": 960.35,
+      "greedy_min": 985.4166666666667,
+      "low_soc_min": 946.4833333333332,
+      "nominal_min": 928.9816666666666,
+      "profile": "set-60kwh",
+      "route": "m6-r23",
+      "sparse_candidates_min": 944.6483333333333
+    },
+    {
+      "first_stop_outage_min": 1013.5816666666666,
+      "fixed_path_min": 1021.8016666666667,
+      "greedy_min": 1026.6016666666667,
+      "low_soc_min": 1026.6683333333333,
+      "nominal_min": 1009.7933333333333,
+      "profile": "set-60kwh",
+      "route": "m6-r24",
+      "sparse_candidates_min": 1045.475
+    },
+    {
+      "first_stop_outage_min": 238.72833333333335,
+      "fixed_path_min": 247.54333333333335,
+      "greedy_min": 271.54333333333335,
+      "low_soc_min": 250.72833333333335,
+      "nominal_min": 237.23499999999999,
+      "profile": "set-80kwh",
+      "route": "m6-r01",
+      "sparse_candidates_min": 238.72833333333335
+    },
+    {
+      "first_stop_outage_min": 199.41333333333336,
+      "fixed_path_min": 204.76666666666665,
+      "greedy_min": 228.76666666666665,
+      "low_soc_min": 213.39666666666665,
+      "nominal_min": 198.31333333333336,
+      "profile": "set-80kwh",
+      "route": "m6-r02",
+      "sparse_candidates_min": 198.31333333333336
+    },
+    {
+      "first_stop_outage_min": 243.655,
+      "fixed_path_min": 253.75,
+      "greedy_min": 289.75,
+      "low_soc_min": 256.89666666666665,
+      "nominal_min": 243.285,
+      "profile": "set-80kwh",
+      "route": "m6-r03",
+      "sparse_candidates_min": 244.03166666666667
+    },
+    {
+      "fixed_path_min": 123.02666666666666,
+      "greedy_min": 123.02666666666666,
+      "low_soc_min": 130.78666666666666,
+      "nominal_min": 123.02666666666666,
+      "profile": "set-80kwh",
+      "route": "m6-r04",
+      "sparse_candidates_min": 123.02666666666667
+    },
+    {
+      "fixed_path_min": 156.79999999999998,
+      "greedy_min": 156.79999999999998,
+      "low_soc_min": 171.56,
+      "nominal_min": 156.79999999999995,
+      "profile": "set-80kwh",
+      "route": "m6-r05",
+      "sparse_candidates_min": 156.8
+    },
+    {
+      "fixed_path_min": 141.46999999999997,
+      "greedy_min": 141.46999999999997,
+      "low_soc_min": 150.805,
+      "nominal_min": 141.46999999999997,
+      "profile": "set-80kwh",
+      "route": "m6-r06",
+      "sparse_candidates_min": 141.46999999999997
+    },
+    {
+      "first_stop_outage_min": 473.1012962962963,
+      "fixed_path_min": 485.2966666666667,
+      "greedy_min": 529.9633333333334,
+      "low_soc_min": 494.83629629629627,
+      "nominal_min": 471.32796296296294,
+      "profile": "set-80kwh",
+      "route": "m6-r07",
+      "sparse_candidates_min": 471.32796296296294
+    },
+    {
+      "first_stop_outage_min": 351.21,
+      "fixed_path_min": 353.87666666666667,
+      "greedy_min": 355.21,
+      "low_soc_min": 364.325,
+      "nominal_min": 347.85,
+      "profile": "set-80kwh",
+      "route": "m6-r08",
+      "sparse_candidates_min": 351.21
+    },
+    {
+      "first_stop_outage_min": 244.28166666666664,
+      "fixed_path_min": 250.58499999999998,
+      "greedy_min": 268.585,
+      "low_soc_min": 257.47833333333335,
+      "nominal_min": 243.00833333333333,
+      "profile": "set-80kwh",
+      "route": "m6-r09",
+      "sparse_candidates_min": 244.28166666666664
+    },
+    {
+      "first_stop_outage_min": 344.08500000000004,
+      "fixed_path_min": 351.02166666666665,
+      "greedy_min": 355.02166666666665,
+      "low_soc_min": 358.68666666666667,
+      "nominal_min": 342.92499999999995,
+      "profile": "set-80kwh",
+      "route": "m6-r10",
+      "sparse_candidates_min": 344.085
+    },
+    {
+      "first_stop_outage_min": 452.86833333333334,
+      "fixed_path_min": 464.08833333333337,
+      "greedy_min": 482.08833333333337,
+      "low_soc_min": 465.62555555555554,
+      "nominal_min": 452.3216666666667,
+      "profile": "set-80kwh",
+      "route": "m6-r11",
+      "sparse_candidates_min": 455.9166666666667
+    },
+    {
+      "first_stop_outage_min": 323.9766666666667,
+      "fixed_path_min": 332.01166666666666,
+      "greedy_min": 340.01166666666666,
+      "low_soc_min": 337.025,
+      "nominal_min": 323.9766666666667,
+      "profile": "set-80kwh",
+      "route": "m6-r12",
+      "sparse_candidates_min": 324.75166666666667
+    },
+    {
+      "first_stop_outage_min": 609.0533333333333,
+      "fixed_path_min": 634.8933333333333,
+      "greedy_min": 649.7266666666667,
+      "low_soc_min": 625.345,
+      "nominal_min": 608.0749999999999,
+      "profile": "set-80kwh",
+      "route": "m6-r13",
+      "sparse_candidates_min": 608.0749999999999
+    },
+    {
+      "first_stop_outage_min": 786.6190740740739,
+      "fixed_path_min": 809.1033333333332,
+      "greedy_min": 812.1033333333332,
+      "low_soc_min": 799.6061111111111,
+      "nominal_min": 782.9394444444443,
+      "profile": "set-80kwh",
+      "route": "m6-r14",
+      "sparse_candidates_min": 793.3209259259258
+    },
+    {
+      "first_stop_outage_min": 629.5066666666667,
+      "fixed_path_min": 650.2116666666667,
+      "greedy_min": 659.2516666666668,
+      "low_soc_min": 642.8666666666667,
+      "nominal_min": 629.1616666666667,
+      "profile": "set-80kwh",
+      "route": "m6-r15",
+      "sparse_candidates_min": 642.05
+    },
+    {
+      "first_stop_outage_min": 646.165,
+      "fixed_path_min": 663.755,
+      "greedy_min": 670.4216666666666,
+      "low_soc_min": 655.765,
+      "nominal_min": 644.4000000000001,
+      "profile": "set-80kwh",
+      "route": "m6-r16",
+      "sparse_candidates_min": 650.51
+    },
+    {
+      "first_stop_outage_min": 502.3449999999999,
+      "fixed_path_min": 510.40629629629626,
+      "greedy_min": 536.4433333333333,
+      "low_soc_min": 515.2733333333333,
+      "nominal_min": 501.3449999999999,
+      "profile": "set-80kwh",
+      "route": "m6-r17",
+      "sparse_candidates_min": 512.5400000000001
+    },
+    {
+      "first_stop_outage_min": 635.8350000000002,
+      "fixed_path_min": 655.1833333333333,
+      "greedy_min": 663.1833333333333,
+      "low_soc_min": 647.375,
+      "nominal_min": 631.0816666666667,
+      "profile": "set-80kwh",
+      "route": "m6-r18",
+      "sparse_candidates_min": 631.835
+    },
+    {
+      "first_stop_outage_min": 882.1183333333333,
+      "fixed_path_min": 899.672962962963,
+      "greedy_min": 913.91,
+      "low_soc_min": 893.085,
+      "nominal_min": 880.5566666666666,
+      "profile": "set-80kwh",
+      "route": "m6-r19",
+      "sparse_candidates_min": 914.9138888888889
+    },
+    {
+      "first_stop_outage_min": 1204.2862962962963,
+      "fixed_path_min": 1214.57,
+      "greedy_min": 1219.9033333333332,
+      "low_soc_min": 1224.2862962962963,
+      "nominal_min": 1203.2266666666665,
+      "profile": "set-80kwh",
+      "route": "m6-r20",
+      "sparse_candidates_min": 1234.1405555555555
+    },
+    {
+      "first_stop_outage_min": 1245.677222222222,
+      "fixed_path_min": 1297.389761904762,
+      "greedy_min": 1309.5564285714286,
+      "low_soc_min": 1261.543888888889,
+      "nominal_min": 1245.302222222222,
+      "profile": "set-80kwh",
+      "route": "m6-r21",
+      "sparse_candidates_min": 1265.9162962962964
+    },
+    {
+      "first_stop_outage_min": 946.9016666666666,
+      "fixed_path_min": 970.84,
+      "greedy_min": 979.3199999999999,
+      "low_soc_min": 960.0783333333333,
+      "nominal_min": 945.1366666666665,
+      "profile": "set-80kwh",
+      "route": "m6-r22",
+      "sparse_candidates_min": 955.2538888888889
+    },
+    {
+      "first_stop_outage_min": 910.3266666666666,
+      "fixed_path_min": 1001.7783333333334,
+      "greedy_min": 1007.7783333333334,
+      "low_soc_min": 927.7283333333332,
+      "nominal_min": 909.3216666666665,
+      "profile": "set-80kwh",
+      "route": "m6-r23",
+      "sparse_candidates_min": 940.8409259259258
+    },
+    {
+      "first_stop_outage_min": 989.1183333333333,
+      "fixed_path_min": 1019.4866666666667,
+      "greedy_min": 1062.6333333333332,
+      "low_soc_min": 999.2664814814815,
+      "nominal_min": 985.9331481481481,
+      "profile": "set-80kwh",
+      "route": "m6-r24",
+      "sparse_candidates_min": 1008.1533333333334
+    }
+  ],
+  "sparse_candidate_cap": 12
+}

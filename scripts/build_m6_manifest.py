@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 from pathlib import Path
 
 from chargepath.providers.osrm import Coordinate, OsrmHttpClient
@@ -44,7 +45,35 @@ FROZEN_INPUTS = {
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--osrm-endpoint", default="http://127.0.0.1:5000")
+    parser.add_argument("--road-metadata", type=Path, help="JSON road_graph provenance object")
+    parser.add_argument("--station-manifest", type=Path, help="Reviewed EPDK snapshot manifest")
+    parser.add_argument("--output-dir", type=Path, help="New directory for an independent run")
     args = parser.parse_args()
+
+    custom_run = any((args.road_metadata, args.station_manifest, args.output_dir))
+    if custom_run and not all((args.road_metadata, args.station_manifest, args.output_dir)):
+        parser.error(
+            "an independent run requires --road-metadata, --station-manifest and --output-dir"
+        )
+    frozen_inputs = FROZEN_INPUTS
+    output_dir = BENCHMARK_DIR
+    if custom_run:
+        output_dir = args.output_dir
+        if output_dir.exists():
+            parser.error("--output-dir must be a new directory")
+        road_metadata = json.loads(args.road_metadata.read_text(encoding="utf-8"))
+        station_manifest = json.loads(args.station_manifest.read_text(encoding="utf-8"))
+        frozen_inputs = {
+            "road_graph": road_metadata,
+            "station_snapshot": {
+                "snapshot_id": station_manifest["snapshot_id"],
+                "sha256": station_manifest["response_sha256"],
+                "retrieved_at": station_manifest["retrieved_at"],
+                "reuse_status": station_manifest["reuse_status"],
+                "stored_in_repository": False,
+            },
+        }
+    data_version = frozen_inputs["road_graph"]["data_version"]
 
     provinces_path = BENCHMARK_DIR / "provinces.json"
     provinces = load_provinces(provinces_path)
@@ -52,8 +81,8 @@ def main() -> None:
     table = client.table(
         tuple(Coordinate(province.longitude, province.latitude) for province in provinces)
     )
-    if table.data_version != DATA_VERSION:
-        raise SystemExit(f"OSRM reports data_version {table.data_version!r}, not {DATA_VERSION!r}")
+    if table.data_version != data_version:
+        raise SystemExit(f"OSRM reports data_version {table.data_version!r}, not {data_version!r}")
 
     road_km: dict[str, float] = {}
     for row, origin in enumerate(provinces):
@@ -70,26 +99,27 @@ def main() -> None:
             "description": (
                 "Road km from the lower to the higher plate number; used only to assign bands."
             ),
-            "data_version": DATA_VERSION,
+            "data_version": data_version,
             "attribution": "Derived from OpenStreetMap data, © OpenStreetMap contributors, ODbL.",
             "unreachable_pairs_omitted": len(provinces) * (len(provinces) - 1) // 2 - len(road_km),
             "road_km": road_km,
         }
     )
-    distances_path = BENCHMARK_DIR / "selection_distances.json"
-    distances_path.write_bytes(distances_bytes)
-
     routes = select_routes(provinces, road_km)
     manifest = build_manifest(
         routes=routes,
         frozen_inputs={
-            **FROZEN_INPUTS,
+            **frozen_inputs,
             "provinces_sha256": hashlib.sha256(provinces_path.read_bytes()).hexdigest(),
             "selection_distances_sha256": hashlib.sha256(distances_bytes).hexdigest(),
         },
-        distances_data_version=DATA_VERSION,
+        distances_data_version=data_version,
     )
-    (BENCHMARK_DIR / "manifest.json").write_bytes(canonical_bytes(manifest))
+    if custom_run:
+        output_dir.mkdir(parents=True)
+        (output_dir / "provinces.json").write_bytes(provinces_path.read_bytes())
+    (output_dir / "selection_distances.json").write_bytes(distances_bytes)
+    (output_dir / "manifest.json").write_bytes(canonical_bytes(manifest))
     for route in routes:
         print(
             f"{route.route_id} {route.band:>9} slot={route.slot} "
