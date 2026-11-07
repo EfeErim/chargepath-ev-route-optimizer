@@ -152,7 +152,7 @@ def _audit_contracts() -> None:
         'license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md", '
         '"licenses/leaflet-BSD-2-Clause.txt"]',
         '"share/chargepath" = ["data/sample/synthetic_corridor.json"]',
-        'version = "0.2.0rc1"',
+        'version = "0.2.0"',
     )
     if not all(value in pyproject for value in required_pyproject):
         raise ValueError("pyproject release version or license contract is missing")
