@@ -2,12 +2,16 @@
 
 ChargePath is a local-first portfolio project that chooses feasible charging stops and charging amounts for a single battery-electric car, while delegating road-network geometry to a configured OpenStreetMap routing engine.
 
-> **Status:** M0 through M5 are complete and the latest release is [v0.1.1](https://github.com/EfeErim/chargepath-ev-route-optimizer/releases/tag/v0.1.1). The deterministic optimization core, competitive route
+> **Status:** M0 through M6 are complete. The latest release is the
+> [v0.2.0rc1](https://github.com/EfeErim/chargepath-ev-route-optimizer/releases/tag/v0.2.0rc1)
+> pre-release with the real-route evaluation. A closure pass toward 0.2.0 final updates
+> documentation and adds no features. The deterministic optimization core, competitive route
 > options, independent replay, schema-versioned synthetic demo, explicit OSRM route/table adapter,
 > observed-schema EPDK normalizer, static public CCS2 DC projection, and deterministic corridor
 > selector are runnable. The fixture-first loopback Leaflet demo exposes verified route options,
-> charging actions, and estimated SOC without requiring OSRM or EPDK network access. M5 was
-> independently verified by the [published CI run](https://github.com/EfeErim/chargepath-ev-route-optimizer/actions/runs/31600469029).
+> charging actions, and estimated SOC without requiring OSRM or EPDK network access. The release
+> candidate passed all four CI matrix jobs in
+> [run 42358442656](https://github.com/EfeErim/chargepath-ev-route-optimizer/actions/runs/42358442656).
 
 ## Demo
 
@@ -253,6 +257,12 @@ See [limitations](docs/limitations.md) for the full boundary.
 - **M5 — Portfolio release (complete):** clean install, pinned cross-platform CI, evidence, final
   README/media, licensing/attribution, a fail-closed release-content audit, and the published v0.1.0
   release.
+- **M6 — Real-route evaluation (complete):** frozen 24-route manifest on Türkiye's road network,
+  separate OSRM collection and offline evaluation, 624 replayed scenario outcomes, and the v0.2.0rc1
+  pre-release.
+- **Closure — 0.2.0 final (in progress):** documentation and related-work review, then the final
+  release. No new features or milestones are planned; out-of-scope gaps are listed in the
+  [research review](docs/research.md#gap-review-at-closure).
 
 Detailed gates are in [PROJECT_PLAN.md](PROJECT_PLAN.md); current evidence is in [PROJECT_STATE.md](PROJECT_STATE.md).
 
@@ -266,8 +276,9 @@ The literature review prioritizes primary papers and official service documentat
 - [OSRM](https://project-osrm.org/) and [OpenStreetMap tile policy](https://operations.osmfoundation.org/policies/tiles/).
 - [EPDK charging-station web services](https://www.epdk.gov.tr/Detay/Icerik/3-0-226/web-servisler).
 
-The [source registry](docs/source_registry.md) records verification dates, project use, and the limits
-of each external source.
+A comparison with open-source, research, commercial, and Turkish planners is in
+[related projects](docs/research.md#related-projects). The [source registry](docs/source_registry.md)
+records verification dates, project use, and the limits of each external source.
 
 ## License
 
