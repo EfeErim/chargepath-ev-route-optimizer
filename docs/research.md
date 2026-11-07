@@ -133,7 +133,7 @@ follows.
 
 | Gap | Status | Reason |
 |---|---|---|
-| Vehicle-specific charging curves | Future work | The only gap that open data could close: [open-ev-data](https://github.com/open-ev-data/open-ev-data-dataset) is CDLA-Permissive-2.0. Its reviewed pages do not state curve fields, provenance, or whether a curve is measured, so its suitability is unverified. |
+| Vehicle-specific charging curves | Future work; closure Phase B stopped at its data gate | [open-ev-data](https://github.com/open-ev-data/open-ev-data-dataset) is CDLA-Permissive-2.0 and its schema defines `charging.dc_charge_curve`. In release v1.24.0, however, none of the 1,189 vehicles has a curve, and only 22 carry isolated DC charging-time measurements. Community forks with curves derive them from Fastned charts, which the plan excludes. No redistributable, measured curve source was found. |
 | Speed-, grade-, weather-, temperature-, and payload-dependent energy | Out of scope | The public telemetry pilots gave mixed results. A speed model improved held-out ID.3 error, while the BMW terrain model helped on three hillier sections but raised whole-trip error. The evidence does not justify changing the planner's model. |
 | Uncertain queues and charger outages | Out of scope | The static snapshot has no occupancy or failure data. The literature above needs both as inputs. |
 | Evidence-backed fallback stations | Out of scope | Requires reliability data. The M6 stress case that removes the first charging site only measures sensitivity. |
