@@ -446,6 +446,10 @@ Acceptance:
 Run only if the user explicitly chooses it before Phase C. Otherwise record it as future work in
 `docs/research.md` and skip it.
 
+Outcome (2026-11-07): approved, then stopped at the data gate with no code change. open-ev-data
+release v1.24.0 contains no `dc_charge_curve` among 1,189 vehicles, and the curve-bearing forks derive
+from Fastned charts. The gap is recorded as future work in `docs/research.md`.
+
 Data gate, checked before any code is written:
 
 - confirm the license on the dataset's own repository. The candidate is
