@@ -1,6 +1,6 @@
 # Source Registry
 
-Verified: 2026-08-09
+Verified: 2026-08-09. Rows marked 2026-11-07 were added and checked in the closure review.
 
 This registry records what each external source supports. A link does not grant dataset
 redistribution rights and is not treated as evidence of live availability.
@@ -22,6 +22,15 @@ redistribution rights and is not treated as evidence of live availability.
 | [Sweda and Klabjan (2017)](https://doi.org/10.1287/trsc.2016.0724) | Primary research | Motivation for treating charger availability as uncertain | Static first-release data cannot support a guaranteed fallback recommendation. |
 | [Schoenberg and Dressler (2021)](https://arxiv.org/abs/2102.06503) | Primary research | Waiting-time and adaptive-rerouting context | Queue and occupancy are future evidence-dependent inputs, not synthetic planner facts. |
 | [Levin, Duell, and Waller (2014)](https://doi.org/10.3141/2427-03) | Primary research | Road-grade energy sensitivity | Supports documenting constant consumption as an uncalibrated baseline. |
+| [Baum, Sauer, Wagner, and Zündorf (2017)](https://doi.org/10.4230/LIPIcs.SEA.2017.19) | Primary research | Consumption profiles, partial recharging, and speedup context | Verified 2026-11-07 on the publisher page. Design reference only. |
+| [Dastpak et al. (2024)](https://doi.org/10.1016/j.trc.2023.104411) | Primary research | Occupancy-aware routing for one EV | Verified 2026-11-07 through Crossref metadata; the publisher page returned HTTP 403. Context only. |
+| [Weng et al. (2025)](https://doi.org/10.1080/23302674.2025.2541923) | Primary research | Charging-failure risk in EV routing | Verified 2026-11-07 through Crossref metadata (title, authors, venue). The abstract was not accessible, so only the title-level topic is cited. |
+| [Gutiérrez-Moreno et al. (2026)](https://doi.org/10.3390/wevj17010041) | Primary research | Learned SOC consumption with A* routing | Verified 2026-11-07 through the Crossref abstract; the publisher page returned HTTP 403. Context only. |
+| [Cruz et al. (2026), EVRoute](https://doi.org/10.3390/automation7050159) | Primary research and open-source platform | Related-project comparison | Verified 2026-11-07 through the Crossref abstract; the publisher page returned HTTP 403. |
+| [evnav](https://github.com/giraldeau/evnav), [TheMarex/charge](https://github.com/TheMarex/charge), [Pumperly](https://github.com/GeiserX/pumperly) | Open-source repositories | Related-project comparison | Verified 2026-11-07 from each README. Features the README does not state are not inferred. |
+| [ABRP](https://abetterrouteplanner.com/home), [Chargetrip API](https://chargetrip.com/api/), [ChargeIQ](https://apps.apple.com/app/id1609390820) | Product pages | Context for commercial planning inputs | Verified 2026-11-07. Marketing statements, not method or accuracy evidence. |
+| [Togg Trumore smart route (DonanımHaber)](https://www.donanimhaber.com/togg-trumore-uygulamasina-elektrikli-araclar-icin-akilli-rota-oze--178447), [Eşarj trip planning (DHA)](https://www.dha.com.tr/ekonomi/esarj-uygulamasina-seyahat-planlama-ozelligini-ekledi-2580648) | News reports dated 2024-06-14 and 2025-02-10 | Turkish planner context | Verified 2026-11-07. Features may have changed since publication. |
+| [open-ev-data dataset](https://github.com/open-ev-data/open-ev-data-dataset) | Community dataset | Candidate source for vehicle charging curves (future work) | Verified 2026-11-07: CDLA-Permissive-2.0, which allows sharing with the license text; latest observed release v1.24.0. The reviewed pages do not state curve fields, provenance, or a measured flag. No data copied. |
 
 ## M2 live probe note
 
