@@ -22,7 +22,7 @@ M5 — Portfolio release: **complete; v0.1.0 published**
 
 v0.1.1 — Maintenance release: **CI green; tagged from the commit that records this result**
 
-M6 — Real-route evaluation: **local acceptance and CI passed; 0.2.0rc1 tag and pre-release pending**
+M6 — Real-route evaluation: **complete; 0.2.0rc1 published as a GitHub pre-release**
 
 Dated evidence sections below describe the state when they were recorded. They are kept as history,
 so file counts, UI text, and CI status in them can be superseded by later sections.
@@ -75,8 +75,8 @@ Verified on 2026-08-05 with Python 3.11.9:
 
 ## Next milestone
 
-M6.4 publication requires explicit approval. The release candidate and local acceptance evidence
-are recorded below. EPDK's public FAQ confirms system-to-system access. Explicit terms for
+No next milestone is planned. M6.4 is complete and 0.2.0rc1 is published as a GitHub pre-release; the
+release candidate, CI, and publication evidence are recorded below. EPDK's public FAQ confirms system-to-system access. Explicit terms for
 redistributing snapshot data or derived results remain unconfirmed.
 
 ## M1 evidence
@@ -755,9 +755,14 @@ Verified locally on 2026-11-06.
 - **Data and publication — pending review.** Source station rows, graphs, OSM extracts, and telemetry
   files remain ignored. The evidence export checks for station data, and the source audit checks JSONL.
   [EPDK's FAQ](https://epdk.gov.tr/Detay/Icerik/3-0-211/lisans) confirms public web-service access.
-  No explicit reuse term covering this release was identified there. The 0.2.0rc1 candidate
-  awaits tag and GitHub pre-release approval. The M6 commits and aggregate evidence are already public
-  on `main` at `1293cc8`.
+  No explicit reuse term covering this release was identified there. The release contains only
+  aggregate scenario outcomes and snapshot metadata, and its notes state that reuse terms are
+  unconfirmed.
+- **Publication — passed.** After approval, commit `3ee1638`, which records the CI result, passed all
+  four matrix jobs in [run 42358442656](https://github.com/EfeErim/chargepath-ev-route-optimizer/actions/runs/42358442656).
+  The annotated tag `v0.2.0rc1` points to that commit, and
+  [ChargePath 0.2.0rc1](https://github.com/EfeErim/chargepath-ev-route-optimizer/releases/tag/v0.2.0rc1)
+  was published as a GitHub pre-release at 2026-11-07T09:14:22Z.
 
 ## Follow-up experiments and public telemetry pilots
 
@@ -790,5 +795,6 @@ Verified locally on 2026-11-06.
 ## Git state
 
 Independent repository is on `main`, tracking `origin/main`. The public v0.1.0 tag and GitHub Release
-and v0.1.1 tags and GitHub Releases record the published versions. Ignored environments, caches,
+and v0.1.1 tags and GitHub Releases record the published versions; the v0.2.0rc1 tag and GitHub
+pre-release record the M6 candidate. Ignored environments, caches,
 raw/processed EPDK data, and generated package metadata remain outside the candidate.

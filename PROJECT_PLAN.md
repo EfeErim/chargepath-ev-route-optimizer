@@ -242,8 +242,8 @@ Acceptance:
 
 ### M6 — Real-route evaluation
 
-Status: M6.0 through M6.3 complete on 2026-11-05. M6.4 local acceptance passed on 2026-11-06.
-The 0.2.0rc1 candidate awaits publication approval. See `PROJECT_STATE.md` for evidence.
+Status: M6.0 through M6.3 complete on 2026-11-05. M6.4 complete on 2026-11-07: 0.2.0rc1 is
+published as a GitHub pre-release. See `PROJECT_STATE.md` for evidence.
 
 M3 validates the software on eight small synthetic cases. M6 measures what the planner does on real
 Turkish road legs and real static station locations, on inputs frozen before the first result exists.
