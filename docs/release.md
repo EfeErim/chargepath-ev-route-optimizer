@@ -2,8 +2,8 @@
 
 ## Candidate identity
 
-- project version: `0.1.1` (maintenance release following `0.1.0`);
-- release date: 2026-11-05;
+- project version: `0.2.0rc1` (pre-release following `0.1.1`);
+- release date: 2026-11-07;
 - Python: CPython 3.11.9 and 3.13.5;
 - supported CI environments: `windows-2025` x64 and `ubuntu-24.04` x64;
 - Python runtime dependencies: none;
@@ -108,8 +108,13 @@ graphs, and OSM extract files stay in ignored data directories.
 
 The [EPDK FAQ](https://epdk.gov.tr/Detay/Icerik/3-0-211/lisans) describes public access and
 system integration through its web services. It does not specify reuse terms for distributing the
-station snapshot or derived statistics. Review reuse status before public release. Publication
-requires explicit approval.
+station snapshot or derived statistics. The published notes state this, and the release contains no
+station rows, names, coordinates, or identifiers.
+
+After approval, all four matrix jobs passed for commit `3ee1638` in
+[run 42358442656](https://github.com/EfeErim/chargepath-ev-route-optimizer/actions/runs/42358442656).
+The annotated `v0.2.0rc1` tag points to that commit and is published as a
+[GitHub pre-release](https://github.com/EfeErim/chargepath-ev-route-optimizer/releases/tag/v0.2.0rc1).
 
 ## Approval-gated finalization of 0.1.0
 
