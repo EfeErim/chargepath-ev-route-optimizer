@@ -24,6 +24,8 @@ v0.1.1 — Maintenance release: **CI green; tagged from the commit that records 
 
 M6 — Real-route evaluation: **complete; 0.2.0rc1 published as a GitHub pre-release**
 
+0.2.0 — Closure release: **CI green; tagged from the commit that records this result**
+
 Dated evidence sections below describe the state when they were recorded. They are kept as history,
 so file counts, UI text, and CI status in them can be superseded by later sections.
 
@@ -763,6 +765,21 @@ Verified locally on 2026-11-06.
   The annotated tag `v0.2.0rc1` points to that commit, and
   [ChargePath 0.2.0rc1](https://github.com/EfeErim/chargepath-ev-route-optimizer/releases/tag/v0.2.0rc1)
   was published as a GitHub pre-release at 2026-11-07T09:14:22Z.
+
+## 0.2.0 closure release evidence
+
+Recorded on 2026-11-07. The closure pass in `PROJECT_PLAN.md` changed documentation only: Phase A
+reviewed related work and corrected status text, and Phase B stopped at its data gate with no code
+change. Code, the generic charging taper, M3 evidence, and M6 result files match 0.2.0rc1.
+
+- **Version — 0.2.0.** `pyproject.toml`, the release audit, the wheel check, and `docs/release.md`
+  name `0.2.0`; `0.2.0rc1` remains only in historical records.
+- **Canonical gate — passed.** 161 tests, byte-compilation, synthetic demo, Ruff lint and formatting,
+  strict mypy, `pip check`, non-editable wheel install and fixture smoke, and a 109-file source audit.
+- **Remote CI — passed.** [Run 42372879146](https://github.com/EfeErim/chargepath-ev-route-optimizer/actions/runs/42372879146)
+  on commit `16c9cf8` passed all four `windows-2025` and `ubuntu-24.04` jobs on 3.11.9 and 3.13.5.
+- **Publication — pending approval.** The `v0.2.0` tag and GitHub Release go on the commit that records
+  this result, after its CI passes.
 
 ## Follow-up experiments and public telemetry pilots
 
