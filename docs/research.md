@@ -1,6 +1,7 @@
 # Research Review
 
-Review date: 2026-08-05
+Review date: 2026-08-05. Literature additions, related projects, and the gap review were updated on
+2026-11-07.
 
 URLs, access notes, and their role in the project are indexed in
 [the source registry](source_registry.md).
@@ -32,6 +33,45 @@ This distinction keeps the mathematical model aligned with the intended product 
 | Schoenberg and Dressler (2021), [Reducing Waiting Times at Charging Stations](https://arxiv.org/abs/2102.06503) | Adds waiting-time information and adaptive rerouting to reduce total trip time. | Queue and occupancy are future risk terms, not invented inputs in the static MVP. |
 | Montoya et al. (2017), [EVRP with Nonlinear Charging Function](https://doi.org/10.1016/j.trb.2017.02.004) | Demonstrates that linear full-charge assumptions miss the nonlinear shape of real charging and uses piecewise linear approximation. | Use partial charging and an explicit taper approximation; document that it is not vehicle-specific calibration. |
 | Levin, Duell, and Waller (2014), [Effect of Road Grade on Energy Consumption](https://doi.org/10.3141/2427-03) | Shows that road grade can materially affect energy and eco-routing. | Constant consumption is a baseline; elevation belongs in a later calibrated model. |
+| Baum, Sauer, Wagner, and Zündorf (2017), [Consumption Profiles in Route Planning for Electric Vehicles](https://doi.org/10.4230/LIPIcs.SEA.2017.19) | Shows that a consumption profile is at most linear in graph size and gives a polynomial-time energy-optimal search with partial recharging; a Contraction Hierarchies and A* variant computes long routes with charging stops in under 300 ms. | Continuous-SOC profiles and speedup techniques exist. At M6 scale, exact fastest took a median 21.3 s for a 72-trip pass (about 0.3 s per trip), so ChargePath keeps the discrete grid and measures its gap (E2). |
+| Dastpak, Errico, Jabali, and Malucelli (2024), [Dynamic Routing for the EVSPP with Charging Station Occupancy Information](https://doi.org/10.1016/j.trc.2023.104411) | Treats charging-station occupancy as dynamic information for routing a single EV. | Confirms that occupancy belongs to the same single-vehicle problem class. Without occupancy data, ChargePath states that every snapshot station is assumed usable. |
+| Weng, Hu, Fan, Zhang, and Yun (2025), [A Reliability Model for EVRP under Charging Failure Risk](https://doi.org/10.1080/23302674.2025.2541923) | As its title states, a reliability model for EV routing under charging-failure risk. The abstract was not accessible for this review. | Charging-failure risk is an active research topic. A static snapshot gives no failure probabilities, so ChargePath does not model it. |
+| Gutiérrez-Moreno et al. (2026), [EV Route Optimization: An End-to-End Learning Approach](https://doi.org/10.3390/wevj17010041) | Predicts SOC use with an LSTM from speed, temperature, inclination, and distance on one Nissan Leaf, then uses an enhanced A* search for energy-minimal routes. | Learned consumption needs logged trips for each vehicle. ChargePath's public-data pilots point the same way, but they are too small to change the planner's model. |
+
+## Related projects
+
+Reviewed on 2026-11-07. Each entry records only what the project's own repository, paper, store page,
+or a dated news report states. "Not stated" means the reviewed page does not say; it is not a claim
+that the feature is missing.
+
+### Open-source and research planners
+
+| Project | Stated method | Stated data | Stated evaluation |
+|---|---|---|---|
+| [evnav](https://github.com/giraldeau/evnav) (MIT per README; C++ with Qt) | Dijkstra over a complete digraph of chargers, origin, and destination built with libosrm. Edge cost is drive time plus charging time plus a stop overhead. Constant Wh/km and an average fast-charging power up to a maximum SOC. The README says it ignores elevation, weather, and battery wear. | User-supplied charger JSON (example: Circuit Électrique, Québec) | Not stated; the README says the prototype will not scale to many chargers. |
+| [TheMarex/charge](https://github.com/TheMarex/charge) (BSD-2-Clause; C++17) | Experimental OSM-based planner for time-optimal routes, with consumption based on driving speed and slope (SRTM elevation) and a "realistic charging model" whose form the README does not describe. | GeoJSON chargers with per-station power; a script downloads Tesla station data | Not stated. |
+| [EVRoute](https://doi.org/10.3390/automation7050159) (Cruz et al., Automation, 2026) | A*-based state-space search over driving and charging time with SOC constraints. | Open Charge Map stations, Valhalla roads, Traccar GPS | Exploratory user study; scenarios in Northeastern Brazil, the longest 685 km with three charging stops. |
+| [Pumperly](https://github.com/GeiserX/pumperly) (AGPL-3.0-or-later) | Fuel-price and charger map whose planner chooses the cheapest fuel stops. No EV energy model is described. | Official registries for Spain and Germany, Open Charge Map elsewhere; optional Valhalla routing | Not stated. |
+
+### Commercial and Turkish planners
+
+These products publish features, not methods or evaluations, so they are listed for context only.
+
+| Product | Stated planning inputs |
+|---|---|
+| [ABRP](https://abetterrouteplanner.com/home) | More than 1,000 vehicle models, charge behavior, temperature, wind, elevation, accessories, live vehicle data, and in its premium tier traffic and live charger availability. |
+| [Chargetrip API](https://chargetrip.com/api/) | Per-vehicle consumption models, live vehicle data such as SOC, and preferred charging operators. |
+| Togg Trumore, smart route ([DonanımHaber, 2024-06-14](https://www.donanimhaber.com/togg-trumore-uygulamasina-elektrikli-araclar-icin-akilli-rota-oze--178447)) | Brand and model, current and desired arrival battery level, battery capacity, and charging speed. It reports charging minutes at each station. |
+| Eşarj, trip planning ([DHA, 2025-02-10](https://www.dha.com.tr/ekonomi/esarj-uygulamasina-seyahat-planlama-ozelligini-ekledi-2580648)) | Brand and model, range, and start and arrival charge, with toll-road and ferry filters. |
+| [ChargeIQ](https://apps.apple.com/app/id1609390820) | Vehicle and current battery level, with stops planned across many Turkish networks and charging time and cost estimated per vehicle. |
+
+### What this comparison supports
+
+ChargePath solves the same single-trip problem with less vehicle realism than the commercial products,
+which state per-vehicle consumption, weather, elevation, and live data. None of the reviewed public
+pages describes independent replay of every returned plan, a frozen real-route benchmark, or
+checksum-pinned evidence. These are what ChargePath contributes. No comparison of plan quality against
+these products was run, and none is claimed.
 
 ## Official platform and data findings
 
@@ -86,12 +126,17 @@ These are to be tested, not stated as results:
 3. Conservative energy rounding will eliminate reserve violations at the cost of rejecting some narrowly feasible continuous solutions.
 4. Candidate-station corridor pruning can bound OSRM matrix size without materially degrading the best plan on the benchmark set.
 
-## Gaps deliberately left for later milestones
+## Gap review at closure
 
-- vehicle-specific charging curves;
-- speed-, grade-, traffic-, weather-, temperature-, and payload-dependent energy;
-- uncertain queues and charger outages;
-- evidence-backed fallback-station recommendations;
-- real-time replanning;
-- empirical field calibration;
-- algorithmic speedups for continental-scale state spaces.
+The 2026-08-05 review left seven gaps for later milestones. At closure on 2026-11-07 they stand as
+follows.
+
+| Gap | Status | Reason |
+|---|---|---|
+| Vehicle-specific charging curves | Future work | The only gap that open data could close: [open-ev-data](https://github.com/open-ev-data/open-ev-data-dataset) is CDLA-Permissive-2.0. Its reviewed pages do not state curve fields, provenance, or whether a curve is measured, so its suitability is unverified. |
+| Speed-, grade-, weather-, temperature-, and payload-dependent energy | Out of scope | The public telemetry pilots gave mixed results. A speed model improved held-out ID.3 error, while the BMW terrain model helped on three hillier sections but raised whole-trip error. The evidence does not justify changing the planner's model. |
+| Uncertain queues and charger outages | Out of scope | The static snapshot has no occupancy or failure data. The literature above needs both as inputs. |
+| Evidence-backed fallback stations | Out of scope | Requires reliability data. The M6 stress case that removes the first charging site only measures sensitivity. |
+| Real-time replanning | Out of scope | Requires a live vehicle and live station data, outside the product boundary. |
+| Empirical field calibration | Partly addressed | The field pilots evaluate energy and charging models on public data from a few vehicles; they are not ground truth for the M6 plans. |
+| Speedups for continental-scale state spaces | Not needed | About 0.3 s per trip at M6 scale. Profile and Contraction Hierarchies methods remain available if the scale changes. |

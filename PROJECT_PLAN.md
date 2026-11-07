@@ -387,3 +387,169 @@ Acceptance:
 - **Reuse conditions:** publishing aggregate metrics derived from EPDK data is treated as lower risk than
   publishing rows, but it is not confirmed permission. Asking EPDK remains open and does not block
   M6.0–M6.3; its answer should be reviewed before M6.4 if one has arrived.
+
+### Closure — 0.2.0 final
+
+Status: planned on 2026-11-07. This is a closure pass, not a new milestone. It adds no features unless
+the optional Phase B gate is explicitly approved.
+
+Order: A → B decision → B (only if approved) → C → D. Each phase starts only after the previous one's
+acceptance checks pass. All work happens on `main`. Every commit, push, tag, and release needs explicit
+approval.
+
+Out of scope for the closure: UI changes, new data providers, live or occupancy data, speed- or
+terrain-dependent consumption in the planner, AC or non-CCS2 charging, performance work, and any change
+to the frozen M3 or M6 v1 evidence.
+
+#### Why close now
+
+A literature and related-project review on 2026-11-07 found that the core matches the established
+formulation (constrained shortest path with resource-recovering nodes, partial charging, a nonlinear
+charging approximation). Its exact search, independent replay, deterministic evidence, and 624-scenario
+real-route benchmark go beyond the open-source planners reviewed (evnav, TheMarex/charge, EVRoute,
+Pumperly). Remaining literature gaps are either out of scope with static data (charger reliability,
+queueing, live state), not supported by the project's own pilot evidence (terrain-aware consumption), or
+unnecessary at the measured scale (continuous-SOC charging-function propagation, contraction hierarchies).
+The concrete defects are documentation drift and an unreleased final version.
+
+#### Phase A — Documentation truth pass
+
+Deliverables:
+
+- `README.md`: the status block names M0–M6, the latest release, and the project's completed state; the
+  roadmap lists M6 and the closure; the "Research sources" list links the related-projects section;
+  every number matches `docs/results.md`.
+- `docs/research.md`: a related-projects section comparing evnav, TheMarex/charge, EVRoute, Pumperly,
+  and commercial or Turkish planners (ABRP, Chargetrip, Togg Trumore, Eşarj, ChargeIQ) by method, data
+  sources, and evidence. The literature table adds consumption profiles (Baum et al., SEA 2017),
+  occupancy-aware dynamic routing (Dastpak et al., 2024), and charging-failure risk (2025). The gaps section states
+  which gaps are permanently out of scope and why.
+- `docs/source_registry.md`: an entry for every new source, with the verification date and project use.
+- `constraints/release-py311.txt`: its header no longer names 0.1.1. Comment-only change; the pinned
+  versions stay the same.
+- `docs/limitations.md` and `docs/algorithm.md` are re-read against the code; only factual drift is
+  corrected.
+
+Acceptance:
+
+- every external claim is checked against its source on the day it is written; unverifiable claims are
+  removed rather than softened. This includes the summary in "Why close now", which came from search
+  results and must be confirmed against the primary pages;
+- related projects are described by what their own repository or paper states, without ranking claims
+  that cannot be checked;
+- no statement presents static data, estimated SOC, or charging time as live or guaranteed;
+- `python -m pytest -q tests/test_real_route_benchmark.py` and `python scripts/audit_release.py` pass;
+- one commit after approval: documentation only, with no code or evidence changes.
+
+#### Phase B — Vehicle-specific charging curves (optional, approval-gated)
+
+Run only if the user explicitly chooses it before Phase C. Otherwise record it as future work in
+`docs/research.md` and skip it.
+
+Data gate, checked before any code is written:
+
+- confirm the license on the dataset's own repository. The candidate is
+  `open-ev-data/open-ev-data-dataset` under CDLA-Permissive-2.0; record the exact release or commit.
+- count how many curves are marked as measured and are CCS2 DC. Fewer than three usable vehicles means
+  Phase B stops and is recorded as future work, with no code change.
+- Fastned-derived data and any source without redistribution terms are excluded.
+
+Design:
+
+- `models.VehicleProfile` gains an optional `charging_curve`: an ordered tuple of `(soc_pct, power_kw)`
+  breakpoints. It is validated as finite, strictly increasing in SOC, covering 0–100, with power > 0.
+  `None` keeps today's behavior.
+- `energy.py` computes charge time over the curve: piecewise-linear power, accepted power capped at
+  `min(curve(soc), station_kw, vehicle_max_dc_kw)`, time integrated per segment and rounded up
+  conservatively. The `taper_start_pct` and `taper_factor` arguments in `optimizer.py`,
+  `alternatives.py`, and `verification.py` stay unchanged and apply only when no curve is given.
+- `verification.py` replays with the same vehicle profile and stays independent of search state.
+- curves ship as one schema-versioned JSON file next to the synthetic fixture. It records source URL,
+  release or commit, retrieval time, SHA-256, license, and the measured flag for every curve. The wheel
+  must package it, which updates `scripts/check_wheel.py` and the release allowlist.
+- documentation updates: `docs/algorithm.md` (charge transition), `docs/data_dictionary.md` and
+  `docs/data_strategy.md` (curve file), `docs/limitations.md` (what a measured curve still ignores:
+  temperature, preconditioning, power sharing), `docs/source_registry.md`, and the license text in
+  `THIRD_PARTY_NOTICES.md`.
+- no UI change. Curves are used from Python, the evaluation script, and tests.
+
+Evaluation:
+
+- the stored M6 graphs are present locally under the ignored `data/processed/m6/`. An E1 rerun with
+  curves compares exact fastest and greedy against the generic model on the same graphs.
+- its output goes to a new, clearly labeled artifact under `docs/evidence/`, separate from the v1 files,
+  and to a short subsection in `docs/results.md` that reports the result as found, including no change.
+
+Acceptance:
+
+- the M3 correctness artifact and both M6 v1 result files regenerate byte-for-byte under the default
+  model;
+- tests cover a monotonic curve, a flat curve equal to the generic model, a curve capped by station power,
+  curve validation failures, and replay rejection of a tampered charge duration;
+- every plan in the curve evaluation passes independent replay with zero reserve violations, and exact
+  fastest is no slower than greedy on each paired trip;
+- the curve artifact contains no station data, and `assert_no_station_data` is applied before writing;
+- strict mypy and Ruff pass, and the full canonical gate passes;
+- one commit after approval, kept separate from the Phase A and Phase C commits.
+
+#### Phase C — 0.2.0 final release
+
+Deliverables:
+
+- version `0.2.0` in `pyproject.toml`, `scripts/audit_release.py`, `scripts/check_wheel.py` (wheel
+  prefix and data path), and `docs/release.md`, with a 0.2.0 section in `docs/release.md`. A search
+  for `0.2.0rc1` finds only historical records afterwards;
+- `README.md` status names `v0.2.0` once it is published;
+- full canonical gate, then commit and push to `main` after approval;
+- green CI on all four matrix jobs for the commit that records it;
+- annotated tag `v0.2.0` on that commit and a GitHub Release (not a pre-release) whose notes match
+  `docs/results.md` and keep the unresolved EPDK reuse statement.
+
+Release notes must state:
+
+- what changed since 0.2.0rc1 (documentation only, or Phase B if it ran);
+- the headline M6 result, worded as in `docs/results.md`, with its modeled-minutes boundary;
+- the CI run for the tagged commit;
+- the static-data and estimate boundary, OpenStreetMap attribution, and the unconfirmed EPDK reuse terms.
+
+Acceptance:
+
+- tag, push, and release happen only after explicit approval; the user may run those commands
+  themselves if tool permissions block them;
+- the tag and release are checked afterwards with `git ls-remote --tags origin` and `gh release view`;
+- the publication record (commit, CI run, tag, release URL, time) is entered in `PROJECT_STATE.md`.
+
+Failure handling:
+
+- a red CI job means no tag. Fix the cause in a new commit and rerun CI; never retag a commit.
+- if a tag or release turns out wrong, report it and wait for the user's decision. Do not delete or move
+  it without approval.
+- `0.2.0rc1` stays published as a pre-release; it is not edited or removed.
+
+#### Phase D — Close
+
+- `PROJECT_STATE.md` marks the project complete and maintenance-only, and lists the items that remain
+  open by design: EPDK reuse confirmation (a user action), live data, and calibrated energy models;
+- the Closure status line in this plan is updated with the completion date;
+- a Turkish draft inquiry to EPDK about reuse terms for aggregate derived statistics is saved under the
+  ignored `outputs/` directory for the user to send. It is never sent on the user's behalf;
+- no further milestone is opened without a stated need.
+
+#### Definition of done
+
+- `README.md`, `PROJECT_STATE.md`, this plan, and `docs/release.md` describe the same completed state
+  and the same latest release;
+- `v0.2.0` is published as a GitHub Release on a commit with green CI on all four matrix jobs;
+- the working tree is clean and `main` equals `origin/main`;
+- the canonical gate passes on the final commit.
+
+#### Closure risks
+
+- **Unverifiable related-work claims:** some projects document little. Describe only what their own
+  pages state, or leave them out.
+- **Hidden coupling of the version string:** it appears in four files, and the gate fails if one is
+  missed. Search for the old version before running the gate.
+- **Phase B scope growth:** a curve touches the charge transition used by every strategy. The
+  byte-for-byte evidence check is the guard. Any change to the frozen evidence stops Phase B.
+- **Tool permissions:** tag and release commands may be blocked in an agent session; the user runs them
+  and the agent verifies the result.
