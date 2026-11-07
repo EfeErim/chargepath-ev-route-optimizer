@@ -22,7 +22,7 @@ M5 — Portfolio release: **complete; v0.1.0 published**
 
 v0.1.1 — Maintenance release: **CI green; tagged from the commit that records this result**
 
-M6 — Real-route evaluation: **local acceptance passed; 0.2.0rc1 publication pending**
+M6 — Real-route evaluation: **local acceptance and CI passed; 0.2.0rc1 tag and pre-release pending**
 
 Dated evidence sections below describe the state when they were recorded. They are kept as history,
 so file counts, UI text, and CI status in them can be superseded by later sections.
@@ -750,11 +750,14 @@ Verified locally on 2026-11-06.
 - **Canonical gate — passed.** 161 tests, byte-compilation, synthetic demo, Ruff lint and formatting,
   strict mypy, `pip check`, non-editable wheel install and fixture smoke, and a 109-file source audit.
   The gate used local resources and the wheel smoke served only on loopback.
+- **Remote CI — passed.** [Run 42268205941](https://github.com/EfeErim/chargepath-ev-route-optimizer/actions/runs/42268205941)
+  on commit `1293cc8` passed all four `windows-2025` and `ubuntu-24.04` jobs on 3.11.9 and 3.13.5.
 - **Data and publication — pending review.** Source station rows, graphs, OSM extracts, and telemetry
   files remain ignored. The evidence export checks for station data, and the source audit checks JSONL.
   [EPDK's FAQ](https://epdk.gov.tr/Detay/Icerik/3-0-211/lisans) confirms public web-service access.
   No explicit reuse term covering this release was identified there. The 0.2.0rc1 candidate
-  awaits publication approval.
+  awaits tag and GitHub pre-release approval. The M6 commits and aggregate evidence are already public
+  on `main` at `1293cc8`.
 
 ## Follow-up experiments and public telemetry pilots
 
