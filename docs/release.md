@@ -1,8 +1,8 @@
 # Release evidence and procedure
 
-## Candidate identity
+## Release identity
 
-- project version: `0.2.0rc1` (pre-release following `0.1.1`);
+- project version: `0.2.0` (final release following the `0.2.0rc1` pre-release);
 - release date: 2026-11-07;
 - Python: CPython 3.11.9 and 3.13.5;
 - supported CI environments: `windows-2025` x64 and `ubuntu-24.04` x64;
@@ -10,7 +10,7 @@
 - verification graph: [`constraints/release-py311.txt`](../constraints/release-py311.txt);
 - release contents: [`docs/evidence/m5/release-allowlist.txt`](evidence/m5/release-allowlist.txt).
 
-This is a source release candidate for a local portfolio project. It is not a hosted navigation
+This is a source release of a local portfolio project. It is not a hosted navigation
 service, safety-certified route planner, live charging feed, or claim of real-world SOC accuracy.
 
 ## Clean installation
@@ -115,6 +115,17 @@ After approval, all four matrix jobs passed for commit `3ee1638` in
 [run 42358442656](https://github.com/EfeErim/chargepath-ev-route-optimizer/actions/runs/42358442656).
 The annotated `v0.2.0rc1` tag points to that commit and is published as a
 [GitHub pre-release](https://github.com/EfeErim/chargepath-ev-route-optimizer/releases/tag/v0.2.0rc1).
+
+## 0.2.0 final release
+
+0.2.0 is the closure release. Its code and evaluation evidence match 0.2.0rc1; the changes since
+the pre-release are documentation only: a related-projects and literature review in
+[`research.md`](research.md), new rows in [`source_registry.md`](source_registry.md), corrected
+status text, and the record that vehicle-specific charging curves stopped at the data gate and stay
+future work. The generic charging taper, the M3 evidence, and the M6 result files are unchanged.
+
+The EPDK reuse terms for the station snapshot and derived statistics remain unconfirmed, as stated
+for 0.2.0rc1. The release contains no station rows, names, coordinates, or identifiers.
 
 ## Approval-gated finalization of 0.1.0
 

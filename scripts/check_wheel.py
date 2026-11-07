@@ -12,7 +12,7 @@ import zipfile
 from pathlib import Path
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-WHEEL_PREFIX = "chargepath_ev_route_optimizer-0.2.0rc1-"
+WHEEL_PREFIX = "chargepath_ev_route_optimizer-0.2.0-"
 
 
 def _run(command: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
@@ -57,8 +57,7 @@ def _inspect_wheel(wheel: Path) -> None:
     with zipfile.ZipFile(wheel) as archive:
         names = set(archive.namelist())
         fixture_name = (
-            "chargepath_ev_route_optimizer-0.2.0rc1.data/data/share/chargepath/"
-            "synthetic_corridor.json"
+            "chargepath_ev_route_optimizer-0.2.0.data/data/share/chargepath/synthetic_corridor.json"
         )
         required_exact = {
             "chargepath/web/app.css",
