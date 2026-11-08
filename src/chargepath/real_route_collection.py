@@ -1,4 +1,4 @@
-"""M6 collection stage: the only M6 stage that talks to OSRM.
+"""Real-route collection stage: the only stage that talks to OSRM.
 
 Candidate graphs are stored under the Git-ignored ``data/processed/m6/`` directory because they
 contain real station rows. A provider failure is stored as an outcome, never dropped.

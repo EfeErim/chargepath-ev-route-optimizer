@@ -1,4 +1,4 @@
-"""Evaluate the stored M6 graphs offline and write normalized evidence with no station data."""
+"""Evaluate the stored real-route graphs offline; the results contain no station data."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ from chargepath.real_route_evaluation import (
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MANIFEST = REPOSITORY_ROOT / "data/benchmarks/m6/v1/manifest.json"
 DEFAULT_GRAPHS = REPOSITORY_ROOT / "data/processed/m6/v1/graphs"
-DEFAULT_EVIDENCE = REPOSITORY_ROOT / "docs/evidence/m6"
+DEFAULT_EVIDENCE = REPOSITORY_ROOT / "docs/benchmarks/real-routes"
 
 
 def main() -> None:
@@ -29,7 +29,7 @@ def main() -> None:
     parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
     parser.add_argument("--graphs-dir", type=Path, default=DEFAULT_GRAPHS)
     parser.add_argument("--evidence-dir", type=Path, default=DEFAULT_EVIDENCE)
-    parser.add_argument("--osrm-runtime", type=Path, help="Provider timing from run_m6_collect.py")
+    parser.add_argument("--osrm-runtime", type=Path, help="Provider timing from collect_routes.py")
     parser.add_argument("--runtime-out", type=Path, help="Write the machine-specific E6 artifact")
     args = parser.parse_args()
 

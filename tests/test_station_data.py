@@ -35,7 +35,7 @@ from chargepath.station_data import (
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 SYNTHETIC_EPDK_FIXTURE = REPOSITORY_ROOT / "tests/fixtures/epdk/observed_v1/synthetic_response.json"
-EPDK_METADATA_EVIDENCE = REPOSITORY_ROOT / "docs/evidence/epdk_snapshot_manifest_2026-08-09.json"
+EPDK_METADATA_EVIDENCE = REPOSITORY_ROOT / "docs/benchmarks/epdk_snapshot_manifest_2026-08-09.json"
 
 
 def provenance(*, response_sha256: str = "a" * 64) -> SnapshotProvenance:

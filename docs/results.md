@@ -1,6 +1,6 @@
 # Results
 
-## M6 real-route benchmark
+## Real-route benchmark
 
 The 2026-11-05 run used 24 routes across four distance bands, three declared vehicle parameter
 sets, and a single frozen road graph and station snapshot. Routes were selected before running the
@@ -9,8 +9,8 @@ data, © OpenStreetMap contributors, ODbL. Results are modeled minutes on that g
 EPDK snapshot. SOC, arrival time, and charger availability require separate field evidence.
 
 The [frozen manifest](../data/benchmarks/m6/v1/manifest.json) defines E1–E6. The
-[normalized summary](evidence/m6/summary_v1.json), [scenario outcomes](evidence/m6/trips_v1.jsonl),
-and [machine timings](evidence/m6/runtime_2026-11-05.json) are the sources for these tables.
+[normalized summary](benchmarks/real-routes/summary_v1.json), [scenario outcomes](benchmarks/real-routes/trips_v1.jsonl),
+and [machine timings](benchmarks/real-routes/runtime_2026-11-05.json) are the sources for these tables.
 
 | Strategy | Plan outcomes | Infeasible | Provider failures |
 |---|---:|---:|---:|
@@ -40,12 +40,12 @@ longest band. The paired comparison measures the effect of replacing one specifi
 combines changes in stop selection and charging amounts.
 
 The exact v1 output requires its original frozen inputs. The repository distributes derived results
-and provenance metadata. See the [rerun procedure](experiment_plan.md#m6-rerun-procedure).
+and provenance metadata. See the [rerun procedure](reproducing.md#real-route-rerun-procedure).
 
 ### Follow-up · Fixed-path charging and stress cases
 
-The [follow-up artifact](evidence/m6/followup_v1.json) uses the E1 scenarios and verifies each
-loaded graph against the recorded M6 checksum. The intermediate strategy keeps every greedy road
+The [follow-up artifact](benchmarks/real-routes/followup_v1.json) uses the E1 scenarios and verifies each
+loaded graph against the recorded benchmark checksum. The intermediate strategy keeps every greedy road
 leg in order and optimizes how much to charge at the visits where greedy charged. The solver may
 skip a charging session there. Every returned plan is replayed, and for paired cases the script
 checks the modeled time ordering from greedy through fixed-path to joint optimization.
@@ -72,14 +72,14 @@ A single pass across 72 nominal inputs measured median/p95 of 165/268 ms per exa
 replay on the recording machine, excluding graph loading, OSRM, and browser work.
 
 ```powershell
-python scripts/run_m6_followup.py --output data/processed/m6/v1/followup-rerun.json
+python scripts/run_route_followup.py --output data/processed/m6/v1/followup-rerun.json
 ```
 
 ## Field pilot · Volkswagen ID.3
 
 The pilot uses one Volkswagen ID.3 Pro Performance from the [TUM usage dataset](https://github.com/TUMFTM/electric-vehicle-uds-dataset)
 by Schreiber et al. ([eTransportation paper](https://doi.org/10.1016/j.etran.2025.100518)).
-The [aggregate artifact](evidence/field-pilot/tum_id1_v1.json) records a chronological split.
+The [aggregate artifact](benchmarks/field-pilot/tum_id1_v1.json) records a chronological split.
 There are 240 calibration and 121 held-out driving windows, and 16 calibration and nine held-out
 likely DC charging windows. These are separately screened windows from the same vehicle.
 
@@ -105,11 +105,11 @@ windows are screened from stationary SOC rises, and the inferred DC classificati
 The fitted effective cap of 75 kW and taper at 65% can reflect the sampled chargers and battery
 conditions. Timing excludes setup and queueing. The results motivate testing on additional vehicles,
 planned rather than recorded speeds, elevation, and labeled DC sessions before changing planner
-defaults. See [pilot procedure](experiment_plan.md#field-pilot-procedure).
+defaults. See [pilot procedure](reproducing.md#field-pilot-procedure).
 
 ### BMW i3 · Speed and elevation
 
-The [BMW pilot artifact](evidence/field-pilot/bmw_grade_v1.json) uses the winter portion of
+The [BMW pilot artifact](benchmarks/field-pilot/bmw_grade_v1.json) uses the winter portion of
 Steinstraeter et al.'s [Battery and Heating Data in Real Driving Cycles](https://ieee-dataport.org/open-access/battery-and-heating-data-real-driving-cycles).
 It compares predictions with net battery energy integrated from recorded voltage and current.
 Of 38 winter trips, 35 passed screening. Eleven complete trips were held out from fitting.
@@ -128,9 +128,9 @@ versus the constant model. It underestimated energy on 86/195 sections versus 78
 constant model. The comparison holds out trips from one car and uses observed speed and elevation.
 The hillier sample is too small to generalize the observed improvement to other routes.
 
-## M3 synthetic benchmark
+## Synthetic benchmark
 
-M3 was evaluated on 2026-08-09 with Python 3.11.9 using the offline, project-authored
+The synthetic benchmark was evaluated on 2026-08-09 with Python 3.11.9 using the offline, project-authored
 `chargepath-m3-synthetic-v1` suite. The fixture contains eight hand-audited cases covering every
 declared topology and boundary class. These results validate software behavior under the stated
 model; they do not establish real-world SOC accuracy or charger availability.
@@ -138,16 +138,16 @@ model; they do not establish real-world SOC accuracy or charger availability.
 Reproduction command:
 
 ```powershell
-python scripts/run_m3_benchmark.py --warmups 3 --repetitions 20
+python scripts/run_synthetic_benchmark.py --warmups 3 --repetitions 20
 ```
 
 Evidence identity:
 
 - fixture SHA-256: `b805fe43dc89d3129e1126d1d5529b9bf5058ab0b4e8a86362caeccd472b980d`;
 - manifest SHA-256: `8744707588e3afbd45d676678fd1b42c1da56c783ce72fed3266887c4457f9e7`;
-- correctness artifact: `docs/evidence/m3/correctness_v1.json`, SHA-256
+- correctness artifact: `docs/benchmarks/synthetic/correctness_v1.json`, SHA-256
   `db55067b92a5904624dcf9fe90c5861561cc092b0b7754673ee101ef849572b6`;
-- runtime artifact: `docs/evidence/m3/runtime_2026-08-09.json`, SHA-256
+- runtime artifact: `docs/benchmarks/synthetic/runtime_2026-08-09.json`, SHA-256
   `04bc47528c72c3facca037403f243e3234f7d7bc14752f64869d82ad73704386`.
 
 ### Correctness
@@ -219,8 +219,8 @@ and nearest-rank p95 are reported; individual samples remain in the runtime arti
 Runtime values describe this tiny synthetic suite on one machine. They are regression evidence, not
 production latency or scaling evidence.
 
-## Earlier foundation verification
+## Unit-level verification
 
-M0-M0.2 established the typed model, exact objective variants, greedy competitor, independent replay,
-deduplicated route options, and the shared synthetic demo. Those unit and demo results remain
-functional evidence; M3 adds the versioned benchmark and measured artifacts above.
+The unit tests cover the typed model, every objective variant, the greedy baseline,
+independent replay, deduplication of route options and the shared synthetic demo. The
+synthetic benchmark above adds versioned inputs and measured outputs on top of them.

@@ -1,4 +1,4 @@
-"""M6 evaluation stage: offline strategy runs over stored candidate graphs.
+"""Real-route evaluation stage: offline strategy runs over stored candidate graphs.
 
 This stage makes no network call. Committed evidence holds metrics, frozen-input identifiers, and
 checksums, never a station name, coordinate, source identifier, or per-trip station sequence.
@@ -55,7 +55,7 @@ _VEHICLE_FIELDS = (
 
 
 class EvaluationDefectError(RuntimeError):
-    """Raised when results break a gate M6 treats as a defect rather than a finding."""
+    """Raised when results break a gate the benchmark treats as a defect rather than a finding."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -264,7 +264,7 @@ def _round_value(value: Any) -> Any:
 
 
 def check_gates(trips: Sequence[Mapping[str, Any]]) -> None:
-    """Raise on any result M6 defines as a defect: exact must dominate on the same inputs."""
+    """Raise on any result the benchmark treats as a defect: exact must dominate greedy."""
 
     for trip in trips:
         results = trip["results"]

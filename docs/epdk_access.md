@@ -9,7 +9,7 @@ The official EPDK charging-station service was reproducibly reachable. A `GET` r
 HTTP 200. The response was captured once under ignored `data/raw/`, inspected offline, and was not
 added to the repository.
 
-The metadata-only [snapshot manifest](evidence/epdk_snapshot_manifest_2026-08-09.json) records the
+The metadata-only [snapshot manifest](benchmarks/epdk_snapshot_manifest_2026-08-09.json) records the
 request fingerprint, UTC retrieval time, response checksum and byte length, source row/socket counts,
 schema version, validation reconciliation, reuse decision, and default candidate-selection contract.
 

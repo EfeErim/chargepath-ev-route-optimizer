@@ -16,13 +16,13 @@ from chargepath.evaluation import (
 from chargepath.providers import StaticRoadNetwork
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-M3_MANIFEST = REPOSITORY_ROOT / "data/benchmarks/m3/v1/manifest.json"
-M3_CORRECTNESS = REPOSITORY_ROOT / "docs/evidence/m3/correctness_v1.json"
-M3_RUNTIME = REPOSITORY_ROOT / "docs/evidence/m3/runtime_2026-08-09.json"
+SYNTHETIC_MANIFEST = REPOSITORY_ROOT / "data/benchmarks/m3/v1/manifest.json"
+SYNTHETIC_CORRECTNESS = REPOSITORY_ROOT / "docs/benchmarks/synthetic/correctness_v1.json"
+SYNTHETIC_RUNTIME = REPOSITORY_ROOT / "docs/benchmarks/synthetic/runtime_2026-08-09.json"
 
 
 def test_manifest_pins_fixture_and_covers_every_required_class() -> None:
-    manifest = load_benchmark_manifest(M3_MANIFEST)
+    manifest = load_benchmark_manifest(SYNTHETIC_MANIFEST)
 
     assert manifest.benchmark_id == "chargepath-m3-synthetic-v1"
     assert len(manifest.fixture_sha256) == 64
@@ -35,8 +35,8 @@ def test_manifest_pins_fixture_and_covers_every_required_class() -> None:
 
 
 def test_manifest_rejects_fixture_checksum_drift(tmp_path: Path) -> None:
-    shutil.copy(M3_MANIFEST, tmp_path / "manifest.json")
-    fixture_source = M3_MANIFEST.with_name("cases.json")
+    shutil.copy(SYNTHETIC_MANIFEST, tmp_path / "manifest.json")
+    fixture_source = SYNTHETIC_MANIFEST.with_name("cases.json")
     fixture_payload = json.loads(fixture_source.read_text(encoding="utf-8"))
     fixture_payload["description"] = "tampered"
     (tmp_path / "cases.json").write_text(json.dumps(fixture_payload), encoding="utf-8")
@@ -75,7 +75,7 @@ def test_shortest_driving_time_baseline_uses_full_node_path_tie_break() -> None:
 
 
 def test_correctness_artifact_reconciles_and_passes_reference_gates() -> None:
-    manifest = load_benchmark_manifest(M3_MANIFEST)
+    manifest = load_benchmark_manifest(SYNTHETIC_MANIFEST)
     artifact = build_correctness_artifact(manifest)
 
     assert artifact["case_count"] == 8
@@ -93,7 +93,7 @@ def test_correctness_artifact_reconciles_and_passes_reference_gates() -> None:
 
 
 def test_normalized_correctness_serialization_is_byte_stable() -> None:
-    manifest = load_benchmark_manifest(M3_MANIFEST)
+    manifest = load_benchmark_manifest(SYNTHETIC_MANIFEST)
 
     first = canonical_json_bytes(build_correctness_artifact(manifest))
     second = canonical_json_bytes(build_correctness_artifact(manifest))
@@ -102,16 +102,16 @@ def test_normalized_correctness_serialization_is_byte_stable() -> None:
 
 
 def test_committed_correctness_evidence_matches_regenerated_bytes() -> None:
-    manifest = load_benchmark_manifest(M3_MANIFEST)
+    manifest = load_benchmark_manifest(SYNTHETIC_MANIFEST)
 
     regenerated = canonical_json_bytes(build_correctness_artifact(manifest))
 
-    assert M3_CORRECTNESS.read_bytes() == regenerated
+    assert SYNTHETIC_CORRECTNESS.read_bytes() == regenerated
 
 
 def test_committed_runtime_evidence_is_bound_to_manifest_and_protocol() -> None:
-    manifest = load_benchmark_manifest(M3_MANIFEST)
-    runtime = json.loads(M3_RUNTIME.read_text(encoding="utf-8"))
+    manifest = load_benchmark_manifest(SYNTHETIC_MANIFEST)
+    runtime = json.loads(SYNTHETIC_RUNTIME.read_text(encoding="utf-8"))
 
     assert runtime["manifest_sha256"] == manifest.manifest_sha256
     assert runtime["fixture_sha256"] == manifest.fixture_sha256
@@ -122,7 +122,7 @@ def test_committed_runtime_evidence_is_bound_to_manifest_and_protocol() -> None:
 
 
 def test_soc_grid_sensitivity_changes_only_resolution_and_exposes_boundary() -> None:
-    artifact = build_correctness_artifact(load_benchmark_manifest(M3_MANIFEST))
+    artifact = build_correctness_artifact(load_benchmark_manifest(SYNTHETIC_MANIFEST))
     sensitivity = artifact["soc_grid_sensitivity"][0]
     runs = sensitivity["runs"]
 
@@ -133,7 +133,7 @@ def test_soc_grid_sensitivity_changes_only_resolution_and_exposes_boundary() -> 
 
 
 def test_pruning_audit_compares_against_unpruned_small_graph() -> None:
-    artifact = build_correctness_artifact(load_benchmark_manifest(M3_MANIFEST))
+    artifact = build_correctness_artifact(load_benchmark_manifest(SYNTHETIC_MANIFEST))
     audit = artifact["pruning_audits"][0]
 
     assert audit["unpruned_candidate_ids"] == ["fast_near", "slow_far"]
@@ -146,7 +146,7 @@ def test_pruning_audit_compares_against_unpruned_small_graph() -> None:
 
 def test_runtime_artifact_declares_protocol_environment_median_and_p95() -> None:
     artifact = build_runtime_artifact(
-        load_benchmark_manifest(M3_MANIFEST),
+        load_benchmark_manifest(SYNTHETIC_MANIFEST),
         warmup_count=0,
         measured_repetitions=2,
         command="test protocol",

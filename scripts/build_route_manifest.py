@@ -1,4 +1,4 @@
-"""Measure province road distances on local OSRM and write the frozen M6 benchmark manifest."""
+"""Measure province road distances on local OSRM and write the real-route benchmark manifest."""
 
 from __future__ import annotations
 

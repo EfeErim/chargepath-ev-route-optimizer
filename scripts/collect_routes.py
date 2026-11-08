@@ -1,4 +1,4 @@
-"""Collect the M6 candidate graphs from local OSRM into the Git-ignored processed directory."""
+"""Collect real-route candidate graphs from local OSRM into the Git-ignored processed directory."""
 
 from __future__ import annotations
 

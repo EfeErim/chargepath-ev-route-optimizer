@@ -1,4 +1,4 @@
-"""Create metadata-only M2 evidence from an ignored raw EPDK response."""
+"""Create metadata-only snapshot evidence from an ignored raw EPDK response."""
 
 from __future__ import annotations
 

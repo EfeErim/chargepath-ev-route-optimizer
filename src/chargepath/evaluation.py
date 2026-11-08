@@ -1,4 +1,4 @@
-"""Versioned, offline M3 benchmark loading and evidence generation."""
+"""Versioned, offline synthetic benchmark loading and result generation."""
 
 from __future__ import annotations
 
@@ -126,7 +126,7 @@ def _sha256(path: Path) -> str:
 
 
 def load_benchmark_manifest(path: str | Path) -> BenchmarkManifest:
-    """Load the M3 manifest, verify fixture identity, and construct typed cases."""
+    """Load the benchmark manifest, verify fixture identity, and construct typed cases."""
 
     manifest_path = Path(path).resolve()
     payload = _object(json.loads(manifest_path.read_text(encoding="utf-8")), field="manifest")
@@ -210,7 +210,7 @@ def load_benchmark_manifest(path: str | Path) -> BenchmarkManifest:
     )
     for run in sensitivity_runs:
         if run.get("factor") != "soc_step_pct":
-            raise ValueError("M3 sensitivity runs may change only soc_step_pct")
+            raise ValueError("Sensitivity runs may change only soc_step_pct")
         if run.get("fixed_input_fixture_sha256") != actual_fixture_sha:
             raise ValueError("sensitivity run fixture checksum must match the fixed case fixture")
         values = tuple(
@@ -641,7 +641,7 @@ def assert_correctness_gates(artifact: dict[str, Any]) -> None:
         or (isinstance(value, int) and not isinstance(value, bool) and value != 0)
     ]
     if failed:
-        raise RuntimeError(f"M3 correctness gates failed: {failed}")
+        raise RuntimeError(f"Synthetic benchmark correctness gates failed: {failed}")
 
 
 def canonical_json_bytes(payload: dict[str, Any]) -> bytes:

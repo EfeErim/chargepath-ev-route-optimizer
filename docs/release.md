@@ -1,142 +1,46 @@
-# Release evidence and procedure
+# Releasing
 
-## Release identity
+ChargePath is released as a source distribution and wheel attached to a GitHub Release.
+Version history is in the [changelog](../CHANGELOG.md).
 
-- project version: `0.2.0` (final release following the `0.2.0rc1` pre-release);
-- release date: 2026-11-07;
-- Python: CPython 3.11.9 and 3.13.5;
-- supported CI environments: `windows-2025` x64 and `ubuntu-24.04` x64;
-- Python runtime dependencies: none;
-- verification graph: [`constraints/release-py311.txt`](../constraints/release-py311.txt);
-- release contents: [`docs/evidence/m5/release-allowlist.txt`](evidence/m5/release-allowlist.txt).
+## Supported environments
 
-This is a source release of a local portfolio project. It is not a hosted navigation
-service, safety-certified route planner, live charging feed, or claim of real-world SOC accuracy.
+- CPython 3.11.9 and 3.13.5
+- `windows-2025` and `ubuntu-24.04` (x64), both exercised by CI
+- no runtime dependencies; the verification environment is pinned in
+  [`constraints/release-py311.txt`](../constraints/release-py311.txt)
 
-## Clean installation
+## Checklist
 
-Windows PowerShell:
+1. Install into a fresh environment and run the full gate:
 
-```powershell
-py -3.11 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade "pip==26.2" "setuptools==83.0.0"
-python -m pip install --constraint constraints/release-py311.txt --editable ".[dev]"
-.\scripts\check.ps1
-```
+   ```bash
+   python -m pip install --constraint constraints/release-py311.txt --editable ".[dev]"
+   pwsh ./scripts/check.ps1
+   ```
 
-Ubuntu 24.04 with CPython 3.11 and PowerShell 7:
+   The gate runs the tests, Ruff, strict mypy, `pip check`, the offline demo, the wheel
+   check and the release-content audit described below.
+2. Bump `version` in `pyproject.toml` and move the `Unreleased` changelog entries under
+   the new version.
+3. Wait for CI to pass on the release commit, then create an annotated tag
+   (`git tag -a vX.Y.Z`) and a GitHub Release with the changelog section as notes.
 
-```bash
-python3.11 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade "pip==26.2" "setuptools==83.0.0"
-python -m pip install --constraint constraints/release-py311.txt --editable ".[dev]"
-pwsh ./scripts/check.ps1
-```
+## Release-content audit
 
-The Windows clean-install transcript is recorded in
-[`docs/evidence/m5/windows-clean-install.txt`](evidence/m5/windows-clean-install.txt). Ubuntu is
-validated by the same repository gate in GitHub Actions; a local Windows result is not presented as
-Linux evidence.
+`scripts/audit_release.py` compares every tracked or non-ignored file with the sorted
+allowlist in [`scripts/release-allowlist.txt`](../scripts/release-allowlist.txt). It fails
+on unexpected or missing files, private data paths, caches, files over 1 MiB, likely
+secrets, missing OpenStreetMap attribution and unpinned CI actions. Adding a file to the
+repository therefore means adding it to the allowlist in the same commit.
 
-The canonical gate additionally builds the current candidate wheel without build isolation, verifies that its
-web assets, exact synthetic fixture, MIT license, and third-party notices are present, installs that
-wheel non-editably into another new environment, and loads the default fixture from outside the
-repository. Generated wheel and environment files remain temporary and are not release-source files.
+`scripts/check_wheel.py` builds the wheel, checks that the web assets, sample fixture and
+license notices are inside it, installs it into a new environment and serves the demo
+from outside the repository.
 
-## Release-content controls
+## Data that is never released
 
-`python scripts/audit_release.py` compares every tracked or non-ignored untracked candidate against
-the exact sorted allowlist. It fails on missing or unexpected files, ignored/private data paths,
-caches, Python bytecode, OSRM build outputs, files over 1 MiB, and high-confidence secret patterns.
-It also checks the MIT metadata, visible OpenStreetMap attribution, synthetic sample flag, and exact
-CI action/Python pins. `scripts/check_wheel.py` separately audits the built artifact rather than
-assuming that a source/editable install proves wheel completeness.
-
-The source checkout is normalized to LF through [`.gitattributes`](../.gitattributes), so
-checksum-pinned text fixtures and browser assets retain the same bytes in Windows and Ubuntu CI.
-
-The 15.4 MB EPDK response under ignored `data/raw/` is deliberately outside the candidate. Its reuse
-status remains unresolved. The candidate contains only the response's metadata/checksum, reviewed
-normalization code, and project-authored synthetic fixtures. The included OSRM request/response
-fixture was generated from the included project-authored synthetic OSM ring.
-
-## Licensing and attribution
-
-Project-authored code and documentation use the [MIT License](../LICENSE). Browser/provider software,
-verification tools, OpenStreetMap data terms, and the unresolved EPDK redistribution boundary are
-listed in the [third-party notices](../THIRD_PARTY_NOTICES.md). OpenStreetMap attribution appears in
-the map UI even when the basemap fails.
-
-## Evidence already in the candidate
-
-- architecture and optimizer contracts: [`docs/architecture.md`](architecture.md) and
-  [`docs/algorithm.md`](algorithm.md);
-- deterministic benchmark and limits: [`docs/results.md`](results.md), with normalized JSON evidence
-  under `docs/evidence/m3/`;
-- reviewed primary demo image: `docs/evidence/m4/fixture-primary.png`;
-- local interactive browser acceptance: `docs/evidence/m5/browser-smoke-2026-08-12.md`;
-- full readiness boundary: [`docs/limitations.md`](limitations.md);
-- milestone acceptance records: [`PROJECT_STATE.md`](../PROJECT_STATE.md).
-
-## External CI verification
-
-The exact candidate at commit
-[`4fe8eef`](https://github.com/EfeErim/chargepath-ev-route-optimizer/commit/4fe8eef82fbbecc0cf878b856c96ea04f85269a2)
-passed the canonical gate on both `ubuntu-24.04` and `windows-2025` in [GitHub Actions run
-31600469029](https://github.com/EfeErim/chargepath-ev-route-optimizer/actions/runs/31600469029).
-The immutable run and job URLs are also recorded in
-[`docs/evidence/m5/ci-run-2026-08-12.md`](evidence/m5/ci-run-2026-08-12.md).
-
-## 0.1.1 maintenance release
-
-0.1.1 changes no optimizer behavior. It makes the Windows launcher work from a clean clone and ask
-before using public OSRM, adds a one-shot EPDK snapshot script, keeps candidate widening within the
-default OSRM Table limit, labels distinct plans in the UI, recaptures the primary screenshot, adds
-CPython 3.13.5 to the CI matrix, and corrects stale status text. All four matrix jobs passed in
-[run 42005327671](https://github.com/EfeErim/chargepath-ev-route-optimizer/actions/runs/42005327671). The
-evidence and the checks that remain unverified are recorded in [`PROJECT_STATE.md`](../PROJECT_STATE.md).
-
-## 0.2.0rc1 real-route evaluation candidate
-
-The candidate adds the [M6 evaluation](results.md#m6-real-route-benchmark), its frozen manifest
-and result files, and the OSRM adapter's sub-meter negative-distance handling found during the
-collection run. The default wheel demo uses the project-authored synthetic fixture. The source
-candidate includes derived scenario outcomes and provenance metadata. EPDK station rows, local
-graphs, and OSM extract files stay in ignored data directories.
-
-The [EPDK FAQ](https://epdk.gov.tr/Detay/Icerik/3-0-211/lisans) describes public access and
-system integration through its web services. It does not specify reuse terms for distributing the
-station snapshot or derived statistics. The published notes state this, and the release contains no
-station rows, names, coordinates, or identifiers.
-
-After approval, all four matrix jobs passed for commit `3ee1638` in
-[run 42358442656](https://github.com/EfeErim/chargepath-ev-route-optimizer/actions/runs/42358442656).
-The annotated `v0.2.0rc1` tag points to that commit and is published as a
-[GitHub pre-release](https://github.com/EfeErim/chargepath-ev-route-optimizer/releases/tag/v0.2.0rc1).
-
-## 0.2.0 final release
-
-0.2.0 is the closure release. Its code and evaluation evidence match 0.2.0rc1; the changes since
-the pre-release are documentation only: a related-projects and literature review in
-[`research.md`](research.md), new rows in [`source_registry.md`](source_registry.md), corrected
-status text, and the record that vehicle-specific charging curves stopped at the data gate and stay
-future work. The generic charging taper, the M3 evidence, and the M6 result files are unchanged.
-
-The EPDK reuse terms for the station snapshot and derived statistics remain unconfirmed, as stated
-for 0.2.0rc1. The release contains no station rows, names, coordinates, or identifiers.
-
-After approval, commit `16c9cf8` passed all four matrix jobs in
-[run 42372879146](https://github.com/EfeErim/chargepath-ev-route-optimizer/actions/runs/42372879146),
-and commit `5928c7b`, which records that result, passed in
-[run 42373331160](https://github.com/EfeErim/chargepath-ev-route-optimizer/actions/runs/42373331160).
-The annotated `v0.2.0` tag points to `5928c7b` and is published as the latest
-[GitHub Release](https://github.com/EfeErim/chargepath-ev-route-optimizer/releases/tag/v0.2.0).
-
-## Approval-gated finalization of 0.1.0
-
-M5 is complete: the candidate was committed and pushed, both matrix jobs are green, immutable
-commit/run evidence is recorded, and the allowlist was rechecked locally. The v0.1.0 tag and GitHub
-Release provide the public publication record for this completed candidate:
-[`v0.1.0 on GitHub`](https://github.com/EfeErim/chargepath-ev-route-optimizer/releases/tag/v0.1.0).
+The raw EPDK station snapshot stays under the ignored `data/raw/` directory because its
+redistribution terms are unconfirmed. Releases contain only its checksum and metadata,
+derived aggregate results, and project-authored synthetic fixtures. See the
+[third-party notices](../THIRD_PARTY_NOTICES.md) for software and data licenses.

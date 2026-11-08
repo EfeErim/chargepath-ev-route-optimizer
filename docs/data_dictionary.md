@@ -93,7 +93,7 @@
 | `stations` | list[Station] | Complete synthetic station inputs including coordinates and connector type. |
 | `legs` | list[RoadLeg] | Directed synthetic road graph; schema version 2 requires validated geometry on every leg. |
 
-## M2 station-data contracts
+## Station-data contracts
 
 ### SnapshotProvenance
 
@@ -128,7 +128,7 @@ previously selected candidate. The cap limits OSRM Table size and the distinct s
 to a plan; it is not a separate optimizer stop-count rule. Legacy v1/v2 remain readable for frozen or
 historical evidence.
 
-## M3 benchmark contracts
+## Benchmark contracts
 
 ### Benchmark manifest
 

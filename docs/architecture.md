@@ -22,7 +22,7 @@ flowchart TD
     O --> R["Independent replay verifier"]
     R --> G["Verified RouteOptions"]
     G --> H["CLI / loopback Leaflet UI"]
-    G --> M3["Versioned M3 evaluation"]
+    G --> SB["Versioned synthetic benchmark"]
 ```
 
 ### Domain core
@@ -76,14 +76,14 @@ flowchart TD
 ### Planner evaluation
 
 `src/chargepath/baselines.py` owns the deterministic shortest-driving-time/no-charging baseline.
-`src/chargepath/evaluation.py` loads the checksum-pinned synthetic M3 manifest, runs both baselines and
+`src/chargepath/evaluation.py` loads the checksum-pinned synthetic benchmark manifest, runs both baselines and
 all exact preferences, independently verifies every returned plan, normalizes byte-stable correctness
 results, audits SOC-grid sensitivity and corridor pruning, and records a separate machine-specific
 median/p95 runtime artifact. Benchmark execution is offline and does not enter the domain core.
 
 ### Local map application
 
-`src/chargepath/demo.py` is the M4 application boundary. Its standard-library HTTP server binds only
+`src/chargepath/demo.py` is the application boundary. Its standard-library HTTP server binds only
 to `127.0.0.1`, validates a small bounded JSON contract, and serves packaged HTML/CSS/JavaScript.
 The fixture service composes the existing loader, static road network, competitive planner, and
 typed GeoJSON without provider calls. The explicit integration service composes the checksum-guarded
@@ -111,7 +111,7 @@ states. It does not calculate feasibility or advance the optimizer.
 
 ### Station-data pipeline
 
-Implemented M2 layers:
+Implemented station-data layers:
 
 1. immutable raw source response outside Git;
 2. retrieval manifest with URL, timestamp, checksum, and access notes;

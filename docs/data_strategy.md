@@ -23,14 +23,14 @@ Recorded OSRM fixtures must retain the API version, routing profile, request opt
 response checksum, and `data_version` when supplied. Table distances are the distances of OSRM's
 fastest routes, not a claim that they are globally shortest-distance routes.
 
-The M1 fixture under `tests/fixtures/osrm/v26.7.3/` was recorded from exact backend release `v26.7.3`
+The OSRM fixture under `tests/fixtures/osrm/v26.7.3/` was recorded from exact backend release `v26.7.3`
 against a project-authored synthetic three-node OSM map. Its manifest pins the backend asset and
 commit, `car.lua` checksum, CH algorithm, HTTP `v1` requests, supplied data version, retrieval time,
 and every fixture-file checksum. It contains no real OpenStreetMap extract.
 
 ### Attribution
 
-The M4 UI displays visible OpenStreetMap attribution, uses one configurable HTTPS Leaflet tile
+The map UI displays visible OpenStreetMap attribution, uses one configurable HTTPS Leaflet tile
 template, and contains no prefetch or bulk-download path. Tile failure leaves route geometry and trip
 explanation available. Public tile usage must follow the [OSM tile policy](https://operations.osmfoundation.org/policies/tiles/).
 
@@ -43,11 +43,11 @@ EPDK's public charging-station services and Şarj@TR information surfaces:
 - https://www.epdk.gov.tr/Detay/Icerik/3-0-226/web-servisler
 - https://www.epdk.gov.tr/Detay/Icerik/1-3428/serbest-erisim-platformu--sarj%40tr
 
-### M2 access result
+### Access result
 
 The 2026-08-09 spike verified the official request and observed schema against one checksum-pinned
-response. Its [metadata-only manifest](evidence/epdk_snapshot_manifest_2026-08-09.json) and
-[access report](epdk_access_spike.md) record 16,539 source rows and 46,955 sockets. The normalizer and
+response. Its [metadata-only manifest](benchmarks/epdk_snapshot_manifest_2026-08-09.json) and
+[access report](epdk_access.md) record 16,539 source rows and 46,955 sockets. The normalizer and
 candidate selector are implemented and offline-tested.
 
 The following questions remain mandatory before a real snapshot is committed or distributed:

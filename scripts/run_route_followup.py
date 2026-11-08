@@ -1,4 +1,4 @@
-"""Evaluate fixed-path charging and station loss on the frozen M6 graphs."""
+"""Evaluate fixed-path charging and station loss on the frozen real-route graphs."""
 
 from __future__ import annotations
 
@@ -72,7 +72,7 @@ def run() -> None:
     args = parser.parse_args()
     manifest_bytes = (ROOT / "data/benchmarks/m6/v1/manifest.json").read_bytes()
     manifest = json.loads(manifest_bytes)
-    reference = json.loads((ROOT / "docs/evidence/m6/summary_v1.json").read_bytes())
+    reference = json.loads((ROOT / "docs/benchmarks/real-routes/summary_v1.json").read_bytes())
 
     def checked_graph(file_name: str) -> StoredGraph:
         path = V1_GRAPHS / file_name
