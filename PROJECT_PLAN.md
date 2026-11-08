@@ -390,8 +390,8 @@ Acceptance:
 
 ### Closure — 0.2.0 final
 
-Status: planned on 2026-11-07. This is a closure pass, not a new milestone. It adds no features unless
-the optional Phase B gate is explicitly approved.
+Status: complete on 2026-11-07. v0.2.0 is published; Phase B stopped at its data gate with no code
+change. This was a closure pass, not a new milestone, and the project is now maintenance only.
 
 Order: A → B decision → B (only if approved) → C → D. Each phase starts only after the previous one's
 acceptance checks pass. All work happens on `main`. Every commit, push, tag, and release needs explicit

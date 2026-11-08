@@ -24,7 +24,7 @@ v0.1.1 — Maintenance release: **CI green; tagged from the commit that records 
 
 M6 — Real-route evaluation: **complete; 0.2.0rc1 published as a GitHub pre-release**
 
-0.2.0 — Closure release: **CI green; tagged from the commit that records this result**
+0.2.0 — Closure release: **complete; v0.2.0 published. The project is complete; maintenance only.**
 
 Dated evidence sections below describe the state when they were recorded. They are kept as history,
 so file counts, UI text, and CI status in them can be superseded by later sections.
@@ -77,9 +77,16 @@ Verified on 2026-08-05 with Python 3.11.9:
 
 ## Next milestone
 
-No next milestone is planned. M6.4 is complete and 0.2.0rc1 is published as a GitHub pre-release; the
-release candidate, CI, and publication evidence are recorded below. EPDK's public FAQ confirms system-to-system access. Explicit terms for
-redistributing snapshot data or derived results remain unconfirmed.
+None. The project is complete and in maintenance only: v0.2.0 is published, and no milestone is
+opened without a stated need. Items that remain open by design:
+
+- **EPDK reuse confirmation — user action.** EPDK's public FAQ confirms system-to-system access, but
+  explicit terms for redistributing snapshot data or derived results remain unconfirmed. A Turkish
+  inquiry draft is kept under the ignored `outputs/` directory for the user to send.
+- **Live data.** Station availability, occupancy, price, and charger status are not modeled; station
+  data is a static snapshot.
+- **Calibrated energy models.** Consumption is a constant baseline and charging uses a generic taper;
+  measured, redistributable vehicle-specific charging curves were not found at closure.
 
 ## M1 evidence
 
@@ -778,8 +785,12 @@ change. Code, the generic charging taper, M3 evidence, and M6 result files match
   strict mypy, `pip check`, non-editable wheel install and fixture smoke, and a 109-file source audit.
 - **Remote CI — passed.** [Run 42372879146](https://github.com/EfeErim/chargepath-ev-route-optimizer/actions/runs/42372879146)
   on commit `16c9cf8` passed all four `windows-2025` and `ubuntu-24.04` jobs on 3.11.9 and 3.13.5.
-- **Publication — pending approval.** The `v0.2.0` tag and GitHub Release go on the commit that records
-  this result, after its CI passes.
+- **Publication — passed.** After approval, commit `5928c7b`, which records the CI result, passed all
+  four matrix jobs in [run 42373331160](https://github.com/EfeErim/chargepath-ev-route-optimizer/actions/runs/42373331160).
+  The annotated tag `v0.2.0` points to that commit, and
+  [ChargePath 0.2.0](https://github.com/EfeErim/chargepath-ev-route-optimizer/releases/tag/v0.2.0)
+  was published as the latest GitHub Release (not a pre-release) at 2026-11-07T12:48:47Z. The
+  0.2.0rc1 pre-release is unchanged.
 
 ## Follow-up experiments and public telemetry pilots
 
@@ -813,5 +824,6 @@ change. Code, the generic charging taper, M3 evidence, and M6 result files match
 
 Independent repository is on `main`, tracking `origin/main`. The public v0.1.0 tag and GitHub Release
 and v0.1.1 tags and GitHub Releases record the published versions; the v0.2.0rc1 tag and GitHub
-pre-release record the M6 candidate. Ignored environments, caches,
+pre-release record the M6 candidate, and the v0.2.0 tag and GitHub Release record the closure
+release. Ignored environments, caches,
 raw/processed EPDK data, and generated package metadata remain outside the candidate.
