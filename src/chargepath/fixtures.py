@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from chargepath import validation
 from chargepath.models import GeoJsonLineString, RoadLeg, Station, VehicleProfile
 
 
@@ -23,16 +24,9 @@ class SyntheticScenario:
         return {station.id: station for station in self.stations}
 
 
-def _object(value: Any, *, field: str) -> dict[str, Any]:
-    if not isinstance(value, dict):
-        raise ValueError(f"{field} must be a JSON object")
-    return value
-
-
-def _array(value: Any, *, field: str) -> list[Any]:
-    if not isinstance(value, list):
-        raise ValueError(f"{field} must be a JSON array")
-    return value
+_object = validation.json_object
+_array = validation.json_array
+_text = validation.text
 
 
 def _number(value: Any, *, field: str) -> float:
@@ -45,22 +39,7 @@ def _number(value: Any, *, field: str) -> float:
 
 
 def _exact_keys(value: dict[str, Any], *, field: str, expected: set[str]) -> None:
-    actual = set(value)
-    if actual != expected:
-        missing = sorted(expected - actual)
-        unexpected = sorted(actual - expected)
-        details: list[str] = []
-        if missing:
-            details.append(f"missing {missing}")
-        if unexpected:
-            details.append(f"unexpected {unexpected}")
-        raise ValueError(f"{field} fields are invalid: {', '.join(details)}")
-
-
-def _text(value: Any, *, field: str) -> str:
-    if not isinstance(value, str) or not value.strip():
-        raise ValueError(f"{field} must be non-empty text")
-    return value
+    validation.exact_fields(value, field=field, expected=expected)
 
 
 def _geojson_line_string(value: Any, *, field: str) -> GeoJsonLineString:

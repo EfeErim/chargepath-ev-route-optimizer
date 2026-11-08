@@ -83,8 +83,10 @@ median/p95 runtime artifact. Benchmark execution is offline and does not enter t
 
 ### Local map application
 
-`src/chargepath/demo.py` is the application boundary. Its standard-library HTTP server binds only
-to `127.0.0.1`, validates a small bounded JSON contract, and serves packaged HTML/CSS/JavaScript.
+`src/chargepath/demo/` is the application boundary. `schema.py` validates a small bounded JSON
+contract from one vehicle-bounds table, `services.py` plans requests without any HTTP dependency, and
+`server.py` runs a standard-library HTTP server that binds only to `127.0.0.1` and serves packaged
+HTML/CSS/JavaScript.
 The fixture service composes the existing loader, static road network, competitive planner, and
 typed GeoJSON without provider calls. The explicit integration service composes the checksum-guarded
 EPDK normalizer, deterministic corridor selector, OSRM Table graph, competitive planner, and

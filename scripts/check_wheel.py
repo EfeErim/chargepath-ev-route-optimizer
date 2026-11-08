@@ -106,8 +106,8 @@ def _install_and_smoke(wheel: Path, temporary_root: Path) -> None:
             "-c",
             (
                 "import json; "
-                "from chargepath.demo import DEFAULT_TILE_URL, FixturePlanningService, "
-                "_default_fixture_path; "
+                "from chargepath.demo import DEFAULT_TILE_URL, FixturePlanningService; "
+                "from chargepath.demo.server import _default_fixture_path; "
                 "from chargepath.fixtures import load_synthetic_scenario; "
                 "path=_default_fixture_path(); "
                 "service=FixturePlanningService(load_synthetic_scenario(path), "

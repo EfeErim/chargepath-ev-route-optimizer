@@ -1,7 +1,5 @@
 import pytest
 
-import chargepath.alternatives as alternatives_module
-import chargepath.optimizer as optimizer_module
 from chargepath import (
     CompetitiveRoutePlanner,
     NoFeasibleRouteError,
@@ -13,7 +11,9 @@ from chargepath import (
     VehicleProfile,
     verify_route_plan,
 )
-from chargepath.energy import energy_for_distance as original_energy_for_distance
+from chargepath.energy import ConstantConsumption, LegEnergy
+from chargepath.models import RoadLeg as _RoadLeg
+from chargepath.models import VehicleProfile as _VehicleProfile
 from chargepath.providers import StaticRoadNetwork
 
 
@@ -199,21 +199,22 @@ def test_competitive_planner_rejects_invalid_configuration_at_construction() -> 
         CompetitiveRoutePlanner(soc_step_pct=True)
 
 
-def test_competitive_planner_reuses_leg_energy_across_strategies(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+class _CountingConsumption:
+    """Constant model that counts evaluations; identity-hashed, so it is a valid cache key."""
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def leg_energy(self, leg: _RoadLeg, vehicle: _VehicleProfile) -> LegEnergy:
+        self.calls += 1
+        return ConstantConsumption().leg_energy(leg, vehicle)
+
+
+def test_competitive_planner_reuses_leg_energy_across_strategies() -> None:
     stations, network = make_competitive_graph()
-    calls = 0
+    model = _CountingConsumption()
 
-    def counted_energy(*args: float) -> float:
-        nonlocal calls
-        calls += 1
-        return original_energy_for_distance(*args)
-
-    monkeypatch.setattr(optimizer_module, "energy_for_distance", counted_energy)
-    monkeypatch.setattr(alternatives_module, "energy_for_distance", counted_energy)
-
-    CompetitiveRoutePlanner().plan(
+    result = CompetitiveRoutePlanner(consumption_model=model).plan(
         origin_id="origin",
         destination_id="destination",
         vehicle=make_vehicle(),
@@ -221,4 +222,7 @@ def test_competitive_planner_reuses_leg_energy_across_strategies(
         road_network=network,
     )
 
-    assert 0 < calls <= 8
+    # The independent replay recomputes every leg of every strategy's plan by design; the search
+    # strategies share one per-leg cache.
+    replay_calls = sum(len(option.plan.legs) * len(option.strategies) for option in result.options)
+    assert 0 < model.calls - replay_calls <= 8

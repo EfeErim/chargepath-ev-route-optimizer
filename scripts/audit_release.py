@@ -141,7 +141,7 @@ def _audit_markdown_links(candidates: set[str]) -> None:
 def _audit_contracts() -> None:
     pyproject = (REPOSITORY_ROOT / "pyproject.toml").read_text(encoding="utf-8")
     readme = (REPOSITORY_ROOT / "README.md").read_text(encoding="utf-8")
-    demo = (REPOSITORY_ROOT / "src/chargepath/demo.py").read_text(encoding="utf-8")
+    demo = (REPOSITORY_ROOT / "src/chargepath/demo/services.py").read_text(encoding="utf-8")
     workflow = (REPOSITORY_ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
     fixture = json.loads(
         (REPOSITORY_ROOT / "data/sample/synthetic_corridor.json").read_text(encoding="utf-8")

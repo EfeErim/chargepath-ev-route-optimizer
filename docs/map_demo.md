@@ -25,12 +25,40 @@ those road legs.
 - selected route geometry and charging-stop markers;
 - driving, charging, total-time, and arrival-SOC estimates;
 - an estimated SOC timeline and estimated charging actions;
+- for each stop of the fastest plan, a structural fallback note: how many other modeled chargers are
+  in direct reach and how much slower the best plan is without that charger (graph structure only,
+  not availability);
 - the exact fixture or static-snapshot freshness label; and
 - validation, loading, infeasible/provider failure, empty-result, and unavailable-basemap states.
 
 The bundled flow always displays `Synthetic fixture — freshness not applicable`. SOC and charging
 time are explicitly estimates. Static station records are never described as live availability,
 price, or reservation evidence.
+
+## Static browser build
+
+The same fixture flow can run entirely in a browser, with no Python server:
+
+```powershell
+python scripts/build_static_demo.py
+python -m http.server 8790 --bind 127.0.0.1 --directory outputs/static-demo
+```
+
+The script writes `outputs/static-demo/`: the packaged HTML, CSS, JavaScript, and Leaflet files with
+relative paths, the synthetic fixture, a deterministic zip of the `chargepath` sources, and a small
+bridge (`static-api.js`). The bridge loads a pinned Pyodide release (0.27.7, CPython 3.12) from
+jsDelivr and answers `/api/config` and `/api/plan` through `chargepath.demo.browser`. That module
+reuses the server's request schema, fixture service, and status mapping, so both builds return the
+same plans and errors. Integration mode, OSRM, and EPDK data are not included.
+
+The output is a plain static site, so a static host such as GitHub Pages can serve it. The first load
+downloads Pyodide (about 10 MB) from the CDN; map tiles still come from the configured tile server
+under its usage policy. The script never deploys anything. Publishing the folder is a separate,
+explicit step.
+
+Checked on 2026-11-08 in Chromium against the build served on loopback: the page loaded the
+fixture through Pyodide, labeled it as synthetic, and returned four strategies with the same
+205.2-minute fastest plan as the loopback server.
 
 ## Explicit integration mode
 

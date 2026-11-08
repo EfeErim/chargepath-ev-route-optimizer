@@ -15,6 +15,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from chargepath import validation
 from chargepath.alternatives import (
     CompetitiveRoutePlanner,
     GreedyFixedTargetOptimizer,
@@ -91,34 +92,11 @@ class BenchmarkManifest:
         return {case.id: case for case in self.cases}
 
 
-def _object(value: Any, *, field: str) -> dict[str, Any]:
-    if not isinstance(value, dict):
-        raise ValueError(f"{field} must be a JSON object")
-    return value
-
-
-def _array(value: Any, *, field: str) -> list[Any]:
-    if not isinstance(value, list):
-        raise ValueError(f"{field} must be a JSON array")
-    return value
-
-
-def _text(value: Any, *, field: str) -> str:
-    if not isinstance(value, str) or not value.strip():
-        raise ValueError(f"{field} must be a non-empty string")
-    return value
-
-
-def _integer(value: Any, *, field: str) -> int:
-    if isinstance(value, bool) or not isinstance(value, int):
-        raise ValueError(f"{field} must be an integer")
-    return int(value)
-
-
-def _boolean(value: Any, *, field: str) -> bool:
-    if not isinstance(value, bool):
-        raise ValueError(f"{field} must be a boolean")
-    return value
+_object = validation.json_object
+_array = validation.json_array
+_text = validation.text
+_integer = validation.integer
+_boolean = validation.boolean
 
 
 def _sha256(path: Path) -> str:
