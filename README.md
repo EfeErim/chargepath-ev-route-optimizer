@@ -2,16 +2,15 @@
 
 ChargePath is a local-first portfolio project that chooses feasible charging stops and charging amounts for a single battery-electric car, while delegating road-network geometry to a configured OpenStreetMap routing engine.
 
-> **Status:** M0 through M6 are complete. The latest release is the
-> [v0.2.0rc1](https://github.com/EfeErim/chargepath-ev-route-optimizer/releases/tag/v0.2.0rc1)
-> pre-release with the real-route evaluation. A closure pass toward 0.2.0 final updates
-> documentation and adds no features. The deterministic optimization core, competitive route
-> options, independent replay, schema-versioned synthetic demo, explicit OSRM route/table adapter,
-> observed-schema EPDK normalizer, static public CCS2 DC projection, and deterministic corridor
-> selector are runnable. The fixture-first loopback Leaflet demo exposes verified route options,
-> charging actions, and estimated SOC without requiring OSRM or EPDK network access. The release
-> candidate passed all four CI matrix jobs in
-> [run 42358442656](https://github.com/EfeErim/chargepath-ev-route-optimizer/actions/runs/42358442656).
+> **Status:** Complete; maintenance only. M0 through M6 are done, and the latest release is
+> [v0.2.0](https://github.com/EfeErim/chargepath-ev-route-optimizer/releases/tag/v0.2.0), the
+> closure release with the real-route evaluation. No further milestones are planned. The
+> deterministic optimization core, competitive route options, independent replay, schema-versioned
+> synthetic demo, explicit OSRM route/table adapter, observed-schema EPDK normalizer, static public
+> CCS2 DC projection, and deterministic corridor selector are runnable. The fixture-first loopback
+> Leaflet demo exposes verified route options, charging actions, and estimated SOC without requiring
+> OSRM or EPDK network access. The tagged release commit passed all four CI matrix jobs in [run
+> 42373331160](https://github.com/EfeErim/chargepath-ev-route-optimizer/actions/runs/42373331160).
 
 ## Demo
 
@@ -260,7 +259,7 @@ See [limitations](docs/limitations.md) for the full boundary.
 - **M6 — Real-route evaluation (complete):** frozen 24-route manifest on Türkiye's road network,
   separate OSRM collection and offline evaluation, 624 replayed scenario outcomes, and the v0.2.0rc1
   pre-release.
-- **Closure — 0.2.0 final (in progress):** documentation and related-work review, then the final
+- **Closure — 0.2.0 final (complete):** documentation and related-work review, then the v0.2.0
   release. No new features or milestones are planned; out-of-scope gaps are listed in the
   [research review](docs/research.md#gap-review-at-closure).
 

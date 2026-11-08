@@ -127,6 +127,13 @@ future work. The generic charging taper, the M3 evidence, and the M6 result file
 The EPDK reuse terms for the station snapshot and derived statistics remain unconfirmed, as stated
 for 0.2.0rc1. The release contains no station rows, names, coordinates, or identifiers.
 
+After approval, commit `16c9cf8` passed all four matrix jobs in
+[run 42372879146](https://github.com/EfeErim/chargepath-ev-route-optimizer/actions/runs/42372879146),
+and commit `5928c7b`, which records that result, passed in
+[run 42373331160](https://github.com/EfeErim/chargepath-ev-route-optimizer/actions/runs/42373331160).
+The annotated `v0.2.0` tag points to `5928c7b` and is published as the latest
+[GitHub Release](https://github.com/EfeErim/chargepath-ev-route-optimizer/releases/tag/v0.2.0).
+
 ## Approval-gated finalization of 0.1.0
 
 M5 is complete: the candidate was committed and pushed, both matrix jobs are green, immutable
