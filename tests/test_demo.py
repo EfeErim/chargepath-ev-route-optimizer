@@ -569,6 +569,8 @@ def test_ui_contract_keeps_basemap_optional_and_avoids_public_geocoding() -> Non
     assert "unpkg.com" not in html
     assert "openstreetmap contributors" in combined
     assert "tileerror" in script
+    # OSM tile servers block requests without a Referer; the page itself is no-referrer.
+    assert 'referrerPolicy: "strict-origin-when-cross-origin"' in script
     assert ".leaflet-pane" in stylesheet
     assert hashlib.sha256(leaflet_css).hexdigest() == (
         "5f236f11b6ca29a549c06be1c1c786ec53523fb39a1bae2f2ba61f6fef889edb"
