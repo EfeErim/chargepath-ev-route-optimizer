@@ -81,7 +81,7 @@ these products was run, and none is claimed.
 
 The public OSRM demo is useful for manual development but is not a project-owned service. A
 user-configured local or self-hosted instance with a pinned backend release, routing profile, and
-regional OpenStreetMap extract is the reproducible integration target. M1 setup notes may choose a
+regional OpenStreetMap extract is the reproducible integration target. The OSRM setup notes may choose a
 deployment method; the plan does not commit the product to a container runtime.
 
 ### Map display
@@ -106,7 +106,7 @@ or availability of a particular station API response.
 
 ## Chosen simplifications
 
-| Topic | M0/MVP choice | Why |
+| Topic | Initial choice | Why |
 |---|---|---|
 | Road routing | OSRM provider | Reimplementing national road restrictions is not the portfolio decision being demonstrated. |
 | Energy use | Constant kWh/100 km × safety factor | Transparent baseline that can be tested before adding grade/weather. |
@@ -128,7 +128,7 @@ These are to be tested, not stated as results:
 
 ## Gap review at closure
 
-The 2026-08-05 review left seven gaps for later milestones. At closure on 2026-11-07 they stand as
+The 2026-08-05 review left seven gaps for later work. At closure on 2026-11-07 they stand as
 follows.
 
 | Gap | Status | Reason |
@@ -136,7 +136,7 @@ follows.
 | Vehicle-specific charging curves | Future work; closure Phase B stopped at its data gate | [open-ev-data](https://github.com/open-ev-data/open-ev-data-dataset) is CDLA-Permissive-2.0 and its schema defines `charging.dc_charge_curve`. In release v1.24.0, however, none of the 1,189 vehicles has a curve, and only 22 carry isolated DC charging-time measurements. Community forks with curves derive them from Fastned charts, which the plan excludes. No redistributable, measured curve source was found. |
 | Speed-, grade-, weather-, temperature-, and payload-dependent energy | Out of scope | The public telemetry pilots gave mixed results. A speed model improved held-out ID.3 error, while the BMW terrain model helped on three hillier sections but raised whole-trip error. The evidence does not justify changing the planner's model. |
 | Uncertain queues and charger outages | Out of scope | The static snapshot has no occupancy or failure data. The literature above needs both as inputs. |
-| Evidence-backed fallback stations | Out of scope | Requires reliability data. The M6 stress case that removes the first charging site only measures sensitivity. |
+| Evidence-backed fallback stations | Out of scope | Requires reliability data. The real-route stress case that removes the first charging site only measures sensitivity. |
 | Real-time replanning | Out of scope | Requires a live vehicle and live station data, outside the product boundary. |
-| Empirical field calibration | Partly addressed | The field pilots evaluate energy and charging models on public data from a few vehicles; they are not ground truth for the M6 plans. |
-| Speedups for continental-scale state spaces | Not needed | About 0.3 s per trip at M6 scale. Profile and Contraction Hierarchies methods remain available if the scale changes. |
+| Empirical field calibration | Partly addressed | The field pilots evaluate energy and charging models on public data from a few vehicles; they are not ground truth for the real-route plans. |
+| Speedups for continental-scale state spaces | Not needed | About 0.3 s per trip at real-route benchmark scale. Profile and Contraction Hierarchies methods remain available if the scale changes. |

@@ -1,4 +1,4 @@
-"""Deterministic road-only baseline used by the M3 evaluation suite."""
+"""Deterministic road-only baseline used by the synthetic benchmark."""
 
 from __future__ import annotations
 

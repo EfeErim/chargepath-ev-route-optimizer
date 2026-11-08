@@ -56,21 +56,21 @@ one is operationally safer or more reliable with static station data.
 
 Synthetic tests prove software invariants against synthetic inputs. Real-world SOC accuracy requires logged trips, a defined vehicle set, and a separate calibration protocol.
 
-The M3 benchmark contains eight small, hand-audited synthetic cases. Its measured advantage for
+The synthetic benchmark contains eight small, hand-audited synthetic cases. Its measured advantage for
 partial charging, 0-minute pruning gap, and millisecond runtimes apply only to that fixture and one
 recorded machine run. They do not establish national-scale performance, general pruning safety, or
 real-world trip-time accuracy.
 
-M6 covers 24 selected routes on one OSM extract and one static EPDK snapshot. Its 624 scenario
+The real-route benchmark covers 24 selected routes on one OSM extract and one static EPDK snapshot. Its 624 scenario
 outcomes include repeated routes at different settings. The evaluated solver assumes each compatible
 candidate can be used. The fixed-80 comparison combines stop selection and charging amounts.
 Benchmark runtime is measured per batch, separately from OSRM, and excludes browser latency.
-Exact reproduction requires the frozen input bytes. See [M6 results](results.md#m6-real-route-benchmark).
+Exact reproduction requires the frozen input bytes. See [real-route results](results.md#real-route-benchmark).
 
 The separate [public telemetry pilots](results.md#field-pilot--volkswagen-id3) evaluate energy and
 charging on a small number of vehicles using recorded speeds. VW charging type is inferred and
 charger capabilities are unavailable. The BMW pilot includes only three hillier held-out sections.
-Neither pilot provides ground truth for the M6 route plans.
+Neither pilot provides ground truth for the real-route plans.
 
 ## Demo boundary
 

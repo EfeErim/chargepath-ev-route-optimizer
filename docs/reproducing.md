@@ -1,21 +1,21 @@
 # Experiment Plan
 
-## M3 execution status
+## Synthetic benchmark
 
 Completed on 2026-08-09 against the checksum-pinned, project-authored synthetic v1 fixture. The
 versioned manifest, normalized correctness/comparison/SOC-grid/pruning artifact, and machine-specific
-runtime artifact are under `data/benchmarks/m3/v1/` and `docs/evidence/m3/`. The reviewed tables and
+runtime artifact are under `data/benchmarks/m3/v1/` and `docs/benchmarks/synthetic/`. The reviewed tables and
 claim boundaries are in [results](results.md).
 
 Reproduction command:
 
 ```powershell
-python scripts/run_m3_benchmark.py --warmups 3 --repetitions 20
+python scripts/run_synthetic_benchmark.py --warmups 3 --repetitions 20
 ```
 
-## M6 rerun procedure
+## Real-route rerun procedure
 
-The [M6 results](results.md#m6-real-route-benchmark) use the inputs pinned in the
+The [real-route results](results.md#real-route-benchmark) use the inputs pinned in the
 [v1 manifest](../data/benchmarks/m6/v1/manifest.json). Collection uses local OSRM. Evaluation
 reads the stored graphs offline. Keep graphs and real EPDK input under the ignored data directories
 because the graphs contain source station fields. To rerun the published design on a new snapshot
@@ -34,15 +34,15 @@ or road extract, create an independent manifest and write its results outside th
 $m6Run = "data/processed/m6/independent"
 $m6StationManifest = "data/processed/epdk/DATE/manifest.json"
 $m6Snapshot = "data/raw/epdk/DATE/response.json"
-python scripts/build_m6_manifest.py --road-metadata data/processed/m6/road.json --station-manifest $m6StationManifest --output-dir $m6Run
-python scripts/run_m6_collect.py --manifest "$m6Run/manifest.json" --station-manifest $m6StationManifest --snapshot $m6Snapshot --graphs-dir "$m6Run/graphs" --osrm-runtime-out "$m6Run/osrm_runtime.json"
-python scripts/run_m6_evaluate.py --manifest "$m6Run/manifest.json" --graphs-dir "$m6Run/graphs" --evidence-dir "$m6Run/results" --osrm-runtime "$m6Run/osrm_runtime.json" --runtime-out "$m6Run/results/runtime.json"
+python scripts/build_route_manifest.py --road-metadata data/processed/m6/road.json --station-manifest $m6StationManifest --output-dir $m6Run
+python scripts/collect_routes.py --manifest "$m6Run/manifest.json" --station-manifest $m6StationManifest --snapshot $m6Snapshot --graphs-dir "$m6Run/graphs" --osrm-runtime-out "$m6Run/osrm_runtime.json"
+python scripts/evaluate_routes.py --manifest "$m6Run/manifest.json" --graphs-dir "$m6Run/graphs" --evidence-dir "$m6Run/results" --osrm-runtime "$m6Run/osrm_runtime.json" --runtime-out "$m6Run/results/runtime.json"
 ```
 
 The builder requires a fresh output directory. It records new road-distance and manifest checksums.
 Collection verifies the station-response hash and the OSRM data version. An independent run can
 select different routes if the road distances change. The manifest hash identifies the specific
-run within the M6 v1 experiment design. Byte-for-byte reproduction of v1 requires its original
+run within the v1 real-route design. Byte-for-byte reproduction of v1 requires its original
 road graph and station snapshot, which are kept outside Git. Machine timings vary across runs.
 
 For an end-to-end check without a real station snapshot or OSRM instance, run the test module

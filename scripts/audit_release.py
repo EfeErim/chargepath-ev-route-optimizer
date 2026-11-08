@@ -8,7 +8,7 @@ import subprocess
 from pathlib import Path
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-ALLOWLIST_PATH = REPOSITORY_ROOT / "docs/evidence/m5/release-allowlist.txt"
+ALLOWLIST_PATH = REPOSITORY_ROOT / "scripts/release-allowlist.txt"
 MAX_RELEASE_FILE_BYTES = 1_048_576
 TEXT_SUFFIXES = {
     ".css",

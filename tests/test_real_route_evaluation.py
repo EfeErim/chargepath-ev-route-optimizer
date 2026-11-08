@@ -373,7 +373,7 @@ def test_runtime_measurements_follow_the_declared_protocol(tmp_path: Path) -> No
 
 
 def _committed_evidence() -> tuple[dict[str, Any], list[dict[str, Any]]]:
-    evidence_dir = REPOSITORY_ROOT / "docs/evidence/m6"
+    evidence_dir = REPOSITORY_ROOT / "docs/benchmarks/real-routes"
     summary: dict[str, Any] = json.loads(
         (evidence_dir / "summary_v1.json").read_text(encoding="utf-8")
     )
@@ -422,6 +422,6 @@ def test_committed_evidence_contains_no_station_data() -> None:
     summary, trips = _committed_evidence()
     assert_no_station_data({"summary": summary, "trips": trips}, {})
     for name in ("summary_v1.json", "trips_v1.jsonl", "runtime_2026-11-05.json"):
-        text = (REPOSITORY_ROOT / "docs/evidence/m6" / name).read_text(encoding="utf-8")
+        text = (REPOSITORY_ROOT / "docs/benchmarks/real-routes" / name).read_text(encoding="utf-8")
         for forbidden in ("epdk:", "ŞRJ/", "sarjIstasyonu", "latitude", "longitude"):
             assert forbidden not in text

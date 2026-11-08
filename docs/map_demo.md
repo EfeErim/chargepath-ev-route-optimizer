@@ -132,6 +132,6 @@ internal tracebacks.
 ## Captured evidence
 
 The verified fixture flow is captured at
-[`docs/evidence/m4/fixture-primary.png`](evidence/m4/fixture-primary.png), recaptured from the current
-interface for 0.1.1. The earlier M4 browser check separately forced tile failure, confirming that route
+[`docs/images/map-demo.png`](images/map-demo.png), recaptured from the current
+interface for 0.1.1. An earlier browser check separately forced tile failure, confirming that route
 paths, three markers, and the replay-verified explanation remained visible.
