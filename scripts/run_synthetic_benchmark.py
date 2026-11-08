@@ -1,4 +1,4 @@
-"""Generate the versioned ChargePath M3 correctness and runtime evidence."""
+"""Generate the versioned ChargePath synthetic-benchmark correctness and runtime evidence."""
 
 from __future__ import annotations
 
@@ -15,8 +15,8 @@ from chargepath.evaluation import (
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MANIFEST = REPOSITORY_ROOT / "data/benchmarks/m3/v1/manifest.json"
-DEFAULT_CORRECTNESS_OUT = REPOSITORY_ROOT / "docs/evidence/m3/correctness_v1.json"
-DEFAULT_RUNTIME_OUT = REPOSITORY_ROOT / "docs/evidence/m3/runtime_2026-08-09.json"
+DEFAULT_CORRECTNESS_OUT = REPOSITORY_ROOT / "docs/benchmarks/synthetic/correctness_v1.json"
+DEFAULT_RUNTIME_OUT = REPOSITORY_ROOT / "docs/benchmarks/synthetic/runtime_2026-08-09.json"
 
 
 def _arguments() -> argparse.Namespace:
@@ -40,7 +40,7 @@ def main() -> None:
     args = _arguments()
     manifest = load_benchmark_manifest(args.manifest)
     command = (
-        "python scripts/run_m3_benchmark.py "
+        "python scripts/run_synthetic_benchmark.py "
         f"--warmups {args.warmups} --repetitions {args.repetitions}"
     )
     correctness = build_correctness_artifact(manifest)
@@ -52,8 +52,8 @@ def main() -> None:
     )
     correctness_sha = _write(args.correctness_out, correctness)
     runtime_sha = _write(args.runtime_out, runtime)
-    print(f"M3 correctness evidence: {args.correctness_out} (sha256={correctness_sha})")
-    print(f"M3 runtime evidence: {args.runtime_out} (sha256={runtime_sha})")
+    print(f"Correctness results: {args.correctness_out} (sha256={correctness_sha})")
+    print(f"Runtime results: {args.runtime_out} (sha256={runtime_sha})")
 
 
 if __name__ == "__main__":
