@@ -46,6 +46,26 @@ required_buckets = ceil(energy_kwh / bucket_kwh)
 
 The upward rounding is intentional. A drive transition is legal only when the remaining bucket count is at least the reserve bucket count.
 
+### Pluggable consumption models
+
+The constant formula above is the default `ConstantConsumption` model. Any object with
+`leg_energy(leg, vehicle) -> LegEnergy` can replace it in every strategy and in replay. A
+`LegEnergy` has a signed `net_kwh` (negative when recuperation recovers more than the leg uses) and
+a `peak_kwh`, the largest cumulative draw anywhere on the leg:
+
+```text
+net_buckets  = ceil(net_kwh / bucket_kwh)      # draws round up, recovered energy rounds down
+peak_buckets = ceil(peak_kwh / bucket_kwh)
+legal when     bucket - peak_buckets >= reserve_bucket
+next bucket  = min(maximum_bucket, bucket - net_buckets)
+```
+
+The peak check keeps a climb followed by a descent from hiding a reserve violation inside the leg,
+and recovered energy never raises the battery above full. Search remains Dijkstra because the
+priority metrics (time, distance, sessions) stay non-negative; energy is part of the state, not of
+the cost, so negative energy does not affect label-setting correctness. For the constant model
+`net = peak`, and every result is identical to the formula above.
+
 Transition cost:
 
 ```text
@@ -69,6 +89,19 @@ effective_kw = min(station_power_kw, vehicle_max_dc_kw)
 ```
 
 Above the taper threshold, effective power is multiplied by a conservative taper factor. The model is an auditable approximation, not a physical battery simulator.
+
+A vehicle may instead carry a `charging_curve`: `(soc_pct, power_kw)` breakpoints from 0 to 100%
+SOC, strictly increasing in SOC with positive power. Accepted power is then
+`min(curve(soc), station_power_kw, vehicle_max_dc_kw)`. That function is linear between the curve
+breakpoints and the points where the curve crosses the cap, so the charge time is integrated exactly
+on each such interval:
+
+```text
+minutes = 60 × Σ (B / 100) × Δsoc × ln(P_end / P_start) / (P_end − P_start)   (Δsoc / P when flat)
+```
+
+The generic taper arguments are ignored for a vehicle with a curve. The project ships no
+vehicle-specific curves; see [research](research.md#gap-review-at-closure) for the data gate.
 
 ## Exact objective variants
 

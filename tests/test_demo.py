@@ -11,6 +11,7 @@ from typing import Any, cast
 import pytest
 
 import chargepath.demo as demo_module
+import chargepath.demo.services as demo_services
 from chargepath.alternatives import CompetitiveRoutePlanner
 from chargepath.corridor import CandidateSelectionConfig, CandidateSelectionResult
 from chargepath.demo import (
@@ -109,7 +110,7 @@ def test_request_validation_is_exact_and_bounded() -> None:
 
     payload = _payload()
     payload["unexpected"] = True
-    with pytest.raises(ValueError, match=r"extra=\['unexpected'\]"):
+    with pytest.raises(ValueError, match=r"unexpected \['unexpected'\]"):
         PlanRequest.from_payload(payload)
 
 
@@ -152,7 +153,7 @@ def test_fixture_refines_only_after_the_default_soc_grid_is_infeasible(
                 raise NoFeasibleRouteError("coarse grid rejected this route")
             return original_planner(soc_step_pct=self._soc_step_pct).plan(**kwargs)
 
-    monkeypatch.setattr(demo_module, "CompetitiveRoutePlanner", CoarseGridFails)
+    monkeypatch.setattr(demo_services, "CompetitiveRoutePlanner", CoarseGridFails)
     result = _service().plan(PlanRequest.from_payload(_payload()))
 
     assert result["model_resolution"] == {
@@ -169,7 +170,7 @@ def test_local_candidate_cap_expands_only_after_an_infeasible_capped_search() ->
     )
 
     assert (
-        demo_module._next_candidate_cap(
+        demo_services._next_candidate_cap(
             selected=selected,
             cap_limit=4,
             enabled=True,
@@ -177,7 +178,7 @@ def test_local_candidate_cap_expands_only_after_an_infeasible_capped_search() ->
         == 4
     )
     assert (
-        demo_module._next_candidate_cap(
+        demo_services._next_candidate_cap(
             selected=selected,
             cap_limit=4,
             enabled=False,
@@ -244,7 +245,7 @@ def test_explicit_integration_mode_uses_checksum_snapshot_and_injected_osrm_boun
     manifest_payload["response_sha256"] = hashlib.sha256(snapshot_bytes).hexdigest()
     manifest.write_text(json.dumps(manifest_payload), encoding="utf-8")
 
-    monkeypatch.setattr(demo_module, "OsrmHttpClient", OfflineOsrmClient)
+    monkeypatch.setattr(demo_services, "OsrmHttpClient", OfflineOsrmClient)
     service = IntegrationPlanningService(
         snapshot_path=snapshot,
         manifest_path=manifest,
@@ -374,7 +375,7 @@ def test_default_widening_stays_within_default_osrm_table_limit(
 ) -> None:
     snapshot, manifest = _many_site_snapshot(tmp_path, site_count=150)
     monkeypatch.setattr(TableLimitedOsrmClient, "largest_table", 0)
-    monkeypatch.setattr(demo_module, "OsrmHttpClient", TableLimitedOsrmClient)
+    monkeypatch.setattr(demo_services, "OsrmHttpClient", TableLimitedOsrmClient)
     service = IntegrationPlanningService(
         snapshot_path=snapshot,
         manifest_path=manifest,
@@ -393,7 +394,7 @@ def test_widening_past_the_provider_table_limit_reports_the_infeasible_result(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     snapshot, manifest = _many_site_snapshot(tmp_path, site_count=150)
-    monkeypatch.setattr(demo_module, "OsrmHttpClient", TableLimitedOsrmClient)
+    monkeypatch.setattr(demo_services, "OsrmHttpClient", TableLimitedOsrmClient)
     service = IntegrationPlanningService(
         snapshot_path=snapshot,
         manifest_path=manifest,
@@ -411,7 +412,7 @@ def test_initial_table_rejection_remains_a_provider_error(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     snapshot, manifest = _many_site_snapshot(tmp_path, site_count=150)
-    monkeypatch.setattr(demo_module, "OsrmHttpClient", TableLimitedOsrmClient)
+    monkeypatch.setattr(demo_services, "OsrmHttpClient", TableLimitedOsrmClient)
     service = IntegrationPlanningService(
         snapshot_path=snapshot,
         manifest_path=manifest,
@@ -513,7 +514,7 @@ def test_server_exposes_explicit_failure_states_without_internal_tracebacks(
     response = connection.getresponse()
     payload = json.loads(response.read())
     assert response.status == 400
-    assert payload["error"].startswith("request fields changed")
+    assert payload["error"].startswith("request fields are invalid")
 
     connection.request("POST", "/api/plan", body=b"{}", headers={"Content-Type": "text/plain"})
     response = connection.getresponse()

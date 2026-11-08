@@ -1,0 +1,56 @@
+{
+  "accepted_trips": 35,
+  "decision_checks": {
+    "all_sections_not_worse": false,
+    "hillier_sections_improve": true,
+    "whole_trip_not_worse": false
+  },
+  "declared_constants": {
+    "drive_efficiency": 0.85,
+    "hillier_threshold_m_per_km": 12.0,
+    "mass_kg": 1400.0,
+    "regen_efficiency": 0.65
+  },
+  "eligible_as_default": false,
+  "one_km_sections": {
+    "calibration_count": 509,
+    "constant": {
+      "bias_kwh": -0.0034646663425973107,
+      "energy_underestimated": 78,
+      "hillier_mae_kwh": 0.22459476313238597,
+      "mae_kwh": 0.07147984129002118,
+      "max_underestimate_kwh": 0.39771426793603626
+    },
+    "fitted_constant_rate": 18.781759285515705,
+    "holdout_count": 195,
+    "holdout_hillier_count": 3,
+    "terrain": {
+      "bias_kwh": -0.0038903646480987326,
+      "energy_underestimated": 75,
+      "hillier_mae_kwh": 0.19396266764043787,
+      "mae_kwh": 0.07194599221554894,
+      "max_underestimate_kwh": 0.413447923676454
+    },
+    "terrain_flat_rate": 18.353705190773756
+  },
+  "source_sha256": "fb59fa697344794321319c7e9d73968d563ee78500f2b173d445f78ff3cc40f5",
+  "whole_trip": {
+    "calibration_count": 24,
+    "constant": {
+      "bias_kwh": 0.0022020251426304593,
+      "energy_underestimated": 7,
+      "mae_kwh": 0.2817379144660321,
+      "max_underestimate_kwh": 0.3723512512412821
+    },
+    "fitted_constant_rate": 18.990602942358187,
+    "holdout_count": 11,
+    "holdout_hillier_count": 0,
+    "terrain": {
+      "bias_kwh": -0.0007964595193358136,
+      "energy_underestimated": 7,
+      "mae_kwh": 0.36743347341363464,
+      "max_underestimate_kwh": 0.44081177653374315
+    },
+    "terrain_flat_rate": 18.60559086493299
+  }
+}

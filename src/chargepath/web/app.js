@@ -91,9 +91,15 @@ document.addEventListener("DOMContentLoaded", () => {
   loadConfig();
 });
 
+// The static browser build defines window.chargepathApi and plans in Pyodide; the local server
+// answers the same paths over HTTP.
+function apiFetch(path, init) {
+  return window.chargepathApi ? window.chargepathApi.fetch(path, init) : fetch(path, init);
+}
+
 async function loadConfig() {
   try {
-    const response = await fetch("/api/config", {headers: {Accept: "application/json"}});
+    const response = await apiFetch("/api/config", {headers: {Accept: "application/json"}});
     if (!response.ok) throw new Error(`Could not load configuration (${response.status})`);
     state.config = await response.json();
     applyConfig();
@@ -349,7 +355,7 @@ async function planRoute() {
   state.planController = controller;
   showLoading();
   try {
-    const response = await fetch("/api/plan", {
+    const response = await apiFetch("/api/plan", {
       method: "POST",
       headers: {"Content-Type": "application/json", Accept: "application/json"},
       signal: controller.signal,
@@ -559,12 +565,31 @@ function renderCharging(stops) {
     const detail = document.createElement("small");
     detail.textContent = `${stop.arrival_soc_pct.toFixed(0)}% → ${stop.departure_soc_pct.toFixed(0)}% · ${stop.energy_added_kwh.toFixed(1)} kWh estimated`;
     copy.append(name, detail);
+    if (stop.redundancy) copy.appendChild(redundancyNote(stop.redundancy));
     const duration = document.createElement("span");
     duration.className = "charge-time";
     duration.textContent = formatMinutes(stop.charging_minutes);
     card.append(copy, duration);
     els.chargingPlan.appendChild(card);
   });
+}
+
+// Structure only: alternatives on the same graph and static station list, not availability.
+function redundancyNote(redundancy) {
+  const note = document.createElement("small");
+  note.className = "charge-fallback";
+  const count = redundancy.alternative_count;
+  const reach = count === 0
+    ? "No other modeled charger in direct reach"
+    : `${count} other modeled ${count === 1 ? "charger" : "chargers"} in direct reach`;
+  const added = redundancy.without_stop_added_minutes;
+  const without = added === null
+    ? "no modeled plan without this charger"
+    : added <= 0.05
+      ? "an equally fast plan exists without it"
+      : `without it: +${formatMinutes(added)}`;
+  note.textContent = `${reach} · ${without} · structure only, not availability`;
+  return note;
 }
 
 function renderRoute(option) {

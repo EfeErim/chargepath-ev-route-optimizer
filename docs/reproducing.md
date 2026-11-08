@@ -87,6 +87,7 @@ squared speed, signed net grade, and total absolute elevation change sampled eve
 
 ```powershell
 python scripts/run_grade_pilot.py data/raw/field-pilot/bmw-i3/drives.zip --output data/processed/field-pilot/bmw-results.json
+python scripts/run_terrain_model_pilot.py data/raw/field-pilot/bmw-i3/drives.zip --output data/processed/field-pilot/bmw-terrain-model.json
 ```
 
 ## Decision question

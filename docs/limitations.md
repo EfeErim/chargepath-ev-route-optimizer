@@ -22,6 +22,10 @@ ChargePath is a planning demonstration, not safety-certified navigation. It does
   update cadence, cross-snapshot identifier behavior, and redistribution conditions remain
   undocumented.
 - Static station presence does not prove availability, access, compatibility, price, or working status at arrival.
+- The per-stop fallback note in the demo is structural only. It counts other compatible chargers in
+  direct reach on the same candidate graph (nearest twelve by driving time) and the added minutes when
+  the stop's charger is removed before planning. It knows nothing about occupancy, outages, or
+  reliability, and it is not a probability that a fallback will work.
 - A coordinate can represent the site rather than the correct road entrance or carriageway.
 - The current public EPDK Swagger does not publish a response schema. The implemented ingestion layer
   uses a synthetic reviewed fixture and fails closed on unreviewed schema fields.
@@ -30,14 +34,21 @@ ChargePath is a planning demonstration, not safety-certified navigation. It does
 
 - Constant consumption ignores speed, grade, traffic, wind, temperature, precipitation, cabin load, payload, tire state, degradation, and driving style.
 - The safety factor is not a substitute for calibration.
-- Regenerative braking is not modeled.
+- An experimental terrain model (`chargepath.terrain`) adds climb and recuperation energy from
+  caller-supplied per-leg ascent and descent. It failed its pre-registered held-out check (lower
+  hillier-section error, higher whole-trip error) and is not the default. The project supplies no
+  elevation data; a digital elevation model sampled along OSRM geometry would also misread bridges,
+  tunnels, and cuttings.
+- Regenerative braking is not modeled by the default constant model. The consumption interface accepts
+  signed per-leg energy, but any such model needs its own calibration evidence.
 - Discrete buckets conservatively round consumption and can reject narrowly feasible continuous solutions.
   The demo retries a coarse 5% infeasible search at 2% and labels the returned resolution, but it
   still cannot establish feasibility in a continuous or calibrated vehicle model.
 
 ## Charging model
 
-- The piecewise taper is generic.
+- The piecewise taper is generic. A caller may supply a vehicle charging curve, but the project ships
+  none, and a curve still ignores temperature, preconditioning, and power sharing.
 - Vehicle and battery temperature, charger voltage/current limits, power sharing, handshake time, and thermal throttling are not modeled.
 - Station power is a cap, not a promise of delivered power.
 - The first release supports modeled CCS2 DC compatibility only. AC charging and other connectors are

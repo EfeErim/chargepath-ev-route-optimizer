@@ -8,10 +8,15 @@ import math
 from dataclasses import dataclass
 from enum import StrEnum
 
+from chargepath import validation
 from chargepath.energy import (
+    DEFAULT_CONSUMPTION,
+    ConsumptionModel,
+    LegBucketCache,
+    buckets_for_leg,
     charging_minutes,
-    energy_for_distance,
-    required_energy_buckets,
+    drive_bucket,
+    leg_bucket_lookup,
 )
 from chargepath.models import (
     ChargingStop,
@@ -25,7 +30,6 @@ from chargepath.providers.base import RoadNetwork
 
 State = tuple[str, int]
 Priority = tuple[float, float, float]
-LegEnergyKey = tuple[RoadLeg, float, float, float]
 
 
 class RoutePreference(StrEnum):
@@ -84,40 +88,20 @@ class EVRouteOptimizer:
         taper_start_pct: float = 80.0,
         taper_factor: float = 0.45,
         session_setup_minutes: float = 2.0,
+        consumption_model: ConsumptionModel = DEFAULT_CONSUMPTION,
     ) -> None:
-        if (
-            isinstance(soc_step_pct, bool)
-            or not isinstance(soc_step_pct, int)
-            or soc_step_pct <= 0
-            or 100 % soc_step_pct != 0
-        ):
-            raise ValueError("soc_step_pct must be a positive divisor of 100")
-        if (
-            isinstance(taper_start_pct, bool)
-            or not isinstance(taper_start_pct, (int, float))
-            or not math.isfinite(taper_start_pct)
-            or not 0 < taper_start_pct < 100
-        ):
-            raise ValueError("taper_start_pct must be between 0 and 100")
-        if (
-            isinstance(taper_factor, bool)
-            or not isinstance(taper_factor, (int, float))
-            or not math.isfinite(taper_factor)
-            or not 0 < taper_factor <= 1
-        ):
-            raise ValueError("taper_factor must be between 0 and 1")
-        if (
-            isinstance(session_setup_minutes, bool)
-            or not isinstance(session_setup_minutes, (int, float))
-            or not math.isfinite(session_setup_minutes)
-            or session_setup_minutes < 0
-        ):
-            raise ValueError("session_setup_minutes must not be negative")
+        validation.soc_step(soc_step_pct)
+        validation.charge_model(
+            taper_start_pct=taper_start_pct,
+            taper_factor=taper_factor,
+            session_setup_minutes=session_setup_minutes,
+        )
         self.preference = RoutePreference(preference)
         self.soc_step_pct = soc_step_pct
         self.taper_start_pct = taper_start_pct
         self.taper_factor = taper_factor
         self.session_setup_minutes = session_setup_minutes
+        self.consumption_model = consumption_model
 
     def optimize(
         self,
@@ -145,7 +129,7 @@ class EVRouteOptimizer:
         vehicle: VehicleProfile,
         stations: dict[str, Station],
         road_network: RoadNetwork,
-        required_buckets_cache: dict[LegEnergyKey, int],
+        required_buckets_cache: LegBucketCache,
     ) -> RoutePlan:
         if (
             not isinstance(origin_id, str)
@@ -172,7 +156,12 @@ class EVRouteOptimizer:
         initial_bucket = math.floor(vehicle.initial_soc_pct / self.soc_step_pct)
         reserve_bucket = math.ceil(vehicle.reserve_soc_pct / self.soc_step_pct)
         bucket_kwh = vehicle.usable_battery_kwh * self.soc_step_pct / 100
-        leg_energy_cache = required_buckets_cache
+        leg_lookup = leg_bucket_lookup(
+            required_buckets_cache,
+            vehicle=vehicle,
+            model=self.consumption_model,
+            bucket_kwh=bucket_kwh,
+        )
         start: State = (origin_id, initial_bucket)
 
         best_metrics: dict[State, _SearchMetrics] = {start: _SearchMetrics()}
@@ -195,23 +184,19 @@ class EVRouteOptimizer:
             for leg in road_network.neighbors(node_id):
                 if leg.origin_id != node_id:
                     raise ValueError("road-network neighbor leg must start at the requested node")
-                energy_key = (
-                    leg,
-                    vehicle.consumption_kwh_per_100km,
-                    vehicle.energy_safety_factor,
-                    bucket_kwh,
+                remaining_bucket = drive_bucket(
+                    energy_bucket,
+                    buckets_for_leg(
+                        leg_lookup,
+                        leg,
+                        vehicle=vehicle,
+                        model=self.consumption_model,
+                        bucket_kwh=bucket_kwh,
+                    ),
+                    reserve_bucket=reserve_bucket,
+                    maximum_bucket=maximum_bucket,
                 )
-                required_buckets = leg_energy_cache.get(energy_key)
-                if required_buckets is None:
-                    required_kwh = energy_for_distance(
-                        leg.distance_km,
-                        vehicle.consumption_kwh_per_100km,
-                        vehicle.energy_safety_factor,
-                    )
-                    required_buckets = required_energy_buckets(required_kwh, bucket_kwh)
-                    leg_energy_cache[energy_key] = required_buckets
-                remaining_bucket = energy_bucket - required_buckets
-                if remaining_bucket < reserve_bucket:
+                if remaining_bucket is None:
                     continue
                 next_state = (leg.destination_id, remaining_bucket)
                 self._relax(

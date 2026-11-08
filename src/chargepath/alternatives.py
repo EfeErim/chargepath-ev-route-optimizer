@@ -8,7 +8,16 @@ import math
 from dataclasses import dataclass
 from enum import StrEnum
 
-from chargepath.energy import charging_minutes, energy_for_distance, required_energy_buckets
+from chargepath import validation
+from chargepath.energy import (
+    DEFAULT_CONSUMPTION,
+    ConsumptionModel,
+    LegBucketCache,
+    buckets_for_leg,
+    charging_minutes,
+    drive_bucket,
+    leg_bucket_lookup,
+)
 from chargepath.models import (
     ChargingStop,
     NoFeasibleRouteError,
@@ -17,7 +26,7 @@ from chargepath.models import (
     Station,
     VehicleProfile,
 )
-from chargepath.optimizer import EVRouteOptimizer, LegEnergyKey, RoutePreference
+from chargepath.optimizer import EVRouteOptimizer, RoutePreference
 from chargepath.providers.base import RoadNetwork
 from chargepath.verification import verify_route_plan
 
@@ -87,14 +96,9 @@ class GreedyFixedTargetOptimizer:
         taper_start_pct: float = 80.0,
         taper_factor: float = 0.45,
         session_setup_minutes: float = 2.0,
+        consumption_model: ConsumptionModel = DEFAULT_CONSUMPTION,
     ) -> None:
-        if (
-            isinstance(soc_step_pct, bool)
-            or not isinstance(soc_step_pct, int)
-            or soc_step_pct <= 0
-            or 100 % soc_step_pct != 0
-        ):
-            raise ValueError("soc_step_pct must be a positive divisor of 100")
+        validation.soc_step(soc_step_pct)
         if (
             isinstance(target_soc_pct, bool)
             or not isinstance(target_soc_pct, (int, float))
@@ -102,32 +106,17 @@ class GreedyFixedTargetOptimizer:
             or not 0 < target_soc_pct <= 100
         ):
             raise ValueError("target_soc_pct must be between 0 and 100")
-        if (
-            isinstance(taper_start_pct, bool)
-            or not isinstance(taper_start_pct, (int, float))
-            or not math.isfinite(taper_start_pct)
-            or not 0 < taper_start_pct < 100
-        ):
-            raise ValueError("taper_start_pct must be between 0 and 100")
-        if (
-            isinstance(taper_factor, bool)
-            or not isinstance(taper_factor, (int, float))
-            or not math.isfinite(taper_factor)
-            or not 0 < taper_factor <= 1
-        ):
-            raise ValueError("taper_factor must be between 0 and 1")
-        if (
-            isinstance(session_setup_minutes, bool)
-            or not isinstance(session_setup_minutes, (int, float))
-            or not math.isfinite(session_setup_minutes)
-            or session_setup_minutes < 0
-        ):
-            raise ValueError("session_setup_minutes must not be negative")
+        validation.charge_model(
+            taper_start_pct=taper_start_pct,
+            taper_factor=taper_factor,
+            session_setup_minutes=session_setup_minutes,
+        )
         self.soc_step_pct = soc_step_pct
         self.target_soc_pct = target_soc_pct
         self.taper_start_pct = taper_start_pct
         self.taper_factor = taper_factor
         self.session_setup_minutes = session_setup_minutes
+        self.consumption_model = consumption_model
 
     def optimize(
         self,
@@ -155,7 +144,7 @@ class GreedyFixedTargetOptimizer:
         vehicle: VehicleProfile,
         stations: dict[str, Station],
         road_network: RoadNetwork,
-        required_buckets_cache: dict[LegEnergyKey, int],
+        required_buckets_cache: LegBucketCache,
     ) -> RoutePlan:
         if (
             not isinstance(origin_id, str)
@@ -180,10 +169,29 @@ class GreedyFixedTargetOptimizer:
 
         reserve_bucket = math.ceil(vehicle.reserve_soc_pct / self.soc_step_pct)
         bucket_kwh = vehicle.usable_battery_kwh * self.soc_step_pct / 100
-        leg_energy_cache = required_buckets_cache
         target_bucket = math.ceil(self.target_soc_pct / self.soc_step_pct)
         maximum_bucket = 100 // self.soc_step_pct
         target_bucket = min(target_bucket, maximum_bucket)
+        leg_lookup = leg_bucket_lookup(
+            required_buckets_cache,
+            vehicle=vehicle,
+            model=self.consumption_model,
+            bucket_kwh=bucket_kwh,
+        )
+
+        def after_leg(bucket: int, leg: RoadLeg) -> int | None:
+            return drive_bucket(
+                bucket,
+                buckets_for_leg(
+                    leg_lookup,
+                    leg,
+                    vehicle=vehicle,
+                    model=self.consumption_model,
+                    bucket_kwh=bucket_kwh,
+                ),
+                reserve_bucket=reserve_bucket,
+                maximum_bucket=maximum_bucket,
+            )
 
         node_ids = [origin_id]
         legs: list[RoadLeg] = []
@@ -205,14 +213,8 @@ class GreedyFixedTargetOptimizer:
             )
             if shortest_path:
                 next_leg = shortest_path[0]
-                remaining_bucket = self._remaining_bucket(
-                    energy_bucket,
-                    next_leg,
-                    vehicle,
-                    bucket_kwh,
-                    leg_energy_cache,
-                )
-                if remaining_bucket >= reserve_bucket:
+                remaining_bucket = after_leg(energy_bucket, next_leg)
+                if remaining_bucket is not None:
                     legs.append(next_leg)
                     node_ids.append(next_leg.destination_id)
                     energy_bucket = remaining_bucket
@@ -251,14 +253,8 @@ class GreedyFixedTargetOptimizer:
                     raise ValueError("station mapping key must match station.id")
                 if station.connector_type not in vehicle.supported_dc_connectors:
                     continue
-                arrival_bucket = self._remaining_bucket(
-                    energy_bucket,
-                    leg,
-                    vehicle,
-                    bucket_kwh,
-                    leg_energy_cache,
-                )
-                if arrival_bucket < reserve_bucket or arrival_bucket >= target_bucket:
+                arrival_bucket = after_leg(energy_bucket, leg)
+                if arrival_bucket is None or arrival_bucket >= target_bucket:
                     continue
                 remaining_path = self._shortest_driving_path(
                     station.id,
@@ -304,31 +300,6 @@ class GreedyFixedTargetOptimizer:
             arrival_soc_pct=float(energy_bucket * self.soc_step_pct),
             total_minutes=driving_time + charging_time,
         )
-
-    def _remaining_bucket(
-        self,
-        energy_bucket: int,
-        leg: RoadLeg,
-        vehicle: VehicleProfile,
-        bucket_kwh: float,
-        required_buckets_cache: dict[LegEnergyKey, int],
-    ) -> int:
-        energy_key = (
-            leg,
-            vehicle.consumption_kwh_per_100km,
-            vehicle.energy_safety_factor,
-            bucket_kwh,
-        )
-        required_buckets = required_buckets_cache.get(energy_key)
-        if required_buckets is None:
-            required_kwh = energy_for_distance(
-                leg.distance_km,
-                vehicle.consumption_kwh_per_100km,
-                vehicle.energy_safety_factor,
-            )
-            required_buckets = required_energy_buckets(required_kwh, bucket_kwh)
-            required_buckets_cache[energy_key] = required_buckets
-        return energy_bucket - required_buckets
 
     def _charge_to_target(
         self,
@@ -410,17 +381,20 @@ class CompetitiveRoutePlanner:
         taper_start_pct: float = 80.0,
         taper_factor: float = 0.45,
         session_setup_minutes: float = 2.0,
+        consumption_model: ConsumptionModel = DEFAULT_CONSUMPTION,
     ) -> None:
         EVRouteOptimizer(
             soc_step_pct=soc_step_pct,
             taper_start_pct=taper_start_pct,
             taper_factor=taper_factor,
             session_setup_minutes=session_setup_minutes,
+            consumption_model=consumption_model,
         )
         self.soc_step_pct = soc_step_pct
         self.taper_start_pct = taper_start_pct
         self.taper_factor = taper_factor
         self.session_setup_minutes = session_setup_minutes
+        self.consumption_model = consumption_model
 
     def plan(
         self,
@@ -433,7 +407,7 @@ class CompetitiveRoutePlanner:
     ) -> RouteOptionSet:
         candidates: list[tuple[RouteStrategy, RoutePlan]] = []
         unavailable: list[RouteStrategy] = []
-        required_buckets_cache: dict[LegEnergyKey, int] = {}
+        required_buckets_cache: LegBucketCache = {}
         exact_strategies = (
             (RouteStrategy.FASTEST, RoutePreference.FASTEST),
             (RouteStrategy.SHORTEST_DISTANCE, RoutePreference.SHORTEST_DISTANCE),
@@ -446,6 +420,7 @@ class CompetitiveRoutePlanner:
                 taper_start_pct=self.taper_start_pct,
                 taper_factor=self.taper_factor,
                 session_setup_minutes=self.session_setup_minutes,
+                consumption_model=self.consumption_model,
             )
             try:
                 plan = optimizer._optimize_with_cache(
@@ -466,6 +441,7 @@ class CompetitiveRoutePlanner:
             taper_start_pct=self.taper_start_pct,
             taper_factor=self.taper_factor,
             session_setup_minutes=self.session_setup_minutes,
+            consumption_model=self.consumption_model,
         )
         try:
             greedy_plan = greedy._optimize_with_cache(
@@ -498,6 +474,7 @@ class CompetitiveRoutePlanner:
                 taper_start_pct=self.taper_start_pct,
                 taper_factor=self.taper_factor,
                 session_setup_minutes=self.session_setup_minutes,
+                consumption_model=self.consumption_model,
             )
             existing_index = option_index.get(plan)
             if existing_index is None:

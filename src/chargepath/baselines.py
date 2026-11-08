@@ -6,7 +6,13 @@ import heapq
 import itertools
 import math
 
-from chargepath.energy import energy_for_distance, required_energy_buckets
+from chargepath import validation
+from chargepath.energy import (
+    DEFAULT_CONSUMPTION,
+    ConsumptionModel,
+    drive_bucket,
+    leg_buckets,
+)
 from chargepath.models import NoFeasibleRouteError, RoadLeg, RoutePlan, VehicleProfile
 from chargepath.providers.base import RoadNetwork
 
@@ -14,15 +20,15 @@ from chargepath.providers.base import RoadNetwork
 class ShortestDrivingTimeBaseline:
     """Select the minimum-driving-time path and evaluate it without charging."""
 
-    def __init__(self, *, soc_step_pct: int = 5) -> None:
-        if (
-            isinstance(soc_step_pct, bool)
-            or not isinstance(soc_step_pct, int)
-            or soc_step_pct <= 0
-            or 100 % soc_step_pct != 0
-        ):
-            raise ValueError("soc_step_pct must be a positive divisor of 100")
+    def __init__(
+        self,
+        *,
+        soc_step_pct: int = 5,
+        consumption_model: ConsumptionModel = DEFAULT_CONSUMPTION,
+    ) -> None:
+        validation.soc_step(soc_step_pct)
         self.soc_step_pct = soc_step_pct
+        self.consumption_model = consumption_model
 
     def optimize(
         self,
@@ -63,18 +69,20 @@ class ShortestDrivingTimeBaseline:
 
         reserve_bucket = math.ceil(vehicle.reserve_soc_pct / self.soc_step_pct)
         bucket_kwh = vehicle.usable_battery_kwh * self.soc_step_pct / 100
+        maximum_bucket = 100 // self.soc_step_pct
         energy_bucket = initial_bucket
         for leg in legs:
-            required_kwh = energy_for_distance(
-                leg.distance_km,
-                vehicle.consumption_kwh_per_100km,
-                vehicle.energy_safety_factor,
+            remaining = drive_bucket(
+                energy_bucket,
+                leg_buckets(self.consumption_model.leg_energy(leg, vehicle), bucket_kwh),
+                reserve_bucket=reserve_bucket,
+                maximum_bucket=maximum_bucket,
             )
-            energy_bucket -= required_energy_buckets(required_kwh, bucket_kwh)
-            if energy_bucket < reserve_bucket:
+            if remaining is None:
                 raise NoFeasibleRouteError(
                     "shortest-driving-time baseline path violates the reserve-SOC invariant"
                 )
+            energy_bucket = remaining
 
         node_ids = (origin_id, *(leg.destination_id for leg in legs))
         total_distance = sum(leg.distance_km for leg in legs)

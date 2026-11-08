@@ -22,6 +22,7 @@ chargepath-demo = "chargepath.demo:main"
 
 [project.optional-dependencies]
 dev = [
+  "hypothesis==6.170.15",
   "mypy==1.20.2",
   "pytest==8.4.2",
   "ruff==0.16.1",

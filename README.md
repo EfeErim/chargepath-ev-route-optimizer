@@ -70,6 +70,10 @@ python examples/run_synthetic_demo.py   # same planner, command line
 On Windows, double-clicking `ChargePath.cmd` opens the map demo; it only needs Python
 3.11+ on the machine.
 
+`python scripts/build_static_demo.py` writes a browser-only copy of the fixture demo that runs
+the planner in Pyodide and can be served by any static host; see the
+[map demo guide](docs/map_demo.md#static-browser-build).
+
 To plan between arbitrary points you need a charger snapshot and an OSRM server; see
 the [map demo guide](docs/map_demo.md) and [OSRM setup](docs/osrm_setup.md).
 

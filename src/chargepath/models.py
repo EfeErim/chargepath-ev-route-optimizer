@@ -6,17 +6,11 @@ import math
 from dataclasses import dataclass
 from typing import Literal
 
+from chargepath.validation import is_finite_number as _is_finite_number
+
 
 class NoFeasibleRouteError(RuntimeError):
     """Raised when no route satisfies the modeled energy constraints."""
-
-
-def _is_finite_number(value: object) -> bool:
-    return (
-        not isinstance(value, bool)
-        and isinstance(value, (int, float))
-        and math.isfinite(float(value))
-    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,10 +42,14 @@ class VehicleProfile:
     reserve_soc_pct: float = 10.0
     energy_safety_factor: float = 1.10
     supported_dc_connectors: tuple[str, ...] = ("CCS2",)
+    # Optional (soc_pct, power_kw) breakpoints from 0 to 100% SOC; None keeps the generic taper.
+    charging_curve: tuple[tuple[float, float], ...] | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.name, str) or not self.name.strip():
             raise ValueError("vehicle name must not be empty")
+        if self.charging_curve is not None:
+            object.__setattr__(self, "charging_curve", _validated_curve(self.charging_curve))
         numeric_values = (
             self.usable_battery_kwh,
             self.initial_soc_pct,
@@ -88,6 +86,27 @@ class VehicleProfile:
         if len(set(normalized_connectors)) != len(normalized_connectors):
             raise ValueError("supported_dc_connectors must not contain duplicates")
         object.__setattr__(self, "supported_dc_connectors", normalized_connectors)
+
+
+def _validated_curve(curve: object) -> tuple[tuple[float, float], ...]:
+    if not isinstance(curve, tuple) or len(curve) < 2:
+        raise ValueError(
+            "charging_curve must be a tuple of at least two (soc_pct, power_kw) points"
+        )
+    points: list[tuple[float, float]] = []
+    for point in curve:
+        if not isinstance(point, tuple) or len(point) != 2:
+            raise ValueError("charging_curve points must be (soc_pct, power_kw) pairs")
+        soc, power = point
+        if not _is_finite_number(soc) or not _is_finite_number(power):
+            raise ValueError("charging_curve values must be finite numbers")
+        points.append((float(soc), float(power)))
+    socs = [soc for soc, _ in points]
+    if socs[0] != 0 or socs[-1] != 100 or any(b <= a for a, b in zip(socs, socs[1:], strict=False)):
+        raise ValueError("charging_curve SOC must increase strictly from 0 to 100")
+    if any(power <= 0 for _, power in points):
+        raise ValueError("charging_curve power must be positive")
+    return tuple(points)
 
 
 @dataclass(frozen=True, slots=True)

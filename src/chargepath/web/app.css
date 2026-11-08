@@ -1368,3 +1368,11 @@ input:focus-visible {
     transition-duration: 0.01ms !important;
   }
 }
+
+.charge-fallback {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted, #5f6b66);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
