@@ -165,6 +165,10 @@ function initMap() {
     detectRetina: true,
     updateWhenIdle: true,
     keepBuffer: 1,
+    // The page is served with Referrer-Policy: no-referrer, but the OSM tile usage policy
+    // requires a Referer on tile requests and blocks tiles without one (seen in Firefox).
+    // Send only the origin for tile images.
+    referrerPolicy: "strict-origin-when-cross-origin",
   })
     .on("tileerror", () => {
       tileErrors += 1;
