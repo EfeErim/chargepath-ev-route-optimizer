@@ -6,7 +6,7 @@ must not be treated as a production dependency.
 
 ## Pinned backend and protocol
 
-The M1 adapter was fixture-tested with OSRM backend `v26.7.3` at commit
+The OSRM adapter was fixture-tested with OSRM backend `v26.7.3` at commit
 `0844e3af77896d11998ef6db356a553056652c8e`. The URL path still uses `/v1/`: `v1` is the OSRM 5.x
 HTTP protocol version, not the backend release number.
 
@@ -15,14 +15,14 @@ backend asset, car-profile checksum, CH preparation algorithm, synthetic input m
 data version, retrieval time, and response checksums. The small OSM XML input is project-authored
 synthetic test data, not a real road extract.
 
-## Native Windows setup (verified for M6.0)
+## Native Windows setup
 
 This path needs no container runtime. It was run on 2026-11-05 on Windows 11 x64 with 15.8 GB RAM and
 12 logical CPUs. The paths are examples; everything stays outside Git.
 
 The release asset contains the executables but no Lua profile, so `profiles/` comes from the source
 archive of the pinned commit. The GitHub archive and raw file serve `car.lua` with LF line endings
-(SHA-256 `48bbb716c2b68ce6803a11a4151fcac050c6ea8240295e7dde111f15f8bd3984`). The M1 manifest's
+(SHA-256 `48bbb716c2b68ce6803a11a4151fcac050c6ea8240295e7dde111f15f8bd3984`). The fixture manifest's
 `3a12ab9c194c4b4c869710e9e7756247aa2b7b102c68b6fd6d0c52a2dd8152e9` is the same file with CRLF line
 endings; converting the LF file to CRLF reproduces that value.
 

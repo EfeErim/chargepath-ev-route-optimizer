@@ -1,4 +1,4 @@
-"""Deterministic route selection and manifest content for the M6 real-route benchmark.
+"""Deterministic route selection and manifest content for the real-route benchmark.
 
 Selection reads only province metadata and road distances. It never reads station data or planner
 output, so the benchmark cannot be tuned toward a favorable result.

@@ -116,7 +116,7 @@ failure is reported as an unavailable strategy, not converted into a partial pla
 
 ## Shortest-driving-time baseline
 
-The M3 road-only baseline applies Dijkstra to road-leg duration, using the full lexicographic node
+The road-only baseline applies Dijkstra to road-leg duration, using the full lexicographic node
 sequence as its final tie-break. It then evaluates the selected path against the same conservative
 SOC buckets without inserting any charging action. A reserve violation therefore makes the baseline
 explicitly infeasible even when a charging-aware strategy can solve the trip.
