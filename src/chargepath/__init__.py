@@ -15,6 +15,7 @@ from chargepath.corridor import (
     CorridorCandidate,
     select_corridor_candidates,
 )
+from chargepath.energy import ConstantConsumption, ConsumptionModel, LegEnergy
 from chargepath.evaluation import (
     BenchmarkCase,
     BenchmarkManifest,
@@ -89,4 +90,7 @@ __all__ = [
     "normalize_epdk_response",
     "project_ccs2_dc_options",
     "select_corridor_candidates",
+    "ConstantConsumption",
+    "ConsumptionModel",
+    "LegEnergy",
 ]

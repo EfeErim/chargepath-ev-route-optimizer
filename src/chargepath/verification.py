@@ -4,7 +4,13 @@ from __future__ import annotations
 
 import math
 
-from chargepath.energy import charging_minutes, energy_for_distance, required_energy_buckets
+from chargepath import validation
+from chargepath.energy import (
+    DEFAULT_CONSUMPTION,
+    ConsumptionModel,
+    charging_minutes,
+    leg_buckets,
+)
 from chargepath.models import RoutePlan, Station, VehicleProfile
 
 
@@ -26,33 +32,16 @@ def verify_route_plan(
     taper_start_pct: float = 80.0,
     taper_factor: float = 0.45,
     session_setup_minutes: float = 2.0,
+    consumption_model: ConsumptionModel = DEFAULT_CONSUMPTION,
 ) -> None:
     """Replay charge and drive actions without relying on optimizer predecessor state."""
 
-    if (
-        isinstance(soc_step_pct, bool)
-        or not isinstance(soc_step_pct, int)
-        or soc_step_pct <= 0
-        or 100 % soc_step_pct != 0
-    ):
-        raise ValueError("soc_step_pct must be a positive divisor of 100")
-    for value, field in (
-        (taper_start_pct, "taper_start_pct"),
-        (taper_factor, "taper_factor"),
-        (session_setup_minutes, "session_setup_minutes"),
-    ):
-        if (
-            isinstance(value, bool)
-            or not isinstance(value, (int, float))
-            or not math.isfinite(value)
-        ):
-            raise ValueError(f"{field} must be finite")
-    if not 0 < taper_start_pct < 100:
-        raise ValueError("taper_start_pct must be between 0 and 100")
-    if not 0 < taper_factor <= 1:
-        raise ValueError("taper_factor must be between 0 and 1")
-    if session_setup_minutes < 0:
-        raise ValueError("session_setup_minutes must not be negative")
+    validation.soc_step(soc_step_pct)
+    validation.charge_model(
+        taper_start_pct=taper_start_pct,
+        taper_factor=taper_factor,
+        session_setup_minutes=session_setup_minutes,
+    )
     bucket_kwh = vehicle.usable_battery_kwh * soc_step_pct / 100
     energy_bucket = math.floor(vehicle.initial_soc_pct / soc_step_pct)
     reserve_bucket = math.ceil(vehicle.reserve_soc_pct / soc_step_pct)
@@ -102,12 +91,10 @@ def verify_route_plan(
             plan.node_ids[leg_index + 1],
         ):
             raise PlanVerificationError("road leg does not match plan node order")
-        required_kwh = energy_for_distance(
-            leg.distance_km,
-            vehicle.consumption_kwh_per_100km,
-            vehicle.energy_safety_factor,
-        )
-        energy_bucket -= required_energy_buckets(required_kwh, bucket_kwh)
+        net, peak = leg_buckets(consumption_model.leg_energy(leg, vehicle), bucket_kwh)
+        if energy_bucket - peak < reserve_bucket:
+            raise PlanVerificationError("road leg violates reserve SOC")
+        energy_bucket = min(maximum_bucket, energy_bucket - net)
         if energy_bucket < reserve_bucket:
             raise PlanVerificationError("road leg violates reserve SOC")
 

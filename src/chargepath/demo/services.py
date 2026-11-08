@@ -1,34 +1,38 @@
-"""Loopback-only fixture-first web demo for ChargePath."""
+"""Planning services behind the demo API: fixture mode and OSRM integration mode.
+
+This module has no HTTP dependency, so the same services can run in a browser build.
+"""
 
 from __future__ import annotations
 
-import argparse
 import hashlib
 import json
 import math
-import sys
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, replace
-from http import HTTPStatus
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from importlib.resources import files
+from dataclasses import replace
 from pathlib import Path
 from typing import Literal, Protocol, cast
 from urllib.parse import urlsplit
 
-from chargepath.alternatives import CompetitiveRoutePlanner, RouteOption, RouteOptionSet
+from chargepath import validation
+from chargepath.alternatives import (
+    CompetitiveRoutePlanner,
+    RouteOption,
+    RouteOptionSet,
+    RouteStrategy,
+)
 from chargepath.corridor import (
     DEFAULT_CANDIDATE_SELECTION_CONFIG,
     CandidateSelectionConfig,
     CandidateSelectionResult,
     select_corridor_candidates,
 )
+from chargepath.demo.schema import VEHICLE_INPUT_BOUNDS, PlanRequest, PointInput, VehicleInputs
 from chargepath.energy import energy_for_distance, required_energy_buckets
-from chargepath.fixtures import SyntheticScenario, load_synthetic_scenario
+from chargepath.fixtures import SyntheticScenario
 from chargepath.models import GeoJsonLineString, NoFeasibleRouteError, Station, VehicleProfile
 from chargepath.providers.base import RoadNetwork
 from chargepath.providers.osrm import (
-    DEFAULT_OSRM_ENDPOINT,
     CandidateGraph,
     CandidateGraphBuilder,
     CandidateNode,
@@ -39,14 +43,13 @@ from chargepath.providers.osrm import (
     fetch_selected_plans_geometry,
 )
 from chargepath.providers.static import StaticRoadNetwork
+from chargepath.redundancy import stop_redundancy
 from chargepath.station_data import (
     SnapshotProvenance,
     normalize_epdk_response,
     project_ccs2_dc_options,
 )
 
-MAX_REQUEST_BYTES = 32_768
-DEFAULT_PORT = 8743
 DEFAULT_TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
 TILE_ATTRIBUTION = "© OpenStreetMap contributors"
 SOC_STEP_PCT = 5
@@ -55,176 +58,40 @@ REFINED_SOC_STEP_PCT = 2
 OSRM_DEFAULT_MAX_TABLE_LOCATIONS = 100
 # The Table request also carries the origin and destination.
 DEFAULT_ADAPTIVE_CANDIDATE_CAP_LIMIT = OSRM_DEFAULT_MAX_TABLE_LOCATIONS - 2
-HEALTH_API_VERSION = 3
 
 
-@dataclass(frozen=True, slots=True)
-class PointInput:
-    id: str
-    longitude: float
-    latitude: float
-
-    def __post_init__(self) -> None:
-        _text(self.id, field="point.id")
-        _bounded_number(self.longitude, field="point.longitude", minimum=-180, maximum=180)
-        _bounded_number(self.latitude, field="point.latitude", minimum=-90, maximum=90)
-
-    @classmethod
-    def from_value(cls, value: object, *, field: str) -> PointInput:
-        row = _exact_object(value, field=field, expected={"id", "longitude", "latitude"})
-        identifier = _text(row["id"], field=f"{field}.id")
-        return cls(
-            id=identifier,
-            longitude=_bounded_number(
-                row["longitude"], field=f"{field}.longitude", minimum=-180, maximum=180
-            ),
-            latitude=_bounded_number(
-                row["latitude"], field=f"{field}.latitude", minimum=-90, maximum=90
-            ),
-        )
+def _object(value: object, *, field: str) -> dict[str, object]:
+    return validation.json_object(value, field=field)
 
 
-@dataclass(frozen=True, slots=True)
-class VehicleInputs:
-    usable_battery_kwh: float
-    initial_soc_pct: float
-    consumption_kwh_per_100km: float
-    max_dc_power_kw: float
-    reserve_soc_pct: float
-    energy_safety_factor: float
-
-    def __post_init__(self) -> None:
-        for field, value, minimum, maximum in (
-            ("usable_battery_kwh", self.usable_battery_kwh, 20, 200),
-            ("initial_soc_pct", self.initial_soc_pct, 5, 100),
-            ("consumption_kwh_per_100km", self.consumption_kwh_per_100km, 8, 40),
-            ("max_dc_power_kw", self.max_dc_power_kw, 20, 400),
-            ("reserve_soc_pct", self.reserve_soc_pct, 5, 40),
-            ("energy_safety_factor", self.energy_safety_factor, 1, 1.5),
-        ):
-            _bounded_number(value, field=f"vehicle.{field}", minimum=minimum, maximum=maximum)
-        if self.initial_soc_pct < self.reserve_soc_pct:
-            raise ValueError("initial SOC must be at least the reserve SOC")
-
-    @classmethod
-    def from_value(cls, value: object) -> VehicleInputs:
-        expected = {
-            "usable_battery_kwh",
-            "initial_soc_pct",
-            "consumption_kwh_per_100km",
-            "max_dc_power_kw",
-            "reserve_soc_pct",
-            "energy_safety_factor",
-        }
-        row = _exact_object(value, field="vehicle", expected=expected)
-        result = cls(
-            usable_battery_kwh=_bounded_number(
-                row["usable_battery_kwh"],
-                field="vehicle.usable_battery_kwh",
-                minimum=20,
-                maximum=200,
-            ),
-            initial_soc_pct=_bounded_number(
-                row["initial_soc_pct"],
-                field="vehicle.initial_soc_pct",
-                minimum=5,
-                maximum=100,
-            ),
-            consumption_kwh_per_100km=_bounded_number(
-                row["consumption_kwh_per_100km"],
-                field="vehicle.consumption_kwh_per_100km",
-                minimum=8,
-                maximum=40,
-            ),
-            max_dc_power_kw=_bounded_number(
-                row["max_dc_power_kw"],
-                field="vehicle.max_dc_power_kw",
-                minimum=20,
-                maximum=400,
-            ),
-            reserve_soc_pct=_bounded_number(
-                row["reserve_soc_pct"],
-                field="vehicle.reserve_soc_pct",
-                minimum=5,
-                maximum=40,
-            ),
-            energy_safety_factor=_bounded_number(
-                row["energy_safety_factor"],
-                field="vehicle.energy_safety_factor",
-                minimum=1,
-                maximum=1.5,
-            ),
-        )
-        if result.initial_soc_pct < result.reserve_soc_pct:
-            raise ValueError("initial SOC must be at least the reserve SOC")
-        return result
-
-    @classmethod
-    def from_profile(cls, vehicle: VehicleProfile) -> VehicleInputs:
-        return cls(
-            usable_battery_kwh=vehicle.usable_battery_kwh,
-            initial_soc_pct=vehicle.initial_soc_pct,
-            consumption_kwh_per_100km=vehicle.consumption_kwh_per_100km,
-            max_dc_power_kw=vehicle.max_dc_power_kw,
-            reserve_soc_pct=vehicle.reserve_soc_pct,
-            energy_safety_factor=vehicle.energy_safety_factor,
-        )
-
-    def to_profile(self) -> VehicleProfile:
-        return VehicleProfile(
-            name="Demo EV",
-            usable_battery_kwh=self.usable_battery_kwh,
-            initial_soc_pct=self.initial_soc_pct,
-            consumption_kwh_per_100km=self.consumption_kwh_per_100km,
-            max_dc_power_kw=self.max_dc_power_kw,
-            reserve_soc_pct=self.reserve_soc_pct,
-            energy_safety_factor=self.energy_safety_factor,
-            supported_dc_connectors=("CCS2",),
-        )
-
-    def to_dict(self) -> dict[str, float]:
-        return {
-            "usable_battery_kwh": self.usable_battery_kwh,
-            "initial_soc_pct": self.initial_soc_pct,
-            "consumption_kwh_per_100km": self.consumption_kwh_per_100km,
-            "max_dc_power_kw": self.max_dc_power_kw,
-            "reserve_soc_pct": self.reserve_soc_pct,
-            "energy_safety_factor": self.energy_safety_factor,
-        }
-
-
-@dataclass(frozen=True, slots=True)
-class PlanRequest:
-    origin: PointInput
-    destination: PointInput
-    vehicle: VehicleInputs
-
-    def __post_init__(self) -> None:
-        if not isinstance(self.origin, PointInput) or not isinstance(self.destination, PointInput):
-            raise ValueError("plan endpoints must be PointInput values")
-        if not isinstance(self.vehicle, VehicleInputs):
-            raise ValueError("plan vehicle must be VehicleInputs")
-        if self.origin.id == self.destination.id:
-            raise ValueError("origin and destination must be different")
-
-    @classmethod
-    def from_payload(cls, payload: object) -> PlanRequest:
-        row = _exact_object(payload, field="request", expected={"origin", "destination", "vehicle"})
-        origin = PointInput.from_value(row["origin"], field="origin")
-        destination = PointInput.from_value(row["destination"], field="destination")
-        if origin.id == destination.id:
-            raise ValueError("origin and destination must be different")
-        return cls(
-            origin=origin,
-            destination=destination,
-            vehicle=VehicleInputs.from_value(row["vehicle"]),
-        )
+def _text(value: object, *, field: str) -> str:
+    return validation.text(value, field=field).strip()
 
 
 class PlanningService(Protocol):
     def public_config(self) -> dict[str, object]: ...
 
     def plan(self, request: PlanRequest) -> dict[str, object]: ...
+
+
+def plan_response(service: PlanningService, payload: object) -> tuple[int, dict[str, object]]:
+    """Validate a decoded plan payload and map planning outcomes to HTTP-style status codes.
+
+    The loopback server and the in-browser build share this so both report the same errors.
+    """
+
+    try:
+        request = PlanRequest.from_payload(payload)
+    except ValueError as error:
+        return 400, {"error": str(error) or "Invalid request"}
+    try:
+        return 200, service.plan(request)
+    except NoFeasibleRouteError as error:
+        return 422, {"error": str(error)}
+    except OsrmProviderError as error:
+        return 502, {"error": str(error)}
+    except (KeyError, ValueError):
+        return 500, {"error": "Internal planning error"}
 
 
 class FixturePlanningService:
@@ -250,12 +117,13 @@ class FixturePlanningService:
         _require_fixture_point(request.destination, expected_destination, role="destination")
         vehicle = request.vehicle.to_profile()
         stations = self._scenario.station_map()
+        network = StaticRoadNetwork(self._scenario.legs)
         result, soc_step_pct = _plan_with_soc_refinement(
             origin_id=self._scenario.origin_id,
             destination_id=self._scenario.destination_id,
             vehicle=vehicle,
             stations=stations,
-            road_network=StaticRoadNetwork(self._scenario.legs),
+            road_network=network,
         )
         return _serialize_result(
             result,
@@ -263,6 +131,7 @@ class FixturePlanningService:
             stations=stations,
             soc_step_pct=soc_step_pct,
             data_label="Synthetic fixture — freshness not applicable",
+            road_network=network,
         )
 
 
@@ -399,6 +268,7 @@ class IntegrationPlanningService:
             stations=stations,
             data_label=self._data_label,
             soc_step_pct=soc_step_pct,
+            road_network=graph,
             candidate_selection={
                 "eligible_count": selected.eligible_count,
                 "selected_count": len(selected.candidates),
@@ -523,139 +393,6 @@ def _next_candidate_cap(
     return min(selected.eligible_count, cap_limit, max(selected_count + 1, selected_count * 2))
 
 
-@dataclass(frozen=True, slots=True)
-class DemoServerConfig:
-    service: PlanningService
-    port: int = DEFAULT_PORT
-
-    def __post_init__(self) -> None:
-        if (
-            isinstance(self.port, bool)
-            or not isinstance(self.port, int)
-            or not 0 <= self.port <= 65_535
-        ):
-            raise ValueError("port must be between 0 and 65535")
-
-
-class DemoHttpServer(ThreadingHTTPServer):
-    service: PlanningService
-
-
-class DemoRequestHandler(BaseHTTPRequestHandler):
-    server_version = "ChargePathDemo/0.1"
-
-    def do_GET(self) -> None:  # noqa: N802
-        path = self.path.split("?", maxsplit=1)[0]
-        if path == "/api/config":
-            self._send_json(HTTPStatus.OK, self._demo_server.service.public_config())
-            return
-        if path == "/health":
-            self._send_json(
-                HTTPStatus.OK,
-                {
-                    "status": "ok",
-                    "service": "chargepath-demo",
-                    "api_version": HEALTH_API_VERSION,
-                },
-            )
-            return
-        assets = {
-            "/": ("index.html", "text/html; charset=utf-8"),
-            "/app.css": ("app.css", "text/css; charset=utf-8"),
-            "/app.js": ("app.js", "text/javascript; charset=utf-8"),
-            "/leaflet.css": ("leaflet.css", "text/css; charset=utf-8"),
-            "/leaflet.js": ("leaflet.js", "text/javascript; charset=utf-8"),
-        }
-        asset = assets.get(path)
-        if asset is None:
-            self._send_json(HTTPStatus.NOT_FOUND, {"error": "Not found"})
-            return
-        name, content_type = asset
-        payload = files("chargepath.web").joinpath(name).read_bytes()
-        self._send_bytes(HTTPStatus.OK, payload, content_type=content_type)
-
-    def do_POST(self) -> None:  # noqa: N802
-        if self.path.split("?", maxsplit=1)[0] != "/api/plan":
-            self._send_json(HTTPStatus.NOT_FOUND, {"error": "Not found"})
-            return
-        if self.headers.get_content_type() != "application/json":
-            self._send_json(
-                HTTPStatus.UNSUPPORTED_MEDIA_TYPE,
-                {"error": "Content-Type must be application/json"},
-            )
-            return
-        length = self.headers.get("Content-Length")
-        if length is None:
-            self._send_json(HTTPStatus.LENGTH_REQUIRED, {"error": "Content-Length is required"})
-            return
-        try:
-            byte_count = int(length)
-        except ValueError:
-            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "Invalid Content-Length"})
-            return
-        if not 0 < byte_count <= MAX_REQUEST_BYTES:
-            self._send_json(
-                HTTPStatus.REQUEST_ENTITY_TOO_LARGE,
-                {"error": f"Request body must be between 1 and {MAX_REQUEST_BYTES} bytes"},
-            )
-            return
-        try:
-            payload = json.loads(self.rfile.read(byte_count))
-            request = PlanRequest.from_payload(payload)
-        except (json.JSONDecodeError, UnicodeDecodeError, ValueError) as error:
-            self._send_json(HTTPStatus.BAD_REQUEST, {"error": str(error) or "Invalid request"})
-            return
-        try:
-            result = self._demo_server.service.plan(request)
-        except NoFeasibleRouteError as error:
-            self._send_json(HTTPStatus.UNPROCESSABLE_ENTITY, {"error": str(error)})
-            return
-        except OsrmProviderError as error:
-            self._send_json(HTTPStatus.BAD_GATEWAY, {"error": str(error)})
-            return
-        except (KeyError, ValueError):
-            self._send_json(HTTPStatus.INTERNAL_SERVER_ERROR, {"error": "Internal planning error"})
-            return
-        self._send_json(HTTPStatus.OK, result)
-
-    @property
-    def _demo_server(self) -> DemoHttpServer:
-        return cast(DemoHttpServer, self.server)
-
-    def _send_json(self, status: HTTPStatus, payload: Mapping[str, object]) -> None:
-        body = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
-        self._send_bytes(status, body, content_type="application/json; charset=utf-8")
-
-    def _send_bytes(self, status: HTTPStatus, body: bytes, *, content_type: str) -> None:
-        try:
-            self.send_response(status)
-            self.send_header("Content-Type", content_type)
-            self.send_header("Content-Length", str(len(body)))
-            self.send_header("Cache-Control", "no-store")
-            self.send_header("X-Content-Type-Options", "nosniff")
-            self.send_header("Referrer-Policy", "no-referrer")
-            self.send_header(
-                "Content-Security-Policy",
-                "default-src 'self'; script-src 'self'; "
-                "style-src 'self' 'unsafe-inline'; "
-                "img-src 'self' data: https:; connect-src 'self'",
-            )
-            self.end_headers()
-            self.wfile.write(body)
-        except (BrokenPipeError, ConnectionResetError):
-            return
-
-    def log_message(self, format: str, *args: object) -> None:
-        return
-
-
-def create_server(config: DemoServerConfig) -> DemoHttpServer:
-    """Create a server that can only listen on IPv4 loopback."""
-    server = DemoHttpServer(("127.0.0.1", config.port), DemoRequestHandler)
-    server.service = config.service
-    return server
-
-
 def _public_config(
     *,
     mode: Literal["fixture", "integration"],
@@ -676,12 +413,7 @@ def _public_config(
         ],
         "vehicle": vehicle.to_dict(),
         "input_bounds": {
-            "usable_battery_kwh": [20, 200],
-            "initial_soc_pct": [5, 100],
-            "consumption_kwh_per_100km": [8, 40],
-            "max_dc_power_kw": [20, 400],
-            "reserve_soc_pct": [5, 40],
-            "energy_safety_factor": [1, 1.5],
+            field: [minimum, maximum] for field, (minimum, maximum) in VEHICLE_INPUT_BOUNDS.items()
         },
         "integration": dict(integration_summary or {}),
     }
@@ -694,11 +426,30 @@ def _serialize_result(
     stations: Mapping[str, Station],
     data_label: str,
     soc_step_pct: int,
+    road_network: RoadNetwork,
     candidate_selection: Mapping[str, object] | None = None,
 ) -> dict[str, object]:
     options: list[dict[str, object]] = []
     for index, option in enumerate(result.options, start=1):
         plan = option.plan
+        # Structural fallbacks are measured for the fastest plan only, which bounds the extra
+        # searches; other options report null.
+        redundancy: dict[str, dict[str, object]] = {}
+        if RouteStrategy.FASTEST in option.strategies:
+            redundancy = {
+                item.station_id: {
+                    "alternative_count": item.alternative_count,
+                    "alternatives_checked": item.alternatives_checked,
+                    "without_stop_added_minutes": item.without_stop_added_minutes,
+                }
+                for item in stop_redundancy(
+                    plan,
+                    vehicle=vehicle,
+                    stations=dict(stations),
+                    road_network=road_network,
+                    soc_step_pct=soc_step_pct,
+                )
+            }
         features: list[dict[str, object]] = []
         for leg in plan.legs:
             if leg.geometry is None:
@@ -726,6 +477,7 @@ def _serialize_result(
                 "departure_soc_pct": stop.departure_soc_pct,
                 "energy_added_kwh": stop.energy_added_kwh,
                 "charging_minutes": stop.charging_minutes,
+                "redundancy": redundancy.get(stop.station_id),
             }
             for stop in plan.charging_stops
         ]
@@ -834,38 +586,6 @@ def _require_fixture_point(actual: PointInput, expected: PointInput, *, role: st
         raise ValueError(f"fixture {role} must be selected from its declared map marker")
 
 
-def _exact_object(value: object, *, field: str, expected: set[str]) -> dict[str, object]:
-    row = _object(value, field=field)
-    actual = set(row)
-    if actual != expected:
-        raise ValueError(
-            f"{field} fields changed; missing={sorted(expected - actual)}, "
-            f"extra={sorted(actual - expected)}"
-        )
-    return row
-
-
-def _object(value: object, *, field: str) -> dict[str, object]:
-    if not isinstance(value, dict) or any(not isinstance(key, str) for key in value):
-        raise ValueError(f"{field} must be an object")
-    return cast(dict[str, object], value)
-
-
-def _text(value: object, *, field: str) -> str:
-    if not isinstance(value, str) or not value.strip():
-        raise ValueError(f"{field} must be non-empty text")
-    return value.strip()
-
-
-def _bounded_number(value: object, *, field: str, minimum: float, maximum: float) -> float:
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
-        raise ValueError(f"{field} must be numeric")
-    number = float(value)
-    if not math.isfinite(number) or not minimum <= number <= maximum:
-        raise ValueError(f"{field} must be between {minimum:g} and {maximum:g}")
-    return number
-
-
 def _validate_tile_url(value: str) -> str:
     if not isinstance(value, str):
         raise ValueError("tile URL must be text")
@@ -885,87 +605,3 @@ def _validate_tile_url(value: str) -> str:
     except ValueError as error:
         raise ValueError("tile URL port is invalid") from error
     return url
-
-
-def _default_fixture_path() -> Path:
-    repository_fixture = (
-        Path(__file__).resolve().parents[2] / "data" / "sample" / "synthetic_corridor.json"
-    )
-    if repository_fixture.is_file():
-        return repository_fixture
-    return Path(sys.prefix) / "share" / "chargepath" / "synthetic_corridor.json"
-
-
-def _argument_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--mode", choices=("fixture", "integration"), default="fixture")
-    parser.add_argument("--port", type=int, default=DEFAULT_PORT)
-    parser.add_argument("--tile-url", default=DEFAULT_TILE_URL)
-    parser.add_argument("--fixture", type=Path, default=_default_fixture_path())
-    parser.add_argument("--osrm-endpoint", default=DEFAULT_OSRM_ENDPOINT)
-    parser.add_argument(
-        "--allow-remote-osrm",
-        action="store_true",
-        help="Allow the explicitly configured non-loopback OSRM endpoint",
-    )
-    parser.add_argument(
-        "--candidate-cap",
-        type=int,
-        default=DEFAULT_CANDIDATE_SELECTION_CONFIG.candidate_cap,
-        help="Maximum compatible charging sites included in the OSRM table",
-    )
-    parser.add_argument(
-        "--adaptive-candidate-cap-limit",
-        type=int,
-        default=DEFAULT_ADAPTIVE_CANDIDATE_CAP_LIMIT,
-        help="Local-only maximum candidate cap after a capped search is infeasible",
-    )
-    parser.add_argument("--station-snapshot", type=Path)
-    parser.add_argument("--station-manifest", type=Path)
-    return parser
-
-
-def _service_from_args(args: argparse.Namespace) -> PlanningService:
-    if args.mode == "fixture":
-        return FixturePlanningService(
-            load_synthetic_scenario(cast(Path, args.fixture)),
-            tile_url=cast(str, args.tile_url),
-        )
-    snapshot = cast(Path | None, args.station_snapshot)
-    manifest = cast(Path | None, args.station_manifest)
-    if snapshot is None or manifest is None:
-        raise ValueError("integration mode requires --station-snapshot and --station-manifest")
-    return IntegrationPlanningService(
-        snapshot_path=snapshot,
-        manifest_path=manifest,
-        osrm_endpoint=cast(str, args.osrm_endpoint),
-        tile_url=cast(str, args.tile_url),
-        allow_remote_osrm=cast(bool, args.allow_remote_osrm),
-        candidate_cap=cast(int, args.candidate_cap),
-        adaptive_candidate_cap_limit=cast(int, args.adaptive_candidate_cap_limit),
-    )
-
-
-def main(argv: Sequence[str] | None = None) -> None:
-    parser = _argument_parser()
-    args = parser.parse_args(argv)
-    try:
-        service = _service_from_args(args)
-        server = create_server(DemoServerConfig(service=service, port=cast(int, args.port)))
-    except (OSError, ValueError, json.JSONDecodeError) as error:
-        parser.error(str(error))
-    host = cast(str, server.server_address[0])
-    port = server.server_address[1]
-    print(f"ChargePath demo: http://{host}:{port}")
-    print(f"Mode: {service.public_config()['mode']}")
-    print("Press Ctrl+C to stop.")
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        pass
-    finally:
-        server.server_close()
-
-
-if __name__ == "__main__":
-    main()

@@ -128,6 +128,61 @@ versus the constant model. It underestimated energy on 86/195 sections versus 78
 constant model. The comparison holds out trips from one car and uses observed speed and elevation.
 The hillier sample is too small to generalize the observed improvement to other routes.
 
+### BMW i3 · Planner terrain model
+
+The [terrain-model artifact](benchmarks/field-pilot/bmw_terrain_model_v1.json) tests the planner's
+opt-in `GradeAwareConsumption` model (`src/chargepath/terrain.py`) on the same data, screening, and
+held-out trips as the pilot above. Unlike the pilot's regression models, it sees only what a planner
+could know before driving: distance, ascent, and descent. Its physical constants were declared
+before the first run and not fitted: 1,400 kg, drive efficiency 0.85, and regen efficiency 0.65.
+Only the flat rate is fitted on calibration data. The decision rule was also fixed in advance: the
+model may become a planner default only if it lowers hillier-section error without raising
+whole-trip or all-section error.
+
+| Model | Whole-trip MAE, 11 trips | Section MAE, 195 sections | Hillier MAE, 3 sections |
+|---|---:|---:|---:|
+| Fitted constant | 0.282 kWh | 0.0715 kWh | 0.225 kWh |
+| Terrain model | 0.367 kWh | 0.0719 kWh | 0.194 kWh |
+
+The terrain model lowered error on the three hillier sections but raised whole-trip error, so it
+failed the rule and stays experimental. The constant model remains the planner default. As in the
+pilot above, three hillier sections from one car in winter are too few to generalize either way.
+
+```powershell
+python scripts/run_terrain_model_pilot.py data/raw/field-pilot/bmw-i3/drives.zip --output data/processed/field-pilot/bmw-terrain-model.json
+```
+
+A second run on 2026-11-08 reproduced the artifact byte for byte (SHA-256
+`aef6dd92256aa3ec51b017f0ebf505fc32bdc725213ff46d612b905aa6d73129`).
+
+## Differential and property checks
+
+`tests/test_properties.py` generates small trips with Hypothesis: two to six nodes, forward,
+backward, and cyclic legs, mixed charger powers, 5–25% SOC grids, and decimal vehicle inputs. A
+reference solver written from [the algorithm description](algorithm.md) recomputes every energy
+bucket and charge duration with exact rational arithmetic and shares no code with
+`chargepath.energy`. The checks are:
+
+- **differential:** feasibility and the lexicographic optimum of all three exact objectives match the
+  reference, and every returned plan passes both the library replay and an exact-arithmetic replay;
+- **dominance:** exact fastest is never slower than shortest distance, fewest sessions, greedy
+  fixed-80, or the road-only baseline when those return a plan;
+- **metamorphic:** a higher starting SOC, a lower reserve, an extra charger, doubled charger and
+  vehicle power, or an extra direct leg never makes a feasible trip infeasible or slower; relabeling
+  nodes leaves every objective unchanged; repeated runs return identical plans.
+
+The gate runs a fixed derandomized sample of 150 cases per property. A deeper randomized run on
+2026-11-08 used 4,000 cases per property (20,000 in total), about half of them feasible and about 8%
+with two or more charging stops. It found no disagreement, including between floating-point and exact
+bucket rounding:
+
+```powershell
+$env:CHARGEPATH_PROPERTY_EXAMPLES = "4000"; python -m pytest -q tests/test_properties.py
+```
+
+These checks cover the modeled problem only. They say nothing about the accuracy of the energy or
+charging model.
+
 ## Synthetic benchmark
 
 The synthetic benchmark was evaluated on 2026-08-09 with Python 3.11.9 using the offline, project-authored

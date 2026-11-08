@@ -14,10 +14,28 @@ All notable changes to this project are documented here. The format follows
   `build_route_manifest.py`, `collect_routes.py`, `evaluate_routes.py`,
   `run_route_followup.py`).
 - Shortened the README.
+- Split `chargepath/demo.py` into a `chargepath.demo` package (`schema`, `services`, `server`);
+  `python -m chargepath.demo` and the `chargepath-demo` entry point are unchanged.
+- Moved repeated input validation into `chargepath.validation`. Some error messages changed wording,
+  for example unexpected request fields are now reported as `fields are invalid: unexpected [...]`.
+- Corrected the Sweda, Dolinskaya, and Klabjan (2017) author list and cited the refereed Schoenberg
+  and Dressler (2023) paper.
 
 ### Added
 
 - pre-commit hooks (Ruff, whitespace) and Dependabot for pip and GitHub Actions.
+- Differential, property-based, and metamorphic tests (`tests/test_properties.py`, Hypothesis)
+  against an exact-rational reference solver.
+- Pluggable consumption models (`ConsumptionModel`, `LegEnergy`) with signed per-leg energy, a peak
+  check inside each leg, and a full-battery cap, plus an optional piecewise-linear
+  `VehicleProfile.charging_curve`. Defaults reproduce earlier results byte for byte.
+- Per-stop structural fallback note for the fastest plan (`chargepath.redundancy`), labeled as
+  structure only.
+- A static browser build of the fixture demo that runs the planner in Pyodide
+  (`scripts/build_static_demo.py`). Nothing is deployed by the script.
+- An experimental terrain consumption model (`chargepath.terrain`) and its pre-registered held-out
+  evaluation on the BMW i3 pilot data, which it did not pass; it is not the default.
+- Literature additions in `docs/research.md` and `docs/source_registry.md`.
 
 ## [0.2.0] - 2026-11-07
 
