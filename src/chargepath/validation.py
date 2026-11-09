@@ -20,6 +20,16 @@ def is_finite_number(value: object) -> TypeGuard[int | float]:
     )
 
 
+def trip_endpoints(origin_id: object, destination_id: object) -> None:
+    if (
+        not isinstance(origin_id, str)
+        or not isinstance(destination_id, str)
+        or not origin_id.strip()
+        or not destination_id.strip()
+    ):
+        raise ValueError("origin_id and destination_id must not be empty")
+
+
 def require_finite(value: object, *, field: str) -> float:
     if not is_finite_number(value):
         raise ValueError(f"{field} must be a finite number")

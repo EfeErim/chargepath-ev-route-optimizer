@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-import heapq
-import itertools
 import math
 from dataclasses import dataclass
 from enum import StrEnum
 
 from chargepath import validation
+from chargepath.baselines import ShortestDrivingTimeBaseline
 from chargepath.energy import (
     DEFAULT_CONSUMPTION,
     ConsumptionModel,
@@ -146,25 +145,12 @@ class GreedyFixedTargetOptimizer:
         road_network: RoadNetwork,
         required_buckets_cache: LegBucketCache,
     ) -> RoutePlan:
-        if (
-            not isinstance(origin_id, str)
-            or not isinstance(destination_id, str)
-            or not origin_id.strip()
-            or not destination_id.strip()
-        ):
-            raise ValueError("origin_id and destination_id must not be empty")
+        validation.trip_endpoints(origin_id, destination_id)
 
         energy_bucket = math.floor(vehicle.initial_soc_pct / self.soc_step_pct)
         if origin_id == destination_id:
-            return RoutePlan(
-                node_ids=(origin_id,),
-                legs=(),
-                charging_stops=(),
-                total_distance_km=0.0,
-                driving_minutes=0.0,
-                charging_minutes=0.0,
-                arrival_soc_pct=float(energy_bucket * self.soc_step_pct),
-                total_minutes=0.0,
+            return RoutePlan.stationary(
+                origin_id, arrival_soc_pct=float(energy_bucket * self.soc_step_pct)
             )
 
         reserve_bucket = math.ceil(vehicle.reserve_soc_pct / self.soc_step_pct)
@@ -206,7 +192,7 @@ class GreedyFixedTargetOptimizer:
                 raise NoFeasibleRouteError("greedy fixed-target strategy entered a repeated state")
             seen_states.add(state)
 
-            shortest_path = self._shortest_driving_path(
+            shortest_path = ShortestDrivingTimeBaseline.shortest_path(
                 current_node,
                 destination_id,
                 road_network,
@@ -256,7 +242,7 @@ class GreedyFixedTargetOptimizer:
                 arrival_bucket = after_leg(energy_bucket, leg)
                 if arrival_bucket is None or arrival_bucket >= target_bucket:
                     continue
-                remaining_path = self._shortest_driving_path(
+                remaining_path = ShortestDrivingTimeBaseline.shortest_path(
                     station.id,
                     destination_id,
                     road_network,
@@ -287,18 +273,11 @@ class GreedyFixedTargetOptimizer:
             energy_bucket = arrival_bucket
             current_node = station_id
 
-        total_distance = sum(leg.distance_km for leg in legs)
-        driving_time = sum(leg.duration_minutes for leg in legs)
-        charging_time = sum(stop.charging_minutes for stop in stops)
-        return RoutePlan(
+        return RoutePlan.assemble(
             node_ids=tuple(node_ids),
             legs=tuple(legs),
             charging_stops=tuple(stops),
-            total_distance_km=total_distance,
-            driving_minutes=driving_time,
-            charging_minutes=charging_time,
             arrival_soc_pct=float(energy_bucket * self.soc_step_pct),
-            total_minutes=driving_time + charging_time,
         )
 
     def _charge_to_target(
@@ -328,47 +307,6 @@ class GreedyFixedTargetOptimizer:
             energy_added_kwh=(target_bucket - energy_bucket) * bucket_kwh,
             charging_minutes=minutes,
         )
-
-    @staticmethod
-    def _shortest_driving_path(
-        origin_id: str,
-        destination_id: str,
-        road_network: RoadNetwork,
-    ) -> tuple[RoadLeg, ...] | None:
-        if origin_id == destination_id:
-            return ()
-        sequence = itertools.count()
-        start_nodes = (origin_id,)
-        queue: list[tuple[float, tuple[str, ...], int, str, tuple[RoadLeg, ...]]] = [
-            (0.0, start_nodes, next(sequence), origin_id, ())
-        ]
-        best: dict[str, tuple[float, tuple[str, ...]]] = {origin_id: (0.0, start_nodes)}
-        while queue:
-            duration, node_path, _, node_id, legs = heapq.heappop(queue)
-            if (duration, node_path) != best.get(node_id):
-                continue
-            if node_id == destination_id:
-                return legs
-            for leg in road_network.neighbors(node_id):
-                if leg.origin_id != node_id:
-                    raise ValueError("road-network neighbor leg must start at the requested node")
-                next_duration = duration + leg.duration_minutes
-                next_nodes = (*node_path, leg.destination_id)
-                next_best = (next_duration, next_nodes)
-                if next_best >= best.get(leg.destination_id, (math.inf, ())):
-                    continue
-                best[leg.destination_id] = next_best
-                heapq.heappush(
-                    queue,
-                    (
-                        next_duration,
-                        next_nodes,
-                        next(sequence),
-                        leg.destination_id,
-                        (*legs, leg),
-                    ),
-                )
-        return None
 
 
 class CompetitiveRoutePlanner:

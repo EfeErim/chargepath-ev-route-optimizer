@@ -131,26 +131,11 @@ class EVRouteOptimizer:
         road_network: RoadNetwork,
         required_buckets_cache: LegBucketCache,
     ) -> RoutePlan:
-        if (
-            not isinstance(origin_id, str)
-            or not isinstance(destination_id, str)
-            or not origin_id.strip()
-            or not destination_id.strip()
-        ):
-            raise ValueError("origin_id and destination_id must not be empty")
+        validation.trip_endpoints(origin_id, destination_id)
         if origin_id == destination_id:
             initial_bucket = math.floor(vehicle.initial_soc_pct / self.soc_step_pct)
             arrival_soc = initial_bucket * self.soc_step_pct
-            return RoutePlan(
-                node_ids=(origin_id,),
-                legs=(),
-                charging_stops=(),
-                total_distance_km=0.0,
-                driving_minutes=0.0,
-                charging_minutes=0.0,
-                arrival_soc_pct=float(arrival_soc),
-                total_minutes=0.0,
-            )
+            return RoutePlan.stationary(origin_id, arrival_soc_pct=float(arrival_soc))
 
         maximum_bucket = 100 // self.soc_step_pct
         initial_bucket = math.floor(vehicle.initial_soc_pct / self.soc_step_pct)
@@ -329,16 +314,9 @@ class EVRouteOptimizer:
                 )
             )
 
-        total_distance = sum(leg.distance_km for leg in legs)
-        driving_time = sum(leg.duration_minutes for leg in legs)
-        charging_time = sum(stop.charging_minutes for stop in stops)
-        return RoutePlan(
+        return RoutePlan.assemble(
             node_ids=tuple(node_ids),
             legs=tuple(legs),
             charging_stops=tuple(stops),
-            total_distance_km=total_distance,
-            driving_minutes=driving_time,
-            charging_minutes=charging_time,
             arrival_soc_pct=float(destination[1] * self.soc_step_pct),
-            total_minutes=driving_time + charging_time,
         )

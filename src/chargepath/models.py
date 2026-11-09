@@ -204,6 +204,49 @@ class RoutePlan:
     arrival_soc_pct: float
     total_minutes: float
 
+    @classmethod
+    def assemble(
+        cls,
+        *,
+        node_ids: tuple[str, ...],
+        legs: tuple[RoadLeg, ...],
+        charging_stops: tuple[ChargingStop, ...],
+        arrival_soc_pct: float,
+    ) -> RoutePlan:
+        """Build a plan whose totals are summed from its legs and stops.
+
+        Plain ``sum`` keeps integer totals for integer inputs. The committed benchmark artifacts
+        are byte-pinned, so this must not switch to float sums.
+        """
+
+        driving = sum(leg.duration_minutes for leg in legs)
+        charging = sum(stop.charging_minutes for stop in charging_stops)
+        return cls(
+            node_ids=node_ids,
+            legs=legs,
+            charging_stops=charging_stops,
+            total_distance_km=sum(leg.distance_km for leg in legs),
+            driving_minutes=driving,
+            charging_minutes=charging,
+            arrival_soc_pct=arrival_soc_pct,
+            total_minutes=driving + charging,
+        )
+
+    @classmethod
+    def stationary(cls, node_id: str, *, arrival_soc_pct: float) -> RoutePlan:
+        """The plan for a trip whose origin is its destination."""
+
+        return cls(
+            node_ids=(node_id,),
+            legs=(),
+            charging_stops=(),
+            total_distance_km=0.0,
+            driving_minutes=0.0,
+            charging_minutes=0.0,
+            arrival_soc_pct=arrival_soc_pct,
+            total_minutes=0.0,
+        )
+
     def __post_init__(self) -> None:
         if not self.node_ids or any(
             not isinstance(node_id, str) or not node_id.strip() for node_id in self.node_ids

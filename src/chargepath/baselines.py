@@ -40,24 +40,11 @@ class ShortestDrivingTimeBaseline:
     ) -> RoutePlan:
         """Return the road-only path when it preserves reserve on every leg."""
 
-        if (
-            not isinstance(origin_id, str)
-            or not isinstance(destination_id, str)
-            or not origin_id.strip()
-            or not destination_id.strip()
-        ):
-            raise ValueError("origin_id and destination_id must not be empty")
+        validation.trip_endpoints(origin_id, destination_id)
         initial_bucket = math.floor(vehicle.initial_soc_pct / self.soc_step_pct)
         if origin_id == destination_id:
-            return RoutePlan(
-                node_ids=(origin_id,),
-                legs=(),
-                charging_stops=(),
-                total_distance_km=0.0,
-                driving_minutes=0.0,
-                charging_minutes=0.0,
-                arrival_soc_pct=float(initial_bucket * self.soc_step_pct),
-                total_minutes=0.0,
+            return RoutePlan.stationary(
+                origin_id, arrival_soc_pct=float(initial_bucket * self.soc_step_pct)
             )
 
         legs = self.shortest_path(origin_id, destination_id, road_network)
@@ -84,14 +71,12 @@ class ShortestDrivingTimeBaseline:
                 )
             energy_bucket = remaining
 
-        node_ids = (origin_id, *(leg.destination_id for leg in legs))
-        total_distance = sum(leg.distance_km for leg in legs)
         driving_minutes = sum(leg.duration_minutes for leg in legs)
         return RoutePlan(
-            node_ids=node_ids,
+            node_ids=(origin_id, *(leg.destination_id for leg in legs)),
             legs=legs,
             charging_stops=(),
-            total_distance_km=total_distance,
+            total_distance_km=sum(leg.distance_km for leg in legs),
             driving_minutes=driving_minutes,
             charging_minutes=0.0,
             arrival_soc_pct=float(energy_bucket * self.soc_step_pct),
