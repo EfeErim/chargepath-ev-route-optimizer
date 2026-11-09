@@ -1,6 +1,6 @@
 import math
 import random
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from typing import Any, cast
 
 import pytest
@@ -15,7 +15,13 @@ from chargepath import (
     VehicleProfile,
     verify_route_plan,
 )
-from chargepath.energy import charging_minutes, energy_for_distance, required_energy_buckets
+from chargepath.energy import (
+    ConstantConsumption,
+    LegEnergy,
+    charging_minutes,
+    energy_for_distance,
+    required_energy_buckets,
+)
 from chargepath.providers import StaticRoadNetwork
 from chargepath.providers.base import RoadNetwork
 
@@ -426,3 +432,30 @@ def test_seeded_small_graph_fuzz_is_deterministic_and_replay_safe() -> None:
             multi_stop_count += len(first.charging_stops) >= 2
 
     assert multi_stop_count >= 10
+
+
+def test_fastest_breaks_time_ties_on_charging_stops_before_distance() -> None:
+    @dataclass(frozen=True, slots=True)
+    class EfficientDirectLeg:
+        def leg_energy(self, leg: RoadLeg, vehicle: VehicleProfile) -> LegEnergy:
+            if (leg.origin_id, leg.destination_id) == ("a", "c"):
+                return LegEnergy(net_kwh=6.0, peak_kwh=6.0)
+            return ConstantConsumption().leg_energy(leg, vehicle)
+
+    # Both routes take exactly 100 minutes. The direct one is longer but needs no charging;
+    # the one via s is shorter and needs 3 buckets (9 kWh at 180 kW = 3 min, plus 2 min setup).
+    vehicle = replace(make_vehicle(initial_soc_pct=30), max_dc_power_kw=180)
+    stations = {"s": Station("s", "Hub", 39.0, 32.0, 180)}
+    network = StaticRoadNetwork(
+        [RoadLeg("a", "c", 200, 100), RoadLeg("a", "s", 30, 40), RoadLeg("s", "c", 75, 55)]
+    )
+    plan = EVRouteOptimizer(consumption_model=EfficientDirectLeg()).optimize(
+        origin_id="a",
+        destination_id="c",
+        vehicle=vehicle,
+        stations=stations,
+        road_network=network,
+    )
+    assert plan.total_minutes == 100
+    assert plan.node_ids == ("a", "c")
+    assert plan.charging_stops == ()
