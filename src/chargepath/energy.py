@@ -141,17 +141,6 @@ def buckets_for_leg(
     return buckets
 
 
-def required_energy_buckets(energy_kwh: float, bucket_kwh: float) -> int:
-    """Round required energy upward so discretization never invents range."""
-    _require_finite(energy_kwh, field="energy_kwh")
-    _require_finite(bucket_kwh, field="bucket_kwh")
-    if energy_kwh < 0:
-        raise ValueError("energy_kwh must not be negative")
-    if bucket_kwh <= 0:
-        raise ValueError("bucket_kwh must be positive")
-    return math.ceil(energy_kwh / bucket_kwh)
-
-
 def charging_minutes(
     vehicle: VehicleProfile,
     station_power_kw: float,

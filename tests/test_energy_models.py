@@ -22,7 +22,6 @@ from chargepath.energy import (
     drive_bucket,
     energy_for_distance,
     leg_buckets,
-    required_energy_buckets,
 )
 from chargepath.providers import StaticRoadNetwork
 
@@ -61,10 +60,7 @@ def test_constant_model_matches_the_original_bucket_rounding(distance: float) ->
     vehicle = make_vehicle(energy_safety_factor=1.1)
     bucket_kwh = 60 * 5 / 100
     leg = RoadLeg("a", "b", distance, 10)
-    expected = required_energy_buckets(
-        energy_for_distance(distance, 20, 1.1),
-        bucket_kwh,
-    )
+    expected = math.ceil(energy_for_distance(distance, 20, 1.1) / bucket_kwh)
     assert leg_buckets(ConstantConsumption().leg_energy(leg, vehicle), bucket_kwh) == (
         expected,
         expected,

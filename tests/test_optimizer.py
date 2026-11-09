@@ -20,7 +20,6 @@ from chargepath.energy import (
     LegEnergy,
     charging_minutes,
     energy_for_distance,
-    required_energy_buckets,
 )
 from chargepath.providers import StaticRoadNetwork
 from chargepath.providers.base import RoadNetwork
@@ -81,7 +80,7 @@ def reference_optimum(
                     vehicle.consumption_kwh_per_100km,
                     vehicle.energy_safety_factor,
                 )
-                remaining = energy_bucket - required_energy_buckets(required_kwh, bucket_kwh)
+                remaining = energy_bucket - math.ceil(required_kwh / bucket_kwh)
                 if remaining >= reserve_bucket:
                     transitions.append(
                         (

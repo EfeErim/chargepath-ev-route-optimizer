@@ -3,9 +3,10 @@ import math
 import pytest
 
 from chargepath.energy import (
+    LegEnergy,
     charging_minutes,
     energy_for_distance,
-    required_energy_buckets,
+    leg_buckets,
 )
 from chargepath.models import ChargingStop, VehicleProfile
 
@@ -26,12 +27,12 @@ def test_energy_model_applies_safety_factor() -> None:
 
 
 def test_required_buckets_rounds_up_conservatively() -> None:
-    assert required_energy_buckets(6.01, 3) == 3
-    assert required_energy_buckets(6, 3) == 2
+    assert leg_buckets(LegEnergy(6.01, 6.01), 3) == (3, 3)
+    assert leg_buckets(LegEnergy(6, 6), 3) == (2, 2)
 
 
 def test_any_positive_energy_requires_at_least_one_bucket() -> None:
-    assert required_energy_buckets(1e-15, 3) == 1
+    assert leg_buckets(LegEnergy(1e-15, 1e-15), 3) == (1, 1)
 
 
 def test_charging_above_taper_threshold_is_slower(vehicle: VehicleProfile) -> None:
@@ -74,4 +75,4 @@ def test_domain_and_energy_boundaries_reject_non_finite_numbers(invalid: float) 
     with pytest.raises(ValueError, match="finite"):
         energy_for_distance(invalid, 20)
     with pytest.raises(ValueError, match="finite"):
-        required_energy_buckets(1, invalid)
+        leg_buckets(LegEnergy(1, 1), invalid)
