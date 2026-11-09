@@ -1,4 +1,4 @@
-# Local Map Demo
+# Local map demo
 
 ## Fixture-first command
 
