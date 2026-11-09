@@ -637,6 +637,52 @@ def load_snapshot_options(
     return provenance, project_ccs2_dc_options(normalize_epdk_response(payload, provenance))
 
 
+def inspect_snapshot(
+    raw_path: Path,
+    *,
+    retrieved_at: str,
+    response_status: int = 200,
+    manifest_out: Path | None = None,
+    report_out: Path | None = None,
+) -> tuple[SnapshotManifest, tuple[CompatibleStationOption, ...]]:
+    """Normalize a raw EPDK response offline and optionally write its manifest and report."""
+
+    raw = raw_path.read_bytes()
+    payload: Any = json.loads(raw.decode("utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("EPDK response root must be an object")
+    checksum = hashlib.sha256(raw).hexdigest()
+    provenance = SnapshotProvenance(
+        snapshot_id=f"epdk-{retrieved_at[:10].replace('-', '')}-{checksum[:12]}",
+        source_name=EPDK_SOURCE_NAME,
+        source_url=EPDK_SOURCE_URL,
+        retrieved_at=retrieved_at,
+        response_sha256=checksum,
+        reuse_status="pending_verification",
+    )
+    normalized = normalize_epdk_response(payload, provenance)
+    manifest = build_snapshot_manifest(
+        raw_response=raw,
+        payload=payload,
+        provenance=provenance,
+        report=normalized.report,
+        response_status=response_status,
+    )
+    if manifest_out is not None:
+        _write_json(manifest_out, manifest.to_dict())
+    if report_out is not None:
+        _write_json(report_out, normalized.report.to_dict())
+    return manifest, project_ccs2_dc_options(normalized)
+
+
+def _write_json(path: Path, value: Mapping[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
 def _require_exact_fields(value: Mapping[str, Any], expected: frozenset[str], field: str) -> None:
     actual = set(value)
     if actual != expected:

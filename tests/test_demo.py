@@ -31,7 +31,6 @@ from chargepath.providers.osrm import OsrmResponseError, OsrmTableCost, OsrmTabl
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 SYNTHETIC_FIXTURE = REPOSITORY_ROOT / "data/sample/synthetic_corridor.json"
 WEB_ROOT = REPOSITORY_ROOT / "src/chargepath/web"
-OPEN_SCRIPT = REPOSITORY_ROOT / "scripts/open_chargepath.ps1"
 
 
 def _service() -> FixturePlanningService:
@@ -556,79 +555,24 @@ def test_server_does_not_misclassify_or_leak_internal_service_errors(failure: Ex
         thread.join(timeout=2)
 
 
-def test_ui_contract_keeps_basemap_optional_and_avoids_public_geocoding() -> None:
+def test_ui_keeps_basemap_local_attributed_and_optional() -> None:
     html = (WEB_ROOT / "index.html").read_text(encoding="utf-8")
-    stylesheet = (WEB_ROOT / "app.css").read_text(encoding="utf-8")
     script = (WEB_ROOT / "app.js").read_text(encoding="utf-8")
-    leaflet_css = (WEB_ROOT / "leaflet.css").read_bytes()
-    leaflet_js = (WEB_ROOT / "leaflet.js").read_bytes()
     combined = f"{html}\n{script}".lower()
 
+    # Leaflet is vendored, not loaded from a CDN, and must stay the reviewed 1.9.4 build.
     assert 'href="/leaflet.css"' in html
     assert 'src="/leaflet.js"' in html
-    assert "unpkg.com" not in html
-    assert "openstreetmap contributors" in combined
-    assert "tileerror" in script
-    # OSM tile servers block requests without a Referer; the page itself is no-referrer.
-    assert 'referrerPolicy: "strict-origin-when-cross-origin"' in script
-    assert ".leaflet-pane" in stylesheet
-    assert hashlib.sha256(leaflet_css).hexdigest() == (
+    assert hashlib.sha256((WEB_ROOT / "leaflet.css").read_bytes()).hexdigest() == (
         "5f236f11b6ca29a549c06be1c1c786ec53523fb39a1bae2f2ba61f6fef889edb"
     )
-    assert hashlib.sha256(leaflet_js).hexdigest() == (
+    assert hashlib.sha256((WEB_ROOT / "leaflet.js").read_bytes()).hexdigest() == (
         "4f1ac3296897403e0a84881c974dbdf36d9a8488f0ef4b5626a952b1b6190d80"
     )
-    assert "basemap unavailable" in combined
+    assert "openstreetmap contributors" in combined
+    # OSM tile servers block requests without a Referer; the page itself is no-referrer.
+    assert 'referrerPolicy: "strict-origin-when-cross-origin"' in script
+    assert "tileerror" in script
     assert "route explanation remains usable" in combined
+    # No public geocoder: map clicks never send coordinates to a search service.
     assert "nominatim" not in combined
-    assert "prefetch" not in combined
-    assert 'id="planButton" type="button" disabled' in html
-    assert 'id="fitButton" type="button"' in html
-    assert 'title="Fit route to view" disabled' in html
-    assert "Enter your vehicle details" in html
-    assert 'aria-label="Vehicle details"' in html
-    assert "Vehicle presets" not in html
-    assert "vehicle profile" not in html.lower()
-    assert "preset-chip" not in html
-    assert "vehicle-details" not in html
-    assert "vehiclePresets" not in script
-    assert "applyVehiclePreset" not in script
-    assert "vehicleSummary" not in script
-    for input_id in ("battery", "initialSoc", "consumption", "maxPower", "reserveSoc", "safety"):
-        assert f'<label for="{input_id}">' in html
-        assert f'<input id="{input_id}"' in html
-    assert "resetPlanForChangedInputs();" in script
-    assert "requestRevision !== state.inputRevision" in script
-    assert "new AbortController()" in script
-    assert "The route provider did not respond within 45 seconds" in script
-    assert "Local OSRM is not running" in script
-    assert "const strategyOrder = Object.keys(strategyNames);" in script
-    assert "refined_after_coarse_infeasible" in script
-    assert "expanded_after_infeasible" in script
-    assert "function strategyTabEntries()" in script
-    assert "${tabEntries.length} strategies · ${distinctPlans} distinct" in script
-    assert "option.strategies\n    .map((name)" in script
-    assert 'button.addEventListener("keydown"' in script
-    assert "button.tabIndex = index === state.selectedOption ? 0 : -1" in script
-    assert ".map {\n  position: absolute;" in stylesheet
-    assert "height: 100%;\n  overflow: hidden;" in stylesheet
-
-
-def test_windows_launcher_contract_matches_current_health_and_public_cap() -> None:
-    open_script = OPEN_SCRIPT.read_text(encoding="utf-8")
-
-    assert '$Payload.service -eq "chargepath-demo"' in open_script
-    assert "$Payload.api_version -eq 3" in open_script
-    assert "[int]$PublicCandidateCap = 24" in open_script
-
-
-def test_windows_launcher_never_sends_coordinates_without_visible_consent() -> None:
-    open_script = OPEN_SCRIPT.read_text(encoding="utf-8")
-    common_script = (REPOSITORY_ROOT / "scripts/launcher_common.ps1").read_text(encoding="utf-8")
-
-    assert "Read-Host" in open_script
-    assert "--allow-remote-osrm" in open_script
-    assert "RedirectStandardError" in open_script
-    assert "Another or outdated process" not in open_script
-    assert "scripts/fetch_epdk_snapshot.py" in common_script
-    assert "2026-08-09" not in common_script

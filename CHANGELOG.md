@@ -16,10 +16,15 @@ All notable changes to this project are documented here. The format follows
   test checks that relative Markdown links resolve.
 - Narrowed the package exports: `chargepath` re-exports only the planner, model, and replay
   names, and `chargepath.providers` only `StaticRoadNetwork`; import other names from their
-  modules. Removed the unused `.env.example` and `scripts/start_custom_map.ps1` (use
-  `open_chargepath.ps1 -UsePublicOsrm` or `python -m chargepath.demo --mode integration`).
+  modules. Removed the unused `.env.example`.
+- Removed the Windows launchers (`ChargePath.cmd`, `scripts/open_chargepath.ps1`,
+  `scripts/start_custom_map.ps1`); the live demo covers the no-install case, and integration mode
+  starts with `python -m chargepath.demo --mode integration`.
 - The demo and the real-route collector load EPDK snapshots through one
-  `station_data.load_snapshot_options` function.
+  `station_data.load_snapshot_options` function, and both EPDK scripts share
+  `station_data.inspect_snapshot` instead of running a subprocess.
+- `docs/architecture.md` is now a module table that covers every module; `docs/source_registry.md`
+  was folded into `docs/research.md`.
 - Renamed benchmark scripts after what they do (`run_synthetic_benchmark.py`,
   `build_route_manifest.py`, `collect_routes.py`, `evaluate_routes.py`,
   `run_route_followup.py`).
@@ -44,7 +49,7 @@ All notable changes to this project are documented here. The format follows
   (`scripts/build_static_demo.py`), published to GitHub Pages by the `Demo site` workflow.
 - An experimental terrain consumption model (`chargepath.terrain`) and its pre-registered held-out
   evaluation on the BMW i3 pilot data, which it did not pass; it is not the default.
-- Literature additions in `docs/research.md` and `docs/source_registry.md`.
+- Literature additions in `docs/research.md`.
 
 ## [0.2.0] - 2026-11-07
 
