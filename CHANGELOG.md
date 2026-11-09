@@ -39,7 +39,7 @@ All notable changes to this project are documented here. The format follows
   SOC timeline from it instead of recomputing leg energy.
 - The optimizer, greedy heuristic, and road-only baseline share `RoutePlan.assemble`,
   `RoutePlan.stationary`, and one shortest-path search. Outputs are byte-identical.
-- Rewrote the README around results, design decisions, and how AI was used. Replaced the unreachable
+- Rewrote the README around results and design decisions. Replaced the unreachable
   Artmeier et al. (2010) link with its DOI.
 
 ### Added

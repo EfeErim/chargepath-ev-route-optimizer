@@ -128,15 +128,6 @@ The full list is in [limitations](docs/limitations.md). Next steps would be meas
 curves and a speed-dependent consumption model; the field pilots suggest both matter, but the public
 data is too thin to change the defaults.
 
-## How AI was used
-
-Most of the code, tests and documentation were written with AI coding agents working from a written
-project plan with acceptance checks per milestone. I set the scope, chose the data sources and the
-benchmark design, fixed decision rules before runs (for example the terrain model's pass rule), and
-reviewed each milestone against its checks. Correctness does not rest on that review: plans are
-replayed, the optimizer is compared with an independent exact solver, and tests regenerate the
-published numbers from committed data.
-
 ## Background
 
 The problem is a shortest feasible path with charging stops, studied by
