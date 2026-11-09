@@ -61,7 +61,7 @@ a synthetic corridor.
 git clone https://github.com/EfeErim/chargepath-ev-route-optimizer.git
 cd chargepath-ev-route-optimizer
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install --constraint constraints/release-py311.txt --editable ".[dev]"
+pip install --editable ".[dev]"
 
 python -m chargepath.demo          # map demo on http://127.0.0.1:8743
 python examples/run_synthetic_demo.py   # same planner, command line
@@ -77,7 +77,7 @@ the planner in Pyodide and can be served by any static host; see the
 To plan between arbitrary points you need a charger snapshot and an OSRM server; see
 the [map demo guide](docs/map_demo.md) and [OSRM setup](docs/osrm_setup.md).
 
-Development checks (tests, Ruff, strict mypy, wheel and release-content audit):
+Development checks (tests, demo, Ruff, strict mypy):
 
 ```bash
 pwsh ./scripts/check.ps1
@@ -87,7 +87,7 @@ pwsh ./scripts/check.ps1
 
 ```text
 src/chargepath/      planner, energy model, providers (OSRM, static), demo server
-scripts/             data fetching, benchmarks, release checks
+scripts/             data fetching, benchmarks, project checks
 data/benchmarks/     frozen benchmark inputs
 docs/benchmarks/     benchmark outputs referenced from docs/results.md
 tests/               unit tests and recorded OSRM/EPDK fixtures

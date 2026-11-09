@@ -120,16 +120,6 @@ or availability of a particular station API response.
 | Station status | Static/unknown | No unsupported live-data claim. |
 | UI input | Map click first | Avoids public geocoder autocomplete restrictions and unnecessary keys. |
 
-## Research-derived hypotheses
-
-These are to be tested, not stated as results:
-
-1. Joint route-and-charge optimization will produce feasible plans on cases where the
-   shortest-driving-time road path is energy-infeasible.
-2. Partial charging will reduce total time relative to a fixed “charge to 80%” policy on at least some multi-stop cases.
-3. Conservative energy rounding will eliminate reserve violations at the cost of rejecting some narrowly feasible continuous solutions.
-4. Candidate-station corridor pruning can bound OSRM matrix size without materially degrading the best plan on the benchmark set.
-
 ## Gap review at closure
 
 The 2026-08-05 review left seven gaps for later work. At closure on 2026-11-07 they stand as

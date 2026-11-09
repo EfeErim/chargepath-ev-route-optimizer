@@ -11,9 +11,9 @@ is copied into the release.
 | [OSRM backend](https://github.com/Project-OSRM/osrm-backend) | Optional; M1 fixture pins 26.7.3 | [BSD 2-Clause](https://github.com/Project-OSRM/osrm-backend/blob/master/LICENSE.TXT) | Optional local road provider. The backend is not bundled. |
 | EPDK charging-station service | Optional static snapshot | Redistribution status unresolved | Real response rows are excluded from Git and the release. Only metadata and project-authored synthetic fixtures are included. |
 
-The reproducible verification environment is pinned in
-[`constraints/release-py311.txt`](constraints/release-py311.txt). These packages are development or
-build tools, not application runtime dependencies.
+The development tools are pinned in the `dev` extra of [`pyproject.toml`](pyproject.toml). These
+packages, listed with their versions at the 0.2.0 release, are development or build tools, not
+application runtime dependencies.
 
 | Package / tool | Release version | Declared license |
 |---|---:|---|

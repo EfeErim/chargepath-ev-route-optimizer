@@ -273,9 +273,3 @@ and nearest-rank p95 are reported; individual samples remain in the runtime arti
 
 Runtime values describe this tiny synthetic suite on one machine. They are regression evidence, not
 production latency or scaling evidence.
-
-## Unit-level verification
-
-The unit tests cover the typed model, every objective variant, the greedy baseline,
-independent replay, deduplication of route options and the shared synthetic demo. The
-synthetic benchmark above adds versioned inputs and measured outputs on top of them.

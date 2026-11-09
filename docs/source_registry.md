@@ -38,11 +38,3 @@ redistribution rights and is not treated as evidence of live availability.
 | [ABRP](https://abetterrouteplanner.com/home), [Chargetrip API](https://chargetrip.com/api/), [ChargeIQ](https://apps.apple.com/app/id1609390820) | Product pages | Context for commercial planning inputs | Verified 2026-11-07. Marketing statements, not method or accuracy evidence. |
 | [Togg Trumore smart route (DonanımHaber)](https://www.donanimhaber.com/togg-trumore-uygulamasina-elektrikli-araclar-icin-akilli-rota-oze--178447), [Eşarj trip planning (DHA)](https://www.dha.com.tr/ekonomi/esarj-uygulamasina-seyahat-planlama-ozelligini-ekledi-2580648) | News reports dated 2024-06-14 and 2025-02-10 | Turkish planner context | Verified 2026-11-07. Features may have changed since publication. |
 | [open-ev-data dataset](https://github.com/open-ev-data/open-ev-data-dataset) | Community dataset | Candidate source for vehicle charging curves (future work) | Verified 2026-11-07: CDLA-Permissive-2.0, which allows sharing with the license text. The schema defines `charging.dc_charge_curve` with optional `source_url` and test conditions, but no measured flag. Release v1.24.0 (JSON SHA-256 `38c4f579c8fb4edf27921faa79d9eb27069f522d088578e95637fa9dfe4ef786`) has 1,189 vehicles, none with a curve. No data copied. |
-
-## Live probe note
-
-On 2026-08-09, a single read-only `{}` request returned HTTP 200 and a 15,444,078-byte response with
-16,539 station rows. The raw response remains under ignored `data/raw/`; only its metadata/checksum and
-a project-authored synthetic schema fixture are in the repository. See the
-[access spike](epdk_access.md). Quota, source freshness, cross-snapshot identifier behavior, and
-redistribution permission remain explicitly unknown.
