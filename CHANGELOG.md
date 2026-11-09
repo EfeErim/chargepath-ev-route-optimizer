@@ -35,6 +35,12 @@ All notable changes to this project are documented here. The format follows
   for example unexpected request fields are now reported as `fields are invalid: unexpected [...]`.
 - Corrected the Sweda, Dolinskaya, and Klabjan (2017) author list and cited the refereed Schoenberg
   and Dressler (2023) paper.
+- `verify_route_plan` returns the battery level after each replayed action, and the demo builds its
+  SOC timeline from it instead of recomputing leg energy.
+- The optimizer, greedy heuristic, and road-only baseline share `RoutePlan.assemble`,
+  `RoutePlan.stationary`, and one shortest-path search. Outputs are byte-identical.
+- Rewrote the README around results, design decisions, and how AI was used. Replaced the unreachable
+  Artmeier et al. (2010) link with its DOI.
 
 ### Added
 
@@ -50,6 +56,10 @@ All notable changes to this project are documented here. The format follows
 - An experimental terrain consumption model (`chargepath.terrain`) and its pre-registered held-out
   evaluation on the BMW i3 pilot data, which it did not pass; it is not the default.
 - Literature additions in `docs/research.md`.
+- Tests that the replay checker rejects tampered plans, that the fastest objective breaks time ties
+  on charging stops before distance, and that the README headline follows from the committed
+  real-route outcomes.
+- `docs/demo.md` with captured output of the main commands.
 
 ## [0.2.0] - 2026-11-07
 

@@ -13,7 +13,8 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 TRIPS = ROOT / "docs/benchmarks/real-routes/trips_v1.jsonl"
-README = (ROOT / "README.md").read_text(encoding="utf-8")
+# Whitespace is collapsed so line wrapping in the README does not matter.
+README = " ".join((ROOT / "README.md").read_text(encoding="utf-8").split())
 
 
 def _rows() -> list[dict[str, Any]]:
