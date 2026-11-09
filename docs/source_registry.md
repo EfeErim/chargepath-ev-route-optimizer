@@ -1,7 +1,6 @@
 # Source Registry
 
-Verified: 2026-08-09. Rows marked 2026-11-07 were added and checked in the closure review; rows marked
-2026-11-08 were added or corrected in the M7 literature pass.
+Each row records the date its source was last checked.
 
 This registry records what each external source supports. A link does not grant dataset
 redistribution rights and is not treated as evidence of live availability.

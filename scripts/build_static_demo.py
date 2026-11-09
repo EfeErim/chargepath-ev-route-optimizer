@@ -1,8 +1,7 @@
 """Build a static, browser-only copy of the synthetic fixture demo.
 
-The output runs the ChargePath Python package in Pyodide and needs no server-side code, so any
-static host (GitHub Pages, for example) can serve it. Only the bundled synthetic fixture is
-included. The script builds files; it never deploys them.
+The output runs the ChargePath Python package in Pyodide and needs no server-side code. Only the
+bundled synthetic fixture is included. The script builds files; the Pages workflow deploys them.
 """
 
 from __future__ import annotations

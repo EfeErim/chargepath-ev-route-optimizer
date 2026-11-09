@@ -13,6 +13,7 @@ from collections import defaultdict
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any, Literal
 from urllib.parse import urlsplit
 
@@ -600,6 +601,40 @@ def project_ccs2_dc_options(result: NormalizationResult) -> tuple[CompatibleStat
             )
         )
     return tuple(options)
+
+
+def load_snapshot_options(
+    snapshot_path: Path, manifest_path: Path, *, frozen_sha256: str | None = None
+) -> tuple[SnapshotProvenance, tuple[CompatibleStationOption, ...]]:
+    """Verify a raw EPDK snapshot and project it to CCS2 DC options.
+
+    The checksum is compared with ``frozen_sha256`` when given, otherwise with the manifest's
+    ``response_sha256``.
+    """
+
+    raw = snapshot_path.read_bytes()
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if not isinstance(manifest, Mapping):
+        raise ValueError("station manifest must be a JSON object")
+    actual_sha = hashlib.sha256(raw).hexdigest()
+    if frozen_sha256 is not None:
+        if actual_sha != frozen_sha256:
+            raise ValueError(f"station snapshot checksum {actual_sha} is not the frozen value")
+    elif actual_sha != str(manifest.get("response_sha256", "")).lower():
+        raise ValueError("station snapshot checksum does not match its manifest")
+    provenance = SnapshotProvenance(
+        snapshot_id=manifest.get("snapshot_id", ""),
+        source_name=manifest.get("source", ""),
+        source_url=manifest.get("source_url", ""),
+        retrieved_at=manifest.get("retrieved_at", ""),
+        response_sha256=actual_sha,
+        reuse_status=manifest.get("reuse_status", ""),
+        source_freshness=manifest.get("source_freshness"),
+    )
+    payload = json.loads(raw)
+    if not isinstance(payload, Mapping):
+        raise ValueError("station snapshot must be a JSON object")
+    return provenance, project_ccs2_dc_options(normalize_epdk_response(payload, provenance))
 
 
 def _require_exact_fields(value: Mapping[str, Any], expected: frozenset[str], field: str) -> None:

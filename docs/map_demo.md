@@ -51,14 +51,11 @@ jsDelivr and answers `/api/config` and `/api/plan` through `chargepath.demo.brow
 reuses the server's request schema, fixture service, and status mapping, so both builds return the
 same plans and errors. Integration mode, OSRM, and EPDK data are not included.
 
-The output is a plain static site, so a static host such as GitHub Pages can serve it. The first load
-downloads Pyodide (about 10 MB) from the CDN; map tiles still come from the configured tile server
-under its usage policy. The script never deploys anything. Publishing the folder is a separate,
-explicit step.
-
-Checked on 2026-11-08 in Chromium against the build served on loopback: the page loaded the
-fixture through Pyodide, labeled it as synthetic, and returned four strategies with the same
-205.2-minute fastest plan as the loopback server.
+The output is a plain static site. The `Demo site` workflow
+(`.github/workflows/pages.yml`) rebuilds it on every push to `main` and publishes it to
+[GitHub Pages](https://efeerim.github.io/chargepath-ev-route-optimizer/). The first load downloads
+Pyodide (about 10 MB) from the CDN; map tiles still come from the configured tile server under its
+usage policy.
 
 ## Explicit integration mode
 
@@ -102,22 +99,19 @@ A snapshot is retrieved once, on request, with `python scripts/fetch_epdk_snapsh
 performs no retry or polling and refuses to replace a snapshot from the same day. The service's quota
 is undocumented and it has returned HTTP 429 to a repeat request, so retrieve snapshots sparingly.
 
-The convenience launcher uses the newest complete local snapshot to enable arbitrary map clicks. It
-uses loopback OSRM by default:
+With a snapshot and a local OSRM server, start integration mode directly (replace the date with
+your snapshot's):
 
 ```powershell
-.\scripts\start_custom_map.ps1
+python -m chargepath.demo --mode integration `
+  --station-snapshot data/raw/epdk/2026-08-09/response.json `
+  --station-manifest data/processed/epdk/2026-08-09/manifest.json `
+  --osrm-endpoint http://127.0.0.1:5000
 ```
 
-For a short-lived portfolio demo without a local OSRM instance, remote OSRM must be an explicit
-choice:
-
-```powershell
-.\scripts\start_custom_map.ps1 -UsePublicOsrm
-```
-
-The remote form warns that selected origin/destination coordinates leave the machine. It is a public
-demo dependency without a project-owned availability guarantee, not the default release path.
+Without a local OSRM instance, `.\scripts\open_chargepath.ps1 -UsePublicOsrm` uses the public OSRM
+demo server instead. It warns that selected origin/destination coordinates leave the machine; that
+server has no project-owned availability guarantee.
 
 ## Double-click launcher
 

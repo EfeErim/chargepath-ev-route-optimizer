@@ -32,7 +32,6 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 SYNTHETIC_FIXTURE = REPOSITORY_ROOT / "data/sample/synthetic_corridor.json"
 WEB_ROOT = REPOSITORY_ROOT / "src/chargepath/web"
 OPEN_SCRIPT = REPOSITORY_ROOT / "scripts/open_chargepath.ps1"
-START_SCRIPT = REPOSITORY_ROOT / "scripts/start_custom_map.ps1"
 
 
 def _service() -> FixturePlanningService:
@@ -617,11 +616,10 @@ def test_ui_contract_keeps_basemap_optional_and_avoids_public_geocoding() -> Non
 
 def test_windows_launcher_contract_matches_current_health_and_public_cap() -> None:
     open_script = OPEN_SCRIPT.read_text(encoding="utf-8")
-    start_script = START_SCRIPT.read_text(encoding="utf-8")
 
     assert '$Payload.service -eq "chargepath-demo"' in open_script
     assert "$Payload.api_version -eq 3" in open_script
-    assert "[int]$PublicCandidateCap = 24" in start_script
+    assert "[int]$PublicCandidateCap = 24" in open_script
 
 
 def test_windows_launcher_never_sends_coordinates_without_visible_consent() -> None:
@@ -634,4 +632,3 @@ def test_windows_launcher_never_sends_coordinates_without_visible_consent() -> N
     assert "Another or outdated process" not in open_script
     assert "scripts/fetch_epdk_snapshot.py" in common_script
     assert "2026-08-09" not in common_script
-    assert "2026-08-09" not in START_SCRIPT.read_text(encoding="utf-8")

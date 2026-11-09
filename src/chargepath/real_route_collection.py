@@ -6,7 +6,6 @@ contain real station rows. A provider failure is stored as an outcome, never dro
 
 from __future__ import annotations
 
-import hashlib
 import json
 import statistics
 import time
@@ -31,12 +30,7 @@ from chargepath.providers.osrm import (
     OsrmResponseError,
     OsrmTableResult,
 )
-from chargepath.station_data import (
-    CompatibleStationOption,
-    SnapshotProvenance,
-    normalize_epdk_response,
-    project_ccs2_dc_options,
-)
+from chargepath.station_data import CompatibleStationOption, load_snapshot_options
 
 GRAPH_SCHEMA_VERSION = 1
 GRAPH_EXPERIMENTS = ("E1", "E2", "E3", "E4", "E5")
@@ -229,23 +223,12 @@ def load_frozen_options(
 ) -> tuple[CompatibleStationOption, ...]:
     """Load the checksum-pinned snapshot and project it to CCS2 DC options, or fail closed."""
 
-    raw = snapshot_path.read_bytes()
-    actual = hashlib.sha256(raw).hexdigest()
-    if actual != frozen_snapshot["sha256"]:
-        raise ValueError(f"station snapshot checksum {actual} is not the frozen value")
-    station_manifest = json.loads(station_manifest_path.read_text(encoding="utf-8"))
-    if station_manifest["snapshot_id"] != frozen_snapshot["snapshot_id"]:
-        raise ValueError("station manifest does not describe the frozen snapshot")
-    provenance = SnapshotProvenance(
-        snapshot_id=station_manifest["snapshot_id"],
-        source_name=station_manifest["source"],
-        source_url=station_manifest["source_url"],
-        retrieved_at=station_manifest["retrieved_at"],
-        response_sha256=actual,
-        reuse_status=station_manifest["reuse_status"],
-        source_freshness=station_manifest["source_freshness"],
+    provenance, options = load_snapshot_options(
+        snapshot_path, station_manifest_path, frozen_sha256=frozen_snapshot["sha256"]
     )
-    return project_ccs2_dc_options(normalize_epdk_response(json.loads(raw), provenance))
+    if provenance.snapshot_id != frozen_snapshot["snapshot_id"]:
+        raise ValueError("station manifest does not describe the frozen snapshot")
+    return options
 
 
 def measure_osrm_runtime(
