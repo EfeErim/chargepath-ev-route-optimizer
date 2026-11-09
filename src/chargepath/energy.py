@@ -38,16 +38,6 @@ def soc_to_kwh(soc_pct: float, usable_battery_kwh: float) -> float:
     return usable_battery_kwh * soc_pct / 100
 
 
-def kwh_to_soc(energy_kwh: float, usable_battery_kwh: float) -> float:
-    _require_finite(energy_kwh, field="energy_kwh")
-    _require_finite(usable_battery_kwh, field="usable_battery_kwh")
-    if energy_kwh < 0:
-        raise ValueError("energy_kwh must not be negative")
-    if usable_battery_kwh <= 0:
-        raise ValueError("usable_battery_kwh must be positive")
-    return energy_kwh / usable_battery_kwh * 100
-
-
 @dataclass(frozen=True, slots=True)
 class LegEnergy:
     """Battery energy for one driven leg.

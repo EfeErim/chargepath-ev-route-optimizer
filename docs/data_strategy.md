@@ -45,10 +45,37 @@ EPDK's public charging-station services and Şarj@TR information surfaces:
 
 ### Access result
 
-The 2026-08-09 spike verified the official request and observed schema against one checksum-pinned
-response. Its [metadata-only manifest](benchmarks/epdk_snapshot_manifest_2026-08-09.json) and
-[access report](epdk_access.md) record 16,539 source rows and 46,955 sockets. The normalizer and
-candidate selector are implemented and offline-tested.
+On 2026-08-09 a `GET` request with JSON headers and the required body `{}` returned HTTP 200 and
+one 16,539-row response. It was captured once under ignored `data/raw/` and inspected offline; the
+[metadata-only manifest](benchmarks/epdk_snapshot_manifest_2026-08-09.json) records the request
+fingerprint, retrieval time, checksum, byte length, row/socket counts, and reuse decision.
+
+```powershell
+python scripts/inspect_epdk_snapshot.py `
+  data/raw/epdk/2026-08-09/response.json `
+  --retrieved-at 2026-08-09T14:13:33Z `
+  --response-status 200 `
+  --manifest-out data/processed/epdk/2026-08-09/manifest.json `
+  --report-out data/processed/epdk/2026-08-09/validation_report.json
+```
+
+The command makes no network call. It reconciled 16,539 sites and 46,955 sockets with zero rejected
+or duplicate records and projected 7,640 public sites with at least one `DC_CCS` socket. These counts
+describe only the checksum-pinned response.
+
+Each row exposed a station identifier, name, operator, access classification, coordinates, and a
+`soketler` list whose sockets carry `soketNo`, `soketTipi` (`AC`/`DC`), `soketTuru` (`AC_TYPE2`,
+`DC_CCS`, `DC_CHADEMO`), and `soketGucu` (kW as a string).
+`tests/fixtures/epdk/observed_v1/synthetic_response.json` mirrors this shape with invented data, and
+the normalizer fails closed on unreviewed fields.
+
+| Question | Observed | Project decision |
+|---|---|---|
+| Quota/retry | No documented quota. On 2026-11-05 a second request from the same machine returned HTTP 429 | No automatic retries or bulk polling. |
+| Freshness | No source timestamp in the response | Retrieval time is not substituted for source freshness. |
+| Reuse/redistribution | Public access, but no explicit redistribution licence found | No real raw or normalized row is committed. |
+| Stable identifiers | Identifiers observed in one snapshot only | Retained verbatim; cross-snapshot stability unproven. |
+| Status, price, availability | Not present | Excluded; station data is presented only as static. |
 
 The following questions remain mandatory before a real snapshot is committed or distributed:
 

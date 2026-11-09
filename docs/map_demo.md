@@ -156,10 +156,3 @@ caps request bodies at 32 KiB and validates finite bounds for battery, SOC, cons
 power, reserve, coordinates, and safety factor. Initial SOC cannot be below reserve SOC. Provider,
 infeasible, validation, and missing-resource outcomes remain distinct HTTP states without returning
 internal tracebacks.
-
-## Captured evidence
-
-The verified fixture flow is captured at
-[`docs/images/map-demo.png`](images/map-demo.png), recaptured from the current
-interface for 0.1.1. An earlier browser check separately forced tile failure, confirming that route
-paths, three markers, and the replay-verified explanation remained visible.

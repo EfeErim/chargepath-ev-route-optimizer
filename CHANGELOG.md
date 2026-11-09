@@ -8,8 +8,12 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
-- Reorganized documentation: benchmark outputs live under `docs/benchmarks/`, the
-  release procedure is in `docs/release.md`, and version history moved here.
+- Reorganized documentation: benchmark outputs live under `docs/benchmarks/` and version
+  history moved here.
+- Trimmed project tooling: CI runs on Ubuntu only (Python 3.11 and 3.13); the release-file
+  allowlist audit, wheel smoke check, constraints file, release guide, data dictionary, and
+  EPDK access report were removed. The EPDK findings now live in `docs/data_strategy.md`, and a
+  test checks that relative Markdown links resolve.
 - Renamed benchmark scripts after what they do (`run_synthetic_benchmark.py`,
   `build_route_manifest.py`, `collect_routes.py`, `evaluate_routes.py`,
   `run_route_followup.py`).
@@ -23,7 +27,6 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
-- pre-commit hooks (Ruff, whitespace) and Dependabot for pip and GitHub Actions.
 - Differential, property-based, and metamorphic tests (`tests/test_properties.py`, Hypothesis)
   against an exact-rational reference solver.
 - Pluggable consumption models (`ConsumptionModel`, `LegEnergy`) with signed per-leg energy, a peak
