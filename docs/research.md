@@ -3,9 +3,6 @@
 Review date: 2026-08-05. Literature additions, related projects, and the gap review were updated on
 2026-11-07.
 
-URLs, access notes, and their role in the project are indexed in
-[the source registry](source_registry.md).
-
 ## Research question
 
 How can a portfolio-sized system compute a feasible and explainable intercity trip for one battery-electric vehicle, choosing charging stops and charging amounts while reusing a mature road-network router for provider-computed road legs?
@@ -133,3 +130,16 @@ Seven gaps were identified during the research review. As of 2026-11-07 they sta
 | Real-time replanning | Out of scope | Requires a live vehicle and live station data, outside the product boundary. |
 | Empirical field calibration | Partly addressed | The field pilots evaluate energy and charging models on public data from a few vehicles; they are not ground truth for the real-route plans. |
 | Speedups for continental-scale state spaces | Not needed | About 0.3 s per trip at real-route benchmark scale. Profile and Contraction Hierarchies methods remain available if the scale changes. |
+
+## Other sources
+
+Sources used for protocol, data-access, or testing decisions and not cited above. Each note gives
+the date the source was checked.
+
+| Source | Type | Project use | Notes |
+|---|---|---|---|
+| [OSRM HTTP API v26.6.1](https://project-osrm.org/docs/v26.6.1/http) | Official documentation | Route/Table request, units, GeoJSON geometry, error, and `data_version` contracts | Verified 2026-08-05. Coordinates are `longitude,latitude`; the HTTP protocol path remains `v1`; Table values may be `null`; distances follow fastest routes. |
+| [OSRM backend releases](https://github.com/Project-OSRM/osrm-backend/releases/latest) | Official release record | Separates the backend release from the HTTP protocol version | Verified 2026-08-09. Latest observed release was v26.7.3; the recorded fixtures pin that exact backend and do not treat HTTP `v1` as a server release number. |
+| [EPDK charging-station Swagger](https://apigateway.epdk.gov.tr/sarjIstasyonlari?swagger) | Official machine-readable service description | Request and schema check | Verified 2026-08-09 with HTTP 200. It declares a required GET body and filter example but no 200 response definition. |
+| [Vehicle Energy Dataset (VED)](https://github.com/gsoh/VED), [eVED](https://arxiv.org/abs/2203.08630) | Public datasets | Candidates for further energy-model evaluation | Verified 2026-11-08. VED is Apache-2.0 and contains three 2013 Nissan Leaf BEVs; eVED adds elevation from a commercial API. Not downloaded or used. |
+| [Hypothesis](https://doi.org/10.21105/joss.01891), [metamorphic testing review](https://doi.org/10.1145/3143561), McKeeman (1998) differential testing | Testing methodology | Property-based, metamorphic, and differential correctness tests | Verified 2026-11-08. Methodology references only. |

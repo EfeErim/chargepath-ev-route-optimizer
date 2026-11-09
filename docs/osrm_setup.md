@@ -17,14 +17,11 @@ synthetic test data, not a real road extract.
 
 ## Native Windows setup
 
-This path needs no container runtime. It was run on 2026-11-05 on Windows 11 x64 with 15.8 GB RAM and
-12 logical CPUs. The paths are examples; everything stays outside Git.
+This path needs no container runtime. The paths are examples; everything stays outside Git.
 
 The release asset contains the executables but no Lua profile, so `profiles/` comes from the source
-archive of the pinned commit. The GitHub archive and raw file serve `car.lua` with LF line endings
-(SHA-256 `48bbb716c2b68ce6803a11a4151fcac050c6ea8240295e7dde111f15f8bd3984`). The fixture manifest's
-`3a12ab9c194c4b4c869710e9e7756247aa2b7b102c68b6fd6d0c52a2dd8152e9` is the same file with CRLF line
-endings; converting the LF file to CRLF reproduces that value.
+archive of the pinned commit. The fixture manifest records the SHA-256 of `car.lua` with CRLF line
+endings; the GitHub copy uses LF, so convert it before comparing.
 
 ```powershell
 $Commit = "0844e3af77896d11998ef6db356a553056652c8e"

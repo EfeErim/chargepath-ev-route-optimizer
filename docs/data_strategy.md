@@ -183,6 +183,6 @@ change the recorded selection algorithm or its ordered output.
 
 The current default must produce a prefix-monotonic route-progress coverage order: raising the cap
 must preserve all smaller-cap candidates. A small declared progress-gap tolerance may let corridor
-quality break near-ties. A launcher-specific candidate cap controls OSRM matrix size and consequently
+quality break near-ties. A mode-specific candidate cap controls OSRM matrix size and consequently
 the distinct station nodes available to the optimizer; it must not be presented as a separate hard-
 coded charging-stop rule.

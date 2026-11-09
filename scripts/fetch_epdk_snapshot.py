@@ -3,9 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import os
-import subprocess
-import sys
 import urllib.error
 import urllib.request
 from collections.abc import Callable
@@ -13,8 +10,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from chargepath.station_data import EPDK_SOURCE_URL, inspect_snapshot
+
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-EPDK_SOURCE_URL = "https://apigateway.epdk.gov.tr/sarjIstasyonlari"
 MAX_RESPONSE_BYTES = 256 * 1024 * 1024
 TIMEOUT_SECONDS = 120
 
@@ -65,28 +63,12 @@ def store_snapshot(
     raw_path.parent.mkdir(parents=True, exist_ok=True)
     raw_path.write_bytes(body)
 
-    environment = dict(os.environ)
-    source_path = str(REPOSITORY_ROOT / "src")
-    existing_path = environment.get("PYTHONPATH")
-    environment["PYTHONPATH"] = (
-        source_path if not existing_path else os.pathsep.join((source_path, existing_path))
-    )
-    subprocess.run(
-        [
-            sys.executable,
-            str(REPOSITORY_ROOT / "scripts/inspect_epdk_snapshot.py"),
-            str(raw_path),
-            "--retrieved-at",
-            retrieved_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "--response-status",
-            str(status),
-            "--manifest-out",
-            str(manifest_path),
-            "--report-out",
-            str(processed / "validation_report.json"),
-        ],
-        check=True,
-        env=environment,
+    inspect_snapshot(
+        raw_path,
+        retrieved_at=retrieved_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        response_status=status,
+        manifest_out=manifest_path,
+        report_out=processed / "validation_report.json",
     )
     return raw_path, manifest_path
 

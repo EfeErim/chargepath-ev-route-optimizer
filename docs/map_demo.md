@@ -77,7 +77,7 @@ graph, runs the competitive planner, and requests geometry only for selected rou
 adapter deduplicates shared directed legs across options and uses at most four concurrent geometry
 requests. It still rejects non-loopback endpoints unless the caller explicitly opts in.
 
-The public-OSRM convenience launcher defaults to 24 candidate stations to bound the remote Table
+With the public OSRM server, use `--candidate-cap 24` to bound the remote Table
 request. The optimizer has no one-stop or fixed stop-count rule, but this pool necessarily bounds a
 plan to those 24 distinct station nodes. Candidate selection is prefix-monotonic and spreads that set
 across route progress while letting corridor quality resolve close coverage choices. In loopback OSRM
@@ -109,20 +109,16 @@ python -m chargepath.demo --mode integration `
   --osrm-endpoint http://127.0.0.1:5000
 ```
 
-Without a local OSRM instance, `.\scripts\open_chargepath.ps1 -UsePublicOsrm` uses the public OSRM
-demo server instead. It warns that selected origin/destination coordinates leave the machine; that
-server has no project-owned availability guarantee.
-
-## Double-click launcher
-
-`ChargePath.cmd` runs the server in the background and opens the browser. It uses `.venv` when present
-and otherwise any Python 3.11+ directly from `src/`. Without a local snapshot it opens the synthetic
-demo. With one, it asks in its console window before using the public OSRM server, and any answer other
-than yes opens the synthetic demo. If startup fails, it prints the server's error. The background
-server keeps running after the window closes; stop it with:
+Without a local OSRM instance, the public OSRM demo server can stand in. Selected origin,
+destination, and candidate station coordinates then leave the machine, so the server refuses a
+non-loopback endpoint unless `--allow-remote-osrm` is given, and that server has no project-owned
+availability guarantee:
 
 ```powershell
-Get-NetTCPConnection -LocalPort 8743 -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess }
+python -m chargepath.demo --mode integration `
+  --station-snapshot data/raw/epdk/2026-08-09/response.json `
+  --station-manifest data/processed/epdk/2026-08-09/manifest.json `
+  --osrm-endpoint https://router.project-osrm.org --allow-remote-osrm --candidate-cap 24
 ```
 
 ## Map and network boundary
