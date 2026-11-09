@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import math
+from dataclasses import dataclass
+from typing import Literal
 
 from chargepath import validation
 from chargepath.energy import (
@@ -16,6 +18,15 @@ from chargepath.models import RoutePlan, Station, VehicleProfile
 
 class PlanVerificationError(ValueError):
     """Raised when a returned plan violates its modeled contracts."""
+
+
+@dataclass(frozen=True, slots=True)
+class ReplayEvent:
+    """Battery level after one replayed action, as the replay computed it."""
+
+    kind: Literal["start", "charge", "arrive"]
+    node_id: str
+    soc_pct: float
 
 
 def _close(actual: float, expected: float, *, field: str) -> None:
@@ -33,8 +44,13 @@ def verify_route_plan(
     taper_factor: float = 0.45,
     session_setup_minutes: float = 2.0,
     consumption_model: ConsumptionModel = DEFAULT_CONSUMPTION,
-) -> None:
-    """Replay charge and drive actions without relying on optimizer predecessor state."""
+) -> tuple[ReplayEvent, ...]:
+    """Replay charge and drive actions without relying on optimizer predecessor state.
+
+    The replay shares the energy and charging-time functions with the optimizer, so it catches
+    search and reconstruction bugs, not model bugs. ``tests/test_properties.py`` checks the model
+    against a separate exact-arithmetic reference.
+    """
 
     validation.soc_step(soc_step_pct)
     validation.charge_model(
@@ -47,6 +63,7 @@ def verify_route_plan(
     reserve_bucket = math.ceil(vehicle.reserve_soc_pct / soc_step_pct)
     maximum_bucket = 100 // soc_step_pct
     stop_index = 0
+    events = [ReplayEvent("start", plan.node_ids[0], energy_bucket * soc_step_pct)]
 
     for leg_index, leg in enumerate(plan.legs):
         current_node = plan.node_ids[leg_index]
@@ -85,6 +102,7 @@ def verify_route_plan(
                 _close(stop.charging_minutes, expected_minutes, field="charging minutes")
                 energy_bucket = departure_bucket
                 stop_index += 1
+                events.append(ReplayEvent("charge", current_node, energy_bucket * soc_step_pct))
 
         if (leg.origin_id, leg.destination_id) != (
             current_node,
@@ -97,7 +115,9 @@ def verify_route_plan(
         energy_bucket = min(maximum_bucket, energy_bucket - net)
         if energy_bucket < reserve_bucket:
             raise PlanVerificationError("road leg violates reserve SOC")
+        events.append(ReplayEvent("arrive", leg.destination_id, energy_bucket * soc_step_pct))
 
     if stop_index != len(plan.charging_stops):
         raise PlanVerificationError("charging stops are not in drive order")
     _close(plan.arrival_soc_pct, energy_bucket * soc_step_pct, field="arrival SOC")
+    return tuple(events)
