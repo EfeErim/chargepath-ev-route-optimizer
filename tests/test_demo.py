@@ -92,8 +92,14 @@ def test_fixture_service_returns_explainable_verified_route_options() -> None:
     assert fastest["strategies"] == ["fastest", "fewest_charging_stops"]
     assert fastest["nodes"] == ["origin", "fast_hub", "destination"]
     assert fastest["charging_stops"][0]["name"] == "Fast Hub"
-    assert fastest["soc_timeline"][0] == {"label": "Start", "kind": "start", "soc_pct": 60}
-    assert fastest["soc_timeline"][-1]["label"] == "Arrival"
+    assert [(row["kind"], row["soc_pct"]) for row in fastest["soc_timeline"]] == [
+        ("start", 60),
+        ("station", 20),
+        ("charge", 75),
+        ("arrival", 10),
+    ]
+    assert fastest["soc_timeline"][2]["label"] == "Charge · Fast Hub"
+    assert fastest["soc_timeline"][-1]["soc_pct"] == fastest["arrival_soc_pct"]
     assert fastest["geometry"]["type"] == "FeatureCollection"
     assert len(fastest["geometry"]["features"]) == 2
 

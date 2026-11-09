@@ -26,7 +26,6 @@ from chargepath.corridor import (
     select_corridor_candidates,
 )
 from chargepath.demo.schema import VEHICLE_INPUT_BOUNDS, PlanRequest, PointInput, VehicleInputs
-from chargepath.energy import energy_for_distance, required_energy_buckets
 from chargepath.fixtures import SyntheticScenario
 from chargepath.models import GeoJsonLineString, NoFeasibleRouteError, Station, VehicleProfile
 from chargepath.providers.base import RoadNetwork
@@ -45,6 +44,7 @@ from chargepath.redundancy import stop_redundancy
 from chargepath.station_data import (
     load_snapshot_options,
 )
+from chargepath.verification import verify_route_plan
 
 DEFAULT_TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
 TILE_ATTRIBUTION = "© OpenStreetMap contributors"
@@ -487,41 +487,19 @@ def _soc_timeline(
     soc_step_pct: int,
 ) -> list[dict[str, object]]:
     plan = option.plan
-    bucket_kwh = vehicle.usable_battery_kwh * soc_step_pct / 100
-    current_bucket = math.floor(vehicle.initial_soc_pct / soc_step_pct)
-    timeline: list[dict[str, object]] = [
-        {"label": "Start", "kind": "start", "soc_pct": current_bucket * soc_step_pct}
-    ]
-    stop_by_station = {stop.station_id: stop for stop in plan.charging_stops}
-    for leg in plan.legs:
-        stop = stop_by_station.get(leg.origin_id)
-        if stop is not None:
-            current_bucket = round(stop.departure_soc_pct / soc_step_pct)
-            timeline.append(
-                {
-                    "label": f"Charge · {stations[stop.station_id].name}",
-                    "kind": "charge",
-                    "soc_pct": stop.departure_soc_pct,
-                }
-            )
-        required = required_energy_buckets(
-            energy_for_distance(
-                leg.distance_km,
-                vehicle.consumption_kwh_per_100km,
-                vehicle.energy_safety_factor,
-            ),
-            bucket_kwh,
-        )
-        current_bucket -= required
-        timeline.append(
-            {
-                "label": "Arrival"
-                if leg.destination_id == plan.node_ids[-1]
-                else (stations[leg.destination_id].name),
-                "kind": "arrival" if leg.destination_id == plan.node_ids[-1] else "station",
-                "soc_pct": current_bucket * soc_step_pct,
-            }
-        )
+    timeline: list[dict[str, object]] = []
+    for event in verify_route_plan(
+        plan, vehicle=vehicle, stations=dict(stations), soc_step_pct=soc_step_pct
+    ):
+        if event.kind == "start":
+            label, kind = "Start", "start"
+        elif event.kind == "charge":
+            label, kind = f"Charge · {stations[event.node_id].name}", "charge"
+        elif event.node_id == plan.node_ids[-1]:
+            label, kind = "Arrival", "arrival"
+        else:
+            label, kind = stations[event.node_id].name, "station"
+        timeline.append({"label": label, "kind": kind, "soc_pct": event.soc_pct})
     return timeline
 
 
