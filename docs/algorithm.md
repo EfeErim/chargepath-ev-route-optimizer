@@ -1,4 +1,4 @@
-# Algorithm Design
+# Algorithm design
 
 ## Input graph
 
@@ -176,6 +176,11 @@ Reconstruction yields ordered road legs, charging stops, SOC values, and time to
 charging stops and legs from the conservatively floored initial SOC, recomputes charge duration and
 energy consumption, and enforces the rounded-up reserve after every leg. Benchmark and demo output
 must pass this replay before being treated as valid evidence.
+
+The replay calls the same `charging_minutes` and leg-bucket functions as the optimizer, so it
+catches search and reconstruction errors but not errors in those functions. The property tests in
+`tests/test_properties.py` cover that side with a separate exact-arithmetic reference, and
+`tests/test_verification.py` checks that the replay rejects tampered plans.
 
 ## Expected complexity
 
