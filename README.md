@@ -13,6 +13,10 @@ The shortest road route is often not drivable for an EV, and "charge to 80% at e
 stop" leaves time on the table. ChargePath solves the charging decision exactly and
 leaves road routing to [OSRM](https://project-osrm.org/).
 
+**[Try the live demo](https://efeerim.github.io/chargepath-ev-route-optimizer/)**: the planner runs
+in your browser on a synthetic corridor, with nothing to install. The first load downloads about
+10 MB.
+
 ![Map demo](docs/images/map-demo.png)
 
 ## Results
@@ -70,9 +74,8 @@ python examples/run_synthetic_demo.py   # same planner, command line
 On Windows, double-clicking `ChargePath.cmd` opens the map demo; it only needs Python
 3.11+ on the machine.
 
-`python scripts/build_static_demo.py` writes a browser-only copy of the fixture demo that runs
-the planner in Pyodide and can be served by any static host; see the
-[map demo guide](docs/map_demo.md#static-browser-build).
+`python scripts/build_static_demo.py` writes the browser-only copy of the fixture demo that
+the live demo serves; see the [map demo guide](docs/map_demo.md#static-browser-build).
 
 To plan between arbitrary points you need a charger snapshot and an OSRM server; see
 the [map demo guide](docs/map_demo.md) and [OSRM setup](docs/osrm_setup.md).

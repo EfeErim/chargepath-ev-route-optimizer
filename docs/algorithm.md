@@ -101,7 +101,7 @@ minutes = 60 × Σ (B / 100) × Δsoc × ln(P_end / P_start) / (P_end − P_star
 ```
 
 The generic taper arguments are ignored for a vehicle with a curve. The project ships no
-vehicle-specific curves; see [research](research.md#gap-review-at-closure) for the data gate.
+vehicle-specific curves; see [research](research.md#open-gaps) for the data gate.
 
 ## Exact objective variants
 

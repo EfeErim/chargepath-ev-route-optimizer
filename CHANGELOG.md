@@ -14,6 +14,12 @@ All notable changes to this project are documented here. The format follows
   allowlist audit, wheel smoke check, constraints file, release guide, data dictionary, and
   EPDK access report were removed. The EPDK findings now live in `docs/data_strategy.md`, and a
   test checks that relative Markdown links resolve.
+- Narrowed the package exports: `chargepath` re-exports only the planner, model, and replay
+  names, and `chargepath.providers` only `StaticRoadNetwork`; import other names from their
+  modules. Removed the unused `.env.example` and `scripts/start_custom_map.ps1` (use
+  `open_chargepath.ps1 -UsePublicOsrm` or `python -m chargepath.demo --mode integration`).
+- The demo and the real-route collector load EPDK snapshots through one
+  `station_data.load_snapshot_options` function.
 - Renamed benchmark scripts after what they do (`run_synthetic_benchmark.py`,
   `build_route_manifest.py`, `collect_routes.py`, `evaluate_routes.py`,
   `run_route_followup.py`).
@@ -35,7 +41,7 @@ All notable changes to this project are documented here. The format follows
 - Per-stop structural fallback note for the fastest plan (`chargepath.redundancy`), labeled as
   structure only.
 - A static browser build of the fixture demo that runs the planner in Pyodide
-  (`scripts/build_static_demo.py`). Nothing is deployed by the script.
+  (`scripts/build_static_demo.py`), published to GitHub Pages by the `Demo site` workflow.
 - An experimental terrain consumption model (`chargepath.terrain`) and its pre-registered held-out
   evaluation on the BMW i3 pilot data, which it did not pass; it is not the default.
 - Literature additions in `docs/research.md` and `docs/source_registry.md`.
