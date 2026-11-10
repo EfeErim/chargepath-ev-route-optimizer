@@ -8,7 +8,6 @@ import math
 import os
 import platform
 import statistics
-import sys
 import time
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -708,7 +707,6 @@ def build_runtime_artifact(
             "machine": platform.machine() or "unknown",
             "processor": platform.processor() or "unknown",
             "logical_cpu_count": os.cpu_count(),
-            "executable": sys.executable,
         },
         "case_count_per_sample": len(manifest.cases),
         "algorithm_results": algorithm_results,
