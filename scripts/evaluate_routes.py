@@ -19,8 +19,8 @@ from chargepath.real_route_evaluation import (
 )
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_MANIFEST = REPOSITORY_ROOT / "data/benchmarks/m6/v1/manifest.json"
-DEFAULT_GRAPHS = REPOSITORY_ROOT / "data/processed/m6/v1/graphs"
+DEFAULT_MANIFEST = REPOSITORY_ROOT / "data/benchmarks/real-routes/v1/manifest.json"
+DEFAULT_GRAPHS = REPOSITORY_ROOT / "data/processed/real-routes/v1/graphs"
 DEFAULT_EVIDENCE = REPOSITORY_ROOT / "docs/benchmarks/real-routes"
 
 

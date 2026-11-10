@@ -40,7 +40,7 @@ from chargepath.real_route_evaluation import (
 from chargepath.station_data import CompatibleStationOption, SnapshotProvenance
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-FIXTURE = REPOSITORY_ROOT / "tests/fixtures/m6/synthetic_graph.json"
+FIXTURE = REPOSITORY_ROOT / "tests/fixtures/real-routes/synthetic_graph.json"
 ALGORITHMS = (
     "shortest_driving_time",
     "fastest",
@@ -382,7 +382,7 @@ def _committed_evidence() -> tuple[dict[str, Any], list[dict[str, Any]]]:
 
 
 def _real_manifest_bytes() -> bytes:
-    return (REPOSITORY_ROOT / "data/benchmarks/m6/v1/manifest.json").read_bytes()
+    return (REPOSITORY_ROOT / "data/benchmarks/real-routes/v1/manifest.json").read_bytes()
 
 
 def test_committed_evidence_belongs_to_the_frozen_manifest() -> None:

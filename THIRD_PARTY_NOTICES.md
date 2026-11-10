@@ -36,7 +36,7 @@ CI uses `actions/checkout` 6.0.2 and `actions/setup-python` 6.2.0, both MIT-lice
 full commit SHAs in the workflow. Their code is executed by GitHub Actions and is not distributed in
 the ChargePath package.
 
-Files under `data/sample/`, `data/benchmarks/m3/`, and `tests/fixtures/` are project-authored
+Files under `data/sample/`, `data/benchmarks/synthetic/`, and `tests/fixtures/` are project-authored
 synthetic fixtures. The recorded OSRM fixture was produced from the included synthetic OSM ring.
 The M6 selection distances and model results derive from OpenStreetMap data, © OpenStreetMap
 contributors, ODbL. Source extracts and station rows stay outside Git.

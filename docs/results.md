@@ -8,7 +8,7 @@ planner, using only province metadata and road distances. Road distances derive 
 data, © OpenStreetMap contributors, ODbL. Results are modeled minutes on that graph and a static
 EPDK snapshot. SOC, arrival time, and charger availability require separate field evidence.
 
-The [frozen manifest](../data/benchmarks/m6/v1/manifest.json) defines E1–E6. The
+The [frozen manifest](../data/benchmarks/real-routes/v1/manifest.json) defines E1–E6. The
 [normalized summary](benchmarks/real-routes/summary_v1.json), [scenario outcomes](benchmarks/real-routes/trips_v1.jsonl),
 and [machine timings](benchmarks/real-routes/runtime_2026-11-05.json) are the sources for these tables.
 
@@ -79,7 +79,7 @@ A single pass across 72 nominal inputs measured median/p95 of 165/268 ms per exa
 replay on the recording machine, excluding graph loading, OSRM, and browser work.
 
 ```powershell
-python scripts/run_route_followup.py --output data/processed/m6/v1/followup-rerun.json
+python scripts/run_route_followup.py --output data/processed/real-routes/v1/followup-rerun.json
 ```
 
 ### Follow-up · Speed choice
@@ -230,7 +230,7 @@ Evidence identity:
 - correctness artifact: `docs/benchmarks/synthetic/correctness_v1.json`, SHA-256
   `db55067b92a5904624dcf9fe90c5861561cc092b0b7754673ee101ef849572b6`;
 - runtime artifact: `docs/benchmarks/synthetic/runtime_2026-08-09.json`, SHA-256
-  `04bc47528c72c3facca037403f243e3234f7d7bc14752f64869d82ad73704386`.
+  `6b9f0cee0cccaf74e373c432573932c708608a18b69eaccc098aa9f3b1a9e882`.
 
 ### Correctness
 

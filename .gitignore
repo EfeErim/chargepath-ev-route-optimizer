@@ -14,11 +14,5 @@ outputs/
 *.osm.pbf
 *.osrm*
 
-
-# Personal notes and working files
+# Local working files
 .local/
-AGENTS.md
-CLAUDE.md
-PROJECT_PLAN.md
-PROJECT_STATE.md
-INTERVIEW_NOTES.md

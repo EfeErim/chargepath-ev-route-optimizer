@@ -16,7 +16,7 @@ from chargepath.real_route_benchmark import (
     select_routes,
 )
 
-BENCHMARK_DIR = Path(__file__).resolve().parents[1] / "data/benchmarks/m6/v1"
+BENCHMARK_DIR = Path(__file__).resolve().parents[1] / "data/benchmarks/real-routes/v1"
 
 
 def _manifest() -> dict[str, Any]:

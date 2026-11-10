@@ -1,7 +1,8 @@
 """Real-route collection stage: the only stage that talks to OSRM.
 
-Candidate graphs are stored under the Git-ignored ``data/processed/m6/`` directory because they
-contain real station rows. A provider failure is stored as an outcome, never dropped.
+Candidate graphs are stored under the Git-ignored ``data/processed/real-routes/`` directory
+because they contain real station rows. A provider failure is stored as an outcome, never
+dropped.
 """
 
 from __future__ import annotations
