@@ -12,7 +12,10 @@ grid.
 
 On 24 routes across Türkiye's road network with three vehicle profiles, the exact planner was a
 median **24.7 minutes (4.2%) faster** than charging to 80% at each stop. That covers the 71 of 72
-scenarios where both found a plan; the 80% heuristic found none on the remaining one. All 2,525 plans
+scenarios where both found a plan; the 80% heuristic found none on the remaining one. The percentage
+looks small because driving is a median 87.5% of the trip and no charging planner can shorten it.
+Measured against the part a planner does control, the median time spent charging fell from 70.7 to
+53.0 minutes, a median cut of 28.7% in the 66 scenarios where the heuristic charged. All 2,525 plans
 produced across the experiments were replayed by a separate checker with zero reserve violations.
 These are modeled minutes on one road extract and one static charger snapshot, not measured drives.
 
@@ -46,8 +49,9 @@ Planning between arbitrary points needs a charger snapshot and a local OSRM serv
 
 | What | Data | Comparison | Result | Reproduce |
 |---|---|---|---|---|
-| Trip time | 72 real-route scenarios (24 routes × 3 vehicles) | exact fastest vs charge-to-80% | median 24.7 min (4.2%) saved, max 98.5 min; 6 ties, 1 heuristic failure | `pytest tests/test_published_results.py` recomputes it from the committed outcomes |
+| Trip time | 72 real-route scenarios (24 routes × 3 vehicles) | exact fastest vs charge-to-80% | median 24.7 min (4.2%) saved, max 98.5 min; charging time cut by a median 28.7%; 6 ties, 1 heuristic failure | `pytest tests/test_published_results.py` recomputes it from the committed outcomes |
 | Where the saving comes from | same 71 paired scenarios | 80% heuristic → best charge amounts on its own path → free path | medians of 9.6 min and 10.5 min; they add per scenario, not as medians | `scripts/run_route_followup.py`, needs the frozen graphs |
+| Slower driving | same 72 scenarios, opt-in speed-dependent consumption | fixed OSRM speed vs also 90% and 80% | no scenario improved; with fast chargers, driving slower costs more time than the charging it saves | `scripts/run_speed_choice.py`, needs the frozen graphs |
 | Plan validity | all 2,525 returned plans | replay checker | 0 reserve violations | same test as the first row |
 | Solver agreement | Hypothesis-generated graphs, 150 per property in CI | optimizer vs exact-rational reference solver | no disagreement; 20,000 cases in one deeper run | `pytest tests/test_properties.py` |
 | Synthetic suite | 8 hand-checked cases | known feasible/infeasible labels | all 5 feasible and 3 infeasible matched | `scripts/run_synthetic_benchmark.py` |

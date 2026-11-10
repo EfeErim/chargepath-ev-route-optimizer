@@ -1,0 +1,1464 @@
+{
+  "consumption_model": {
+    "kind": "speed_aware",
+    "quadratic_share": 0.149,
+    "reference_speed_kmh": 86.771,
+    "source": "docs/benchmarks/field-pilot/tum_id1_v1.json"
+  },
+  "input_benchmark": "chargepath-m6-real-route-v1",
+  "manifest_sha256": "1c637e15d52fb053ac52d7721a4223b294927729cae6aa9bdb7d82724f76cadf",
+  "reserve_violations_on_returned_plans": 0,
+  "scenarios": [
+    {
+      "fixed_speed": {
+        "charging_minutes": 30.8,
+        "charging_stops": 1,
+        "driving_minutes": 232.568,
+        "total_minutes": 263.368
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r01",
+      "speed_choice": {
+        "charging_minutes": 30.8,
+        "charging_stops": 1,
+        "driving_minutes": 232.568,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 263.368
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 26.0,
+        "charging_stops": 1,
+        "driving_minutes": 195.33,
+        "total_minutes": 221.33
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r02",
+      "speed_choice": {
+        "charging_minutes": 26.0,
+        "charging_stops": 1,
+        "driving_minutes": 195.33,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 221.33
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 23.6,
+        "charging_stops": 1,
+        "driving_minutes": 240.19,
+        "total_minutes": 263.79
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r03",
+      "speed_choice": {
+        "charging_minutes": 23.6,
+        "charging_stops": 1,
+        "driving_minutes": 240.19,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 263.79
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 4.4,
+        "charging_stops": 1,
+        "driving_minutes": 123.027,
+        "total_minutes": 127.427
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r04",
+      "speed_choice": {
+        "charging_minutes": 4.4,
+        "charging_stops": 1,
+        "driving_minutes": 123.027,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 127.427
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 11.6,
+        "charging_stops": 1,
+        "driving_minutes": 156.953,
+        "total_minutes": 168.553
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r05",
+      "speed_choice": {
+        "charging_minutes": 11.6,
+        "charging_stops": 1,
+        "driving_minutes": 156.953,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 168.553
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 6.8,
+        "charging_stops": 1,
+        "driving_minutes": 143.29,
+        "total_minutes": 150.09
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r06",
+      "speed_choice": {
+        "charging_minutes": 6.8,
+        "charging_stops": 1,
+        "driving_minutes": 143.29,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 150.09
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 85.2,
+        "charging_stops": 3,
+        "driving_minutes": 447.335,
+        "total_minutes": 532.535
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r07",
+      "speed_choice": {
+        "charging_minutes": 85.2,
+        "charging_stops": 3,
+        "driving_minutes": 447.335,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 532.535
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 56.933,
+        "charging_stops": 3,
+        "driving_minutes": 339.54,
+        "total_minutes": 396.473
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r08",
+      "speed_choice": {
+        "charging_minutes": 56.933,
+        "charging_stops": 3,
+        "driving_minutes": 339.54,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 396.473
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 40.0,
+        "charging_stops": 2,
+        "driving_minutes": 235.615,
+        "total_minutes": 275.615
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r09",
+      "speed_choice": {
+        "charging_minutes": 40.0,
+        "charging_stops": 2,
+        "driving_minutes": 235.615,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 275.615
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 68.8,
+        "charging_stops": 2,
+        "driving_minutes": 328.295,
+        "total_minutes": 397.095
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r10",
+      "speed_choice": {
+        "charging_minutes": 68.8,
+        "charging_stops": 2,
+        "driving_minutes": 328.295,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 397.095
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 99.2,
+        "charging_stops": 4,
+        "driving_minutes": 430.823,
+        "total_minutes": 530.023
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r11",
+      "speed_choice": {
+        "charging_minutes": 99.2,
+        "charging_stops": 4,
+        "driving_minutes": 430.823,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 530.023
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 64.133,
+        "charging_stops": 3,
+        "driving_minutes": 310.012,
+        "total_minutes": 374.145
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r12",
+      "speed_choice": {
+        "charging_minutes": 64.133,
+        "charging_stops": 3,
+        "driving_minutes": 310.012,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 374.145
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 132.8,
+        "charging_stops": 4,
+        "driving_minutes": 569.892,
+        "total_minutes": 702.692
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r13",
+      "speed_choice": {
+        "charging_minutes": 132.8,
+        "charging_stops": 4,
+        "driving_minutes": 569.892,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 702.692
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 192.133,
+        "charging_stops": 7,
+        "driving_minutes": 725.622,
+        "total_minutes": 917.755
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r14",
+      "speed_choice": {
+        "charging_minutes": 192.133,
+        "charging_stops": 7,
+        "driving_minutes": 725.622,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 917.755
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 194.0,
+        "charging_stops": 7,
+        "driving_minutes": 582.513,
+        "total_minutes": 776.513
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r15",
+      "speed_choice": {
+        "charging_minutes": 194.0,
+        "charging_stops": 7,
+        "driving_minutes": 582.513,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 776.513
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 165.6,
+        "charging_stops": 6,
+        "driving_minutes": 599.358,
+        "total_minutes": 764.958
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r16",
+      "speed_choice": {
+        "charging_minutes": 165.6,
+        "charging_stops": 6,
+        "driving_minutes": 599.358,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 764.958
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 144.4,
+        "charging_stops": 5,
+        "driving_minutes": 471.747,
+        "total_minutes": 616.147
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r17",
+      "speed_choice": {
+        "charging_minutes": 144.4,
+        "charging_stops": 5,
+        "driving_minutes": 471.747,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 616.147
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 148.8,
+        "charging_stops": 6,
+        "driving_minutes": 588.25,
+        "total_minutes": 737.05
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r18",
+      "speed_choice": {
+        "charging_minutes": 148.8,
+        "charging_stops": 6,
+        "driving_minutes": 588.25,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 737.05
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 291.2,
+        "charging_stops": 10,
+        "driving_minutes": 814.417,
+        "total_minutes": 1105.617
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r19",
+      "speed_choice": {
+        "charging_minutes": 291.2,
+        "charging_stops": 10,
+        "driving_minutes": 814.417,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 1105.617
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 372.133,
+        "charging_stops": 13,
+        "driving_minutes": 1104.6,
+        "total_minutes": 1476.733
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r20",
+      "speed_choice": {
+        "charging_minutes": 372.133,
+        "charging_stops": 13,
+        "driving_minutes": 1104.6,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 1476.733
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 419.333,
+        "charging_stops": 15,
+        "driving_minutes": 1142.562,
+        "total_minutes": 1561.895
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r21",
+      "speed_choice": {
+        "charging_minutes": 419.333,
+        "charging_stops": 15,
+        "driving_minutes": 1142.562,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 1561.895
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 243.6,
+        "charging_stops": 9,
+        "driving_minutes": 871.707,
+        "total_minutes": 1115.307
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r22",
+      "speed_choice": {
+        "charging_minutes": 243.6,
+        "charging_stops": 9,
+        "driving_minutes": 871.707,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 1115.307
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 208.4,
+        "charging_stops": 7,
+        "driving_minutes": 846.105,
+        "total_minutes": 1054.505
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r23",
+      "speed_choice": {
+        "charging_minutes": 208.4,
+        "charging_stops": 7,
+        "driving_minutes": 846.105,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 1054.505
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 243.6,
+        "charging_stops": 9,
+        "driving_minutes": 913.118,
+        "total_minutes": 1156.718
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r24",
+      "speed_choice": {
+        "charging_minutes": 243.6,
+        "charging_stops": 9,
+        "driving_minutes": 913.118,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 1156.718
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 8.0,
+        "charging_stops": 1,
+        "driving_minutes": 233.128,
+        "total_minutes": 241.128
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r01",
+      "speed_choice": {
+        "charging_minutes": 8.0,
+        "charging_stops": 1,
+        "driving_minutes": 233.128,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 241.128
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 6.8,
+        "charging_stops": 1,
+        "driving_minutes": 194.98,
+        "total_minutes": 201.78
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r02",
+      "speed_choice": {
+        "charging_minutes": 6.8,
+        "charging_stops": 1,
+        "driving_minutes": 194.98,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 201.78
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 6.8,
+        "charging_stops": 1,
+        "driving_minutes": 239.365,
+        "total_minutes": 246.165
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r03",
+      "speed_choice": {
+        "charging_minutes": 6.8,
+        "charging_stops": 1,
+        "driving_minutes": 239.365,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 246.165
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 0,
+        "charging_stops": 0,
+        "driving_minutes": 123.027,
+        "total_minutes": 123.027
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r04",
+      "speed_choice": {
+        "charging_minutes": 0,
+        "charging_stops": 0,
+        "driving_minutes": 123.027,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 123.027
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 0,
+        "charging_stops": 0,
+        "driving_minutes": 156.8,
+        "total_minutes": 156.8
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r05",
+      "speed_choice": {
+        "charging_minutes": 0,
+        "charging_stops": 0,
+        "driving_minutes": 156.8,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 156.8
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 0,
+        "charging_stops": 0,
+        "driving_minutes": 141.47,
+        "total_minutes": 141.47
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r06",
+      "speed_choice": {
+        "charging_minutes": 0,
+        "charging_stops": 0,
+        "driving_minutes": 141.47,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 141.47
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 30.1,
+        "charging_stops": 2,
+        "driving_minutes": 445.407,
+        "total_minutes": 475.507
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r07",
+      "speed_choice": {
+        "charging_minutes": 30.1,
+        "charging_stops": 2,
+        "driving_minutes": 445.407,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 475.507
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 15.2,
+        "charging_stops": 1,
+        "driving_minutes": 337.69,
+        "total_minutes": 352.89
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r08",
+      "speed_choice": {
+        "charging_minutes": 15.2,
+        "charging_stops": 1,
+        "driving_minutes": 337.69,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 352.89
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 11.6,
+        "charging_stops": 1,
+        "driving_minutes": 235.615,
+        "total_minutes": 247.215
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r09",
+      "speed_choice": {
+        "charging_minutes": 11.6,
+        "charging_stops": 1,
+        "driving_minutes": 235.615,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 247.215
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 24.7,
+        "charging_stops": 2,
+        "driving_minutes": 325.022,
+        "total_minutes": 349.722
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r10",
+      "speed_choice": {
+        "charging_minutes": 24.7,
+        "charging_stops": 2,
+        "driving_minutes": 325.022,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 349.722
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 36.933,
+        "charging_stops": 2,
+        "driving_minutes": 427.703,
+        "total_minutes": 464.637
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r11",
+      "speed_choice": {
+        "charging_minutes": 36.933,
+        "charging_stops": 2,
+        "driving_minutes": 427.703,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 464.637
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 20.8,
+        "charging_stops": 2,
+        "driving_minutes": 309.63,
+        "total_minutes": 330.43
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r12",
+      "speed_choice": {
+        "charging_minutes": 20.8,
+        "charging_stops": 2,
+        "driving_minutes": 309.63,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 330.43
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 49.467,
+        "charging_stops": 3,
+        "driving_minutes": 569.408,
+        "total_minutes": 618.875
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r13",
+      "speed_choice": {
+        "charging_minutes": 49.467,
+        "charging_stops": 3,
+        "driving_minutes": 569.408,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 618.875
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 71.867,
+        "charging_stops": 4,
+        "driving_minutes": 727.013,
+        "total_minutes": 798.88
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r14",
+      "speed_choice": {
+        "charging_minutes": 71.867,
+        "charging_stops": 4,
+        "driving_minutes": 727.013,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 798.88
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 70.4,
+        "charging_stops": 4,
+        "driving_minutes": 583.858,
+        "total_minutes": 654.258
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r15",
+      "speed_choice": {
+        "charging_minutes": 70.4,
+        "charging_stops": 4,
+        "driving_minutes": 583.858,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 654.258
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 60.8,
+        "charging_stops": 4,
+        "driving_minutes": 593.715,
+        "total_minutes": 654.515
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r16",
+      "speed_choice": {
+        "charging_minutes": 60.8,
+        "charging_stops": 4,
+        "driving_minutes": 593.715,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 654.515
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 58.667,
+        "charging_stops": 4,
+        "driving_minutes": 462.795,
+        "total_minutes": 521.462
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r17",
+      "speed_choice": {
+        "charging_minutes": 58.667,
+        "charging_stops": 4,
+        "driving_minutes": 462.795,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 521.462
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 54.8,
+        "charging_stops": 4,
+        "driving_minutes": 588.975,
+        "total_minutes": 643.775
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r18",
+      "speed_choice": {
+        "charging_minutes": 54.8,
+        "charging_stops": 4,
+        "driving_minutes": 588.975,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 643.775
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 110.0,
+        "charging_stops": 7,
+        "driving_minutes": 811.528,
+        "total_minutes": 921.528
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r19",
+      "speed_choice": {
+        "charging_minutes": 110.0,
+        "charging_stops": 7,
+        "driving_minutes": 811.528,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 921.528
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 149.6,
+        "charging_stops": 8,
+        "driving_minutes": 1085.062,
+        "total_minutes": 1234.662
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r20",
+      "speed_choice": {
+        "charging_minutes": 149.6,
+        "charging_stops": 8,
+        "driving_minutes": 1085.062,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 1234.662
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 167.867,
+        "charging_stops": 10,
+        "driving_minutes": 1125.735,
+        "total_minutes": 1293.602
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r21",
+      "speed_choice": {
+        "charging_minutes": 167.867,
+        "charging_stops": 10,
+        "driving_minutes": 1125.735,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 1293.602
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 93.867,
+        "charging_stops": 6,
+        "driving_minutes": 873.338,
+        "total_minutes": 967.205
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r22",
+      "speed_choice": {
+        "charging_minutes": 93.867,
+        "charging_stops": 6,
+        "driving_minutes": 873.338,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 967.205
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 83.433,
+        "charging_stops": 5,
+        "driving_minutes": 837.548,
+        "total_minutes": 920.982
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r23",
+      "speed_choice": {
+        "charging_minutes": 83.433,
+        "charging_stops": 5,
+        "driving_minutes": 837.548,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 920.982
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 99.933,
+        "charging_stops": 6,
+        "driving_minutes": 907.83,
+        "total_minutes": 1007.763
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r24",
+      "speed_choice": {
+        "charging_minutes": 99.933,
+        "charging_stops": 6,
+        "driving_minutes": 907.83,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 1007.763
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 4.667,
+        "charging_stops": 1,
+        "driving_minutes": 232.568,
+        "total_minutes": 237.235
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r01",
+      "speed_choice": {
+        "charging_minutes": 4.667,
+        "charging_stops": 1,
+        "driving_minutes": 232.568,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 237.235
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 3.333,
+        "charging_stops": 1,
+        "driving_minutes": 194.98,
+        "total_minutes": 198.313
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r02",
+      "speed_choice": {
+        "charging_minutes": 3.333,
+        "charging_stops": 1,
+        "driving_minutes": 194.98,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 198.313
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 2.96,
+        "charging_stops": 1,
+        "driving_minutes": 239.365,
+        "total_minutes": 242.325
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r03",
+      "speed_choice": {
+        "charging_minutes": 2.96,
+        "charging_stops": 1,
+        "driving_minutes": 239.365,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 242.325
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 0,
+        "charging_stops": 0,
+        "driving_minutes": 123.027,
+        "total_minutes": 123.027
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r04",
+      "speed_choice": {
+        "charging_minutes": 0,
+        "charging_stops": 0,
+        "driving_minutes": 123.027,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 123.027
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 0,
+        "charging_stops": 0,
+        "driving_minutes": 156.8,
+        "total_minutes": 156.8
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r05",
+      "speed_choice": {
+        "charging_minutes": 0,
+        "charging_stops": 0,
+        "driving_minutes": 156.8,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 156.8
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 0,
+        "charging_stops": 0,
+        "driving_minutes": 141.47,
+        "total_minutes": 141.47
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r06",
+      "speed_choice": {
+        "charging_minutes": 0,
+        "charging_stops": 0,
+        "driving_minutes": 141.47,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 141.47
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 23.63,
+        "charging_stops": 1,
+        "driving_minutes": 445.472,
+        "total_minutes": 469.101
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r07",
+      "speed_choice": {
+        "charging_minutes": 23.63,
+        "charging_stops": 1,
+        "driving_minutes": 445.472,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 469.101
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 9.68,
+        "charging_stops": 1,
+        "driving_minutes": 337.21,
+        "total_minutes": 346.89
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r08",
+      "speed_choice": {
+        "charging_minutes": 9.68,
+        "charging_stops": 1,
+        "driving_minutes": 337.21,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 346.89
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 6.8,
+        "charging_stops": 1,
+        "driving_minutes": 236.208,
+        "total_minutes": 243.008
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r09",
+      "speed_choice": {
+        "charging_minutes": 6.8,
+        "charging_stops": 1,
+        "driving_minutes": 236.208,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 243.008
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 15.52,
+        "charging_stops": 2,
+        "driving_minutes": 327.405,
+        "total_minutes": 342.925
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r10",
+      "speed_choice": {
+        "charging_minutes": 15.52,
+        "charging_stops": 2,
+        "driving_minutes": 327.405,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 342.925
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 22.24,
+        "charging_stops": 2,
+        "driving_minutes": 427.842,
+        "total_minutes": 450.082
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r11",
+      "speed_choice": {
+        "charging_minutes": 22.24,
+        "charging_stops": 2,
+        "driving_minutes": 427.842,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 450.082
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 13.013,
+        "charging_stops": 2,
+        "driving_minutes": 310.178,
+        "total_minutes": 323.192
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r12",
+      "speed_choice": {
+        "charging_minutes": 13.013,
+        "charging_stops": 2,
+        "driving_minutes": 310.178,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 323.192
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 35.551,
+        "charging_stops": 3,
+        "driving_minutes": 570.613,
+        "total_minutes": 606.164
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r13",
+      "speed_choice": {
+        "charging_minutes": 35.551,
+        "charging_stops": 3,
+        "driving_minutes": 570.613,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 606.164
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 57.551,
+        "charging_stops": 4,
+        "driving_minutes": 725.388,
+        "total_minutes": 782.939
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r14",
+      "speed_choice": {
+        "charging_minutes": 57.551,
+        "charging_stops": 4,
+        "driving_minutes": 725.388,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 782.939
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 57.28,
+        "charging_stops": 4,
+        "driving_minutes": 576.148,
+        "total_minutes": 633.428
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r15",
+      "speed_choice": {
+        "charging_minutes": 57.28,
+        "charging_stops": 4,
+        "driving_minutes": 576.148,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 633.428
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 53.493,
+        "charging_stops": 4,
+        "driving_minutes": 592.672,
+        "total_minutes": 646.165
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r16",
+      "speed_choice": {
+        "charging_minutes": 53.493,
+        "charging_stops": 4,
+        "driving_minutes": 592.672,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 646.165
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 42.107,
+        "charging_stops": 3,
+        "driving_minutes": 462.997,
+        "total_minutes": 505.103
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r17",
+      "speed_choice": {
+        "charging_minutes": 42.107,
+        "charging_stops": 3,
+        "driving_minutes": 462.997,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 505.103
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 41.547,
+        "charging_stops": 2,
+        "driving_minutes": 588.317,
+        "total_minutes": 629.863
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r18",
+      "speed_choice": {
+        "charging_minutes": 41.547,
+        "charging_stops": 2,
+        "driving_minutes": 588.317,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 629.863
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 81.707,
+        "charging_stops": 6,
+        "driving_minutes": 806.13,
+        "total_minutes": 887.837
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r19",
+      "speed_choice": {
+        "charging_minutes": 81.707,
+        "charging_stops": 6,
+        "driving_minutes": 806.13,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 887.837
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 109.36,
+        "charging_stops": 7,
+        "driving_minutes": 1094.827,
+        "total_minutes": 1204.187
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r20",
+      "speed_choice": {
+        "charging_minutes": 109.36,
+        "charging_stops": 7,
+        "driving_minutes": 1094.827,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 1204.187
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 129.393,
+        "charging_stops": 8,
+        "driving_minutes": 1126.143,
+        "total_minutes": 1255.536
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r21",
+      "speed_choice": {
+        "charging_minutes": 129.393,
+        "charging_stops": 8,
+        "driving_minutes": 1126.143,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 1255.536
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 68.216,
+        "charging_stops": 5,
+        "driving_minutes": 873.452,
+        "total_minutes": 941.668
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r22",
+      "speed_choice": {
+        "charging_minutes": 68.216,
+        "charging_stops": 5,
+        "driving_minutes": 873.452,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 941.668
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 65.196,
+        "charging_stops": 4,
+        "driving_minutes": 837.515,
+        "total_minutes": 902.711
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r23",
+      "speed_choice": {
+        "charging_minutes": 65.196,
+        "charging_stops": 4,
+        "driving_minutes": 837.515,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 902.711
+      }
+    },
+    {
+      "fixed_speed": {
+        "charging_minutes": 76.856,
+        "charging_stops": 6,
+        "driving_minutes": 905.225,
+        "total_minutes": 982.081
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r24",
+      "speed_choice": {
+        "charging_minutes": 76.856,
+        "charging_stops": 6,
+        "driving_minutes": 905.225,
+        "slowed_km": {
+          "0.8": 0,
+          "0.9": 0
+        },
+        "total_minutes": 982.081
+      }
+    }
+  ],
+  "speed_factors": [
+    1.0,
+    0.9,
+    0.8
+  ],
+  "summary": {
+    "improved": 0,
+    "max_saving_minutes": 0.0,
+    "median_saving_minutes": 0.0,
+    "scenarios": 72
+  }
+}

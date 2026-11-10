@@ -49,6 +49,34 @@ def test_e1_savings_match_the_readme() -> None:
     assert "71 of 72 scenarios" in README
 
 
+def test_charging_time_share_matches_the_readme() -> None:
+    driving_share: list[float] = []
+    fastest_charging: list[float] = []
+    greedy_charging: list[float] = []
+    charging_cut: list[float] = []
+    for row in _rows():
+        if row["experiment"] != "E1":
+            continue
+        fastest = row["results"]["fastest"]
+        greedy = row["results"]["greedy_fixed_80"]
+        if greedy["outcome"] != "plan":
+            continue
+        driving_share.append(100 * greedy["driving_minutes"] / greedy["total_minutes"])
+        fastest_charging.append(fastest["charging_minutes"])
+        greedy_charging.append(greedy["charging_minutes"])
+        if greedy["charging_minutes"] > 0:
+            cut = greedy["charging_minutes"] - fastest["charging_minutes"]
+            charging_cut.append(100 * cut / greedy["charging_minutes"])
+
+    assert len(charging_cut) == 66
+    assert round(statistics.median(driving_share), 1) == 87.5
+    assert round(statistics.median(greedy_charging), 1) == 70.7
+    assert round(statistics.median(fastest_charging), 1) == 53.0
+    assert round(statistics.median(charging_cut), 1) == 28.7
+    assert "median 87.5% of the trip" in README
+    assert "from 70.7 to 53.0 minutes, a median cut of 28.7% in the 66 scenarios" in README
+
+
 def test_every_returned_plan_was_replayed_without_violations() -> None:
     results = [result for row in _rows() for result in row["results"].values()]
     plans = [result for result in results if result["outcome"] == "plan"]
