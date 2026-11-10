@@ -168,7 +168,6 @@
   "benchmark_id": "chargepath-m3-synthetic-v1",
   "case_count_per_sample": 8,
   "environment": {
-    "executable": "D:\\kişisel projeler\\03-ev-route-optimizer\\.venv\\Scripts\\python.exe",
     "generated_at_utc": "2026-08-09T14:37:59Z",
     "logical_cpu_count": 12,
     "machine": "AMD64",
