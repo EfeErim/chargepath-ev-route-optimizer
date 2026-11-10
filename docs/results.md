@@ -35,6 +35,13 @@ starting SOC. The shortest-distance objective compares the distances of the legs
 | E5 · Vehicle inputs | On eight routes, exact search stayed feasible at every tested value. Median total times at the 50, 150, and 250 kW vehicle limits were 617.9, 551.0, and 542.5 min. |
 | E6 · Runtime | Over 72 scenarios per pass, median/p95 were 21.3/27.5 s for exact fastest, 3.9/4.8 s for greedy, and 0.32/0.56 s for road-only. OSRM was timed separately over 24 requests per pass, with medians of 0.65 s for Route and 1.15 s for Table. These are machine-specific batch timings. |
 
+Driving was a median 87.5% of the greedy trip time, and that share is fixed by the road legs, so the
+percentage saving understates the effect on the part a charging planner controls. Median charging
+time, including the 2-minute session overhead, was 70.7 minutes for greedy and 53.0 for exact
+fastest. In the 66 paired scenarios where greedy charged, exact fastest cut charging time by a
+median 28.7% (range 0–100%). The total saving also includes path changes, so it is not only charging
+time.
+
 Median E1 savings by distance band were 10.3, 19.8, 28.7, and 40.0 minutes, from the shortest to the
 longest band. The paired comparison measures the effect of replacing one specified heuristic and
 combines changes in stop selection and charging amounts.
@@ -73,6 +80,26 @@ replay on the recording machine, excluding graph loading, OSRM, and browser work
 
 ```powershell
 python scripts/run_route_followup.py --output data/processed/m6/v1/followup-rerun.json
+```
+
+### Follow-up · Speed choice
+
+The [speed-choice artifact](benchmarks/real-routes/speed_choice_v1.json) reruns the 72 E1 scenarios
+on the checksum-verified graphs with the opt-in `SpeedAwareConsumption` model. It scales each
+vehicle's constant rate by `1 − q + q × (v / v_ref)²`, with `q = 0.149` and `v_ref = 86.8 km/h` from
+the ID.3 pilot's squared-speed fit. Both runs use that model. The second may also drive any leg at 90%
+or 80% of its OSRM speed, and exact search picks the fastest combination.
+
+Speed choice improved none of the 72 scenarios; no plan slowed a single leg. Every plan replayed
+under the same model. This is the expected result under this model, not a search failure.
+Minimizing `d / v + d × (a + b v²) / P` per kilometre gives an optimal speed of `v³ = P / (2b)`.
+With the pilot's quadratic term and the vehicle sets' rates, that is 179–193 km/h at a 50 kW
+charger and still about 137 km/h at a 50 kW charger in the taper (22.5 kW), above OSRM's leg speeds. Slowing down can still matter when it avoids a stop entirely or
+when the next charger is weak, which these scenarios did not require. The result depends on one
+vehicle's fit, which ignores temperature, wind, and grade.
+
+```powershell
+python scripts/run_speed_choice.py --output docs/benchmarks/real-routes/speed_choice_v1.json
 ```
 
 ## Field pilot · Volkswagen ID.3
