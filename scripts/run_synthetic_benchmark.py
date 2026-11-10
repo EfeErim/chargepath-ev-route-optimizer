@@ -14,7 +14,7 @@ from chargepath.evaluation import (
 )
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_MANIFEST = REPOSITORY_ROOT / "data/benchmarks/m3/v1/manifest.json"
+DEFAULT_MANIFEST = REPOSITORY_ROOT / "data/benchmarks/synthetic/v1/manifest.json"
 DEFAULT_CORRECTNESS_OUT = REPOSITORY_ROOT / "docs/benchmarks/synthetic/correctness_v1.json"
 DEFAULT_RUNTIME_OUT = REPOSITORY_ROOT / "docs/benchmarks/synthetic/runtime_2026-08-09.json"
 

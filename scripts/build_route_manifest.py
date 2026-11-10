@@ -17,7 +17,7 @@ from chargepath.real_route_benchmark import (
 )
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-BENCHMARK_DIR = REPOSITORY_ROOT / "data/benchmarks/m6/v1"
+BENCHMARK_DIR = REPOSITORY_ROOT / "data/benchmarks/real-routes/v1"
 DATA_VERSION = "geofabrik-turkey-20261104-794874509924"
 FROZEN_INPUTS = {
     "road_graph": {

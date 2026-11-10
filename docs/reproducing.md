@@ -4,7 +4,7 @@
 
 Completed on 2026-08-09 against the checksum-pinned, project-authored synthetic v1 fixture. The
 versioned manifest, normalized correctness/comparison/SOC-grid/pruning artifact, and machine-specific
-runtime artifact are under `data/benchmarks/m3/v1/` and `docs/benchmarks/synthetic/`. The reviewed tables and
+runtime artifact are under `data/benchmarks/synthetic/v1/` and `docs/benchmarks/synthetic/`. The reviewed tables and
 claim boundaries are in [results](results.md).
 
 Reproduction command:
@@ -16,14 +16,14 @@ python scripts/run_synthetic_benchmark.py --warmups 3 --repetitions 20
 ## Real-route rerun procedure
 
 The [real-route results](results.md#real-route-benchmark) use the inputs pinned in the
-[v1 manifest](../data/benchmarks/m6/v1/manifest.json). Collection uses local OSRM. Evaluation
+[v1 manifest](../data/benchmarks/real-routes/v1/manifest.json). Collection uses local OSRM. Evaluation
 reads the stored graphs offline. Keep graphs and real EPDK input under the ignored data directories
 because the graphs contain source station fields. To rerun the published design on a new snapshot
 or road extract, create an independent manifest and write its results outside the v1 evidence path.
 
 1. Prepare a local OSRM instance using the [setup guide](osrm_setup.md), with
    `--max-table-size 202` and the extract's explicit `data_version`. Save its road provenance
-   in `data/processed/m6/road.json`, using the v1 manifest's `frozen_inputs.road_graph` object
+   in `data/processed/real-routes/road.json`, using the v1 manifest's `frozen_inputs.road_graph` object
    as the schema. Record the actual extract checksum, data version, backend, and profile.
 2. Obtain a local EPDK response with `scripts/fetch_epdk_snapshot.py` and generate its reviewed
    station manifest with `scripts/inspect_epdk_snapshot.py`. Keep both local and substitute their
@@ -31,12 +31,12 @@ or road extract, create an independent manifest and write its results outside th
 3. Run the builder, collection, and offline evaluation from the repository root.
 
 ```powershell
-$m6Run = "data/processed/m6/independent"
-$m6StationManifest = "data/processed/epdk/DATE/manifest.json"
-$m6Snapshot = "data/raw/epdk/DATE/response.json"
-python scripts/build_route_manifest.py --road-metadata data/processed/m6/road.json --station-manifest $m6StationManifest --output-dir $m6Run
-python scripts/collect_routes.py --manifest "$m6Run/manifest.json" --station-manifest $m6StationManifest --snapshot $m6Snapshot --graphs-dir "$m6Run/graphs" --osrm-runtime-out "$m6Run/osrm_runtime.json"
-python scripts/evaluate_routes.py --manifest "$m6Run/manifest.json" --graphs-dir "$m6Run/graphs" --evidence-dir "$m6Run/results" --osrm-runtime "$m6Run/osrm_runtime.json" --runtime-out "$m6Run/results/runtime.json"
+$run = "data/processed/real-routes/independent"
+$stationManifest = "data/processed/epdk/DATE/manifest.json"
+$snapshot = "data/raw/epdk/DATE/response.json"
+python scripts/build_route_manifest.py --road-metadata data/processed/real-routes/road.json --station-manifest $stationManifest --output-dir $run
+python scripts/collect_routes.py --manifest "$run/manifest.json" --station-manifest $stationManifest --snapshot $snapshot --graphs-dir "$run/graphs" --osrm-runtime-out "$run/osrm_runtime.json"
+python scripts/evaluate_routes.py --manifest "$run/manifest.json" --graphs-dir "$run/graphs" --evidence-dir "$run/results" --osrm-runtime "$run/osrm_runtime.json" --runtime-out "$run/results/runtime.json"
 ```
 
 The builder requires a fresh output directory. It records new road-distance and manifest checksums.

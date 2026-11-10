@@ -14,8 +14,8 @@ from chargepath.real_route_collection import (
 )
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_MANIFEST = REPOSITORY_ROOT / "data/benchmarks/m6/v1/manifest.json"
-DEFAULT_GRAPHS = REPOSITORY_ROOT / "data/processed/m6/v1/graphs"
+DEFAULT_MANIFEST = REPOSITORY_ROOT / "data/benchmarks/real-routes/v1/manifest.json"
+DEFAULT_GRAPHS = REPOSITORY_ROOT / "data/processed/real-routes/v1/graphs"
 DEFAULT_SNAPSHOT = REPOSITORY_ROOT / "data/raw/epdk/2026-11-05/response.json"
 DEFAULT_STATION_MANIFEST = REPOSITORY_ROOT / "data/processed/epdk/2026-11-05/manifest.json"
 

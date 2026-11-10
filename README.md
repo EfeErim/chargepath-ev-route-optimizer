@@ -34,7 +34,7 @@ cd chargepath-ev-route-optimizer
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install --editable ".[dev]"
 
-python -m pytest -q                       # 217 tests, about 40 s
+python -m pytest -q                       # 246 tests, about 30 s
 python examples/run_synthetic_demo.py     # plan the synthetic trip on the command line
 python -m chargepath.demo                 # map demo on http://127.0.0.1:8743
 ```

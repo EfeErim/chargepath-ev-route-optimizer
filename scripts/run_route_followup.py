@@ -21,7 +21,7 @@ from chargepath.real_route_evaluation import Trip, assert_no_station_data, enume
 from chargepath.verification import verify_route_plan
 
 ROOT = Path(__file__).resolve().parents[1]
-V1_GRAPHS = ROOT / "data/processed/m6/v1/graphs"
+V1_GRAPHS = ROOT / "data/processed/real-routes/v1/graphs"
 
 
 def optimize_fixed_path(trip: Trip, greedy: RoutePlan, stations: dict[str, Station]) -> RoutePlan:
@@ -70,7 +70,7 @@ def run() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
-    manifest_bytes = (ROOT / "data/benchmarks/m6/v1/manifest.json").read_bytes()
+    manifest_bytes = (ROOT / "data/benchmarks/real-routes/v1/manifest.json").read_bytes()
     manifest = json.loads(manifest_bytes)
     reference = json.loads((ROOT / "docs/benchmarks/real-routes/summary_v1.json").read_bytes())
 

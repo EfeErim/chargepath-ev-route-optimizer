@@ -16,7 +16,7 @@ from chargepath.evaluation import (
 from chargepath.providers import StaticRoadNetwork
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-SYNTHETIC_MANIFEST = REPOSITORY_ROOT / "data/benchmarks/m3/v1/manifest.json"
+SYNTHETIC_MANIFEST = REPOSITORY_ROOT / "data/benchmarks/synthetic/v1/manifest.json"
 SYNTHETIC_CORRECTNESS = REPOSITORY_ROOT / "docs/benchmarks/synthetic/correctness_v1.json"
 SYNTHETIC_RUNTIME = REPOSITORY_ROOT / "docs/benchmarks/synthetic/runtime_2026-08-09.json"
 
