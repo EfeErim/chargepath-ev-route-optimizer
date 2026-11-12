@@ -13,7 +13,8 @@ from chargepath.energy import (
     charging_minutes,
     leg_buckets,
 )
-from chargepath.models import RoutePlan, Station, VehicleProfile
+from chargepath.models import RoadLeg, RoutePlan, Station, VehicleProfile
+from chargepath.providers.base import RoadNetwork
 
 
 class PlanVerificationError(ValueError):
@@ -34,6 +35,16 @@ def _close(actual: float, expected: float, *, field: str) -> None:
         raise PlanVerificationError(f"{field} mismatch: expected {expected}, got {actual}")
 
 
+def _offered_by(road_network: RoadNetwork, leg: RoadLeg) -> bool:
+    """Compare costs, not geometry: geometry is attached only after a plan is chosen."""
+
+    return any(
+        (offered.destination_id, offered.distance_km, offered.duration_minutes)
+        == (leg.destination_id, leg.distance_km, leg.duration_minutes)
+        for offered in road_network.neighbors(leg.origin_id)
+    )
+
+
 def verify_route_plan(
     plan: RoutePlan,
     *,
@@ -44,12 +55,19 @@ def verify_route_plan(
     taper_factor: float = 0.45,
     session_setup_minutes: float = 2.0,
     consumption_model: ConsumptionModel = DEFAULT_CONSUMPTION,
+    road_network: RoadNetwork | None = None,
+    origin_id: str | None = None,
+    destination_id: str | None = None,
 ) -> tuple[ReplayEvent, ...]:
     """Replay charge and drive actions without relying on optimizer predecessor state.
 
     The replay shares the energy and charging-time functions with the optimizer, so it catches
     search and reconstruction bugs, not model bugs. ``tests/test_properties.py`` checks the model
     against a separate exact-arithmetic reference.
+
+    With ``road_network``, every driven leg must be one that network offers, with the same
+    distance and duration, so a plan cannot shorten or invent a road. With ``origin_id`` and
+    ``destination_id``, the plan must start and end at those nodes.
     """
 
     validation.soc_step(soc_step_pct)
@@ -62,6 +80,10 @@ def verify_route_plan(
     energy_bucket = math.floor(vehicle.initial_soc_pct / soc_step_pct)
     reserve_bucket = math.ceil(vehicle.reserve_soc_pct / soc_step_pct)
     maximum_bucket = 100 // soc_step_pct
+    if origin_id is not None and plan.node_ids[0] != origin_id:
+        raise PlanVerificationError("plan does not start at the requested origin")
+    if destination_id is not None and plan.node_ids[-1] != destination_id:
+        raise PlanVerificationError("plan does not end at the requested destination")
     stop_index = 0
     events = [ReplayEvent("start", plan.node_ids[0], energy_bucket * soc_step_pct)]
 
@@ -109,6 +131,8 @@ def verify_route_plan(
             plan.node_ids[leg_index + 1],
         ):
             raise PlanVerificationError("road leg does not match plan node order")
+        if road_network is not None and not _offered_by(road_network, leg):
+            raise PlanVerificationError("road leg is not offered by the road network")
         net, peak = leg_buckets(consumption_model.leg_energy(leg, vehicle), bucket_kwh)
         if energy_bucket - peak < reserve_bucket:
             raise PlanVerificationError("road leg violates reserve SOC")

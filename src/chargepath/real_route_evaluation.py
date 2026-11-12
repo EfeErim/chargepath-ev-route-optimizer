@@ -243,7 +243,15 @@ def run_trip_on_graph(
             results[algorithm] = {"outcome": "infeasible"}
             continue
         # A replay failure propagates: it is a defect, not a reportable trip outcome.
-        verify_route_plan(plan, vehicle=vehicle, stations=stations, soc_step_pct=soc_step_pct)
+        verify_route_plan(
+            plan,
+            vehicle=vehicle,
+            stations=stations,
+            soc_step_pct=soc_step_pct,
+            road_network=network,
+            origin_id="origin",
+            destination_id="destination",
+        )
         results[algorithm] = _plan_metrics(plan, reference_km=reference_km)
         if algorithm in OPTION_ALGORITHMS:
             fingerprints.add(_plan_fingerprint(plan))

@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-12
+
 ### Changed
 
 - Reorganized documentation: benchmark outputs live under `docs/benchmarks/` and version
@@ -41,9 +43,29 @@ All notable changes to this project are documented here. The format follows
   `RoutePlan.stationary`, and one shortest-path search. Outputs are byte-identical.
 - Rewrote the README around results and design decisions. Replaced the unreachable
   Artmeier et al. (2010) link with its DOI.
+- Benchmark data directories are named after what they hold (`data/benchmarks/real-routes/`,
+  `data/benchmarks/synthetic/`), and runtime evidence no longer records the interpreter path.
+- The demo shows all four route options in a two-by-two grid instead of a scrolling row; the README
+  screenshot was retaken.
+- CI and the Pages workflow use `actions/checkout` 7.0.1 and `actions/setup-python` 7.1.0, and the
+  dev tools are bumped to pytest 9.2, mypy 2.4 and Ruff 0.17. Dependabot opens monthly grouped
+  updates for actions and dev tools.
+- The static demo loads `pyodide.js` with a subresource-integrity hash, and the build refuses a
+  Pyodide version without a recorded hash. Pyodide is listed in the third-party notices.
 
 ### Added
 
+- `verify_route_plan` accepts `road_network`, `origin_id` and `destination_id`. With them, every
+  leg must be one the network offers with the same distance and duration, and the plan must start
+  and end at the requested nodes. Route options, the synthetic benchmark and the real-route
+  evaluation pass all three; the committed results are unchanged.
+- Charging-time framing for the real-route headline: driving is a median 87.5% of the heuristic's
+  trip time, and median charging time falls from 70.7 to 53.0 minutes.
+- Opt-in speed-dependent consumption (`chargepath.speed`) with a per-leg speed choice, an
+  `ID3_PILOT_PROFILE` example vehicle (`chargepath.examples`), and `scripts/run_speed_choice.py`,
+  whose result on the 72 scenarios is that no plan improved.
+- A per-scenario savings chart in the README, drawn by `scripts/plot_e1_savings.py` from the
+  committed outcomes and checked by `tests/test_published_results.py`.
 - Differential, property-based, and metamorphic tests (`tests/test_properties.py`, Hypothesis)
   against an exact-rational reference solver.
 - Pluggable consumption models (`ConsumptionModel`, `LegEnergy`) with signed per-leg energy, a peak
@@ -113,7 +135,8 @@ First public release.
 - Synthetic benchmark suite with correctness and runtime results.
 - Offline Leaflet map demo served from loopback.
 
-[Unreleased]: https://github.com/EfeErim/chargepath-ev-route-optimizer/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/EfeErim/chargepath-ev-route-optimizer/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/EfeErim/chargepath-ev-route-optimizer/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/EfeErim/chargepath-ev-route-optimizer/compare/v0.2.0rc1...v0.2.0
 [0.2.0rc1]: https://github.com/EfeErim/chargepath-ev-route-optimizer/compare/v0.1.1...v0.2.0rc1
 [0.1.1]: https://github.com/EfeErim/chargepath-ev-route-optimizer/compare/v0.1.0...v0.1.1

@@ -45,6 +45,13 @@ select different routes if the road distances change. The manifest hash identifi
 run within the v1 real-route design. Byte-for-byte reproduction of v1 requires its original
 road graph and station snapshot, which are kept outside Git. Machine timings vary across runs.
 
+The README's savings chart is drawn from the committed outcomes alone, so it can be redrawn from a
+clone; `tests/test_published_results.py` fails if the committed SVG no longer matches.
+
+```powershell
+python scripts/plot_e1_savings.py
+```
+
 For an end-to-end check without a real station snapshot or OSRM instance, run the test module
 below. Its synthetic fixture and fake road provider exercise collection and offline evaluation.
 

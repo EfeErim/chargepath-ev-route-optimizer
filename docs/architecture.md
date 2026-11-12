@@ -38,7 +38,7 @@ All paths are under `src/chargepath/`.
 | Planning | `optimizer.py` | Exact Dijkstra over `(node, energy bucket)` with lexicographic fastest, shortest-distance, and fewest-stop objectives. |
 | Planning | `alternatives.py` | Runs the three exact objectives plus the greedy fixed-80 heuristic, verifies each plan, and merges identical plans. |
 | Planning | `baselines.py` | Shortest-driving-time, no-charging baseline for the benchmarks. |
-| Planning | `verification.py` | Independent replay of every returned plan: energy, charge time, reserve, connector checks. |
+| Planning | `verification.py` | Independent replay of every returned plan: energy, charge time, reserve, connector checks, and optionally legs and endpoints against the road network. |
 | Planning | `redundancy.py` | Structural per-stop fallback note for the demo; knows nothing about reliability. |
 | Roads | `providers/static.py`, `providers/base.py` | In-memory road network and the provider protocols the planner depends on. |
 | Roads | `providers/osrm.py` | OSRM Route/Table adapter behind an injectable transport; builds candidate graphs, treats `null` cells as unreachable, fetches geometry only for selected legs. |

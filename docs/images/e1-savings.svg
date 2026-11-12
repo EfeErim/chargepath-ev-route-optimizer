@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 360" width="960" height="360" role="img" aria-labelledby="title desc">
+<title id="title">Modeled minutes saved by the exact planner, per scenario</title>
+<desc id="desc">71 real-route scenarios where both the exact fastest planner and the charge-to-80% heuristic found a plan, split by vehicle set and sorted by saving. Overall median 24.7 minutes, maximum 98.5.</desc>
+<style>
+  .surface { fill: #fcfcfb; }
+  .title { fill: #0b0b0b; font: 600 17px system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .subtitle { fill: #52514e; font: 13px system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .panel { fill: #0b0b0b; font: 600 13px system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .tick { fill: #898781; font: 11px system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .note { fill: #52514e; font: 12px system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .median-label { fill: #0b0b0b; font: 600 12px system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .grid { stroke: #e1e0d9; stroke-width: 1; }
+  .axis { stroke: #c3c2b7; stroke-width: 1; }
+  .bar { fill: #2a78d6; }
+  .median { stroke: #0b0b0b; stroke-width: 1.5; stroke-dasharray: 5 4; }
+  @media (prefers-color-scheme: dark) {
+    .surface { fill: #1a1a19; }
+    .title, .panel, .median-label { fill: #f0efec; }
+    .subtitle, .note { fill: #c3c2b7; }
+    .grid { stroke: #2c2c2a; }
+    .axis { stroke: #383835; }
+    .bar { fill: #3987e5; }
+    .median { stroke: #f0efec; }
+  }
+</style>
+<rect class="surface" width="960" height="360" rx="8"/>
+<text class="title" x="24" y="34">Minutes saved per trip against charging to 80% at every stop</text>
+<text class="subtitle" x="24" y="56">71 real-route scenarios, sorted within each vehicle set. Dashed line: that set's median. Modeled minutes, not measured drives.</text>
+<line class="grid" x1="56" x2="936" y1="300.0" y2="300.0"/>
+<text class="tick" x="48" y="304.0" text-anchor="end">0</text>
+<line class="grid" x1="56" x2="936" y1="248.0" y2="248.0"/>
+<text class="tick" x="48" y="252.0" text-anchor="end">25</text>
+<line class="grid" x1="56" x2="936" y1="196.0" y2="196.0"/>
+<text class="tick" x="48" y="200.0" text-anchor="end">50</text>
+<line class="grid" x1="56" x2="936" y1="144.0" y2="144.0"/>
+<text class="tick" x="48" y="148.0" text-anchor="end">75</text>
+<line class="grid" x1="56" x2="936" y1="92.0" y2="92.0"/>
+<text class="tick" x="48" y="96.0" text-anchor="end">100</text>
+<text class="tick" x="16" y="196.0" text-anchor="middle" transform="rotate(-90 16 196.0)">minutes saved</text>
+<text class="panel" x="56.0" y="80">40 kWh set · 23 scenarios</text>
+<rect class="bar" x="57.0" y="118.9" width="9.9" height="181.1"><title>87.1 min</title></rect>
+<rect class="bar" x="68.9" y="148.5" width="9.9" height="151.5"><title>72.9 min</title></rect>
+<rect class="bar" x="80.9" y="183.4" width="9.9" height="116.6"><title>56.1 min</title></rect>
+<rect class="bar" x="92.8" y="211.8" width="9.9" height="88.2"><title>42.4 min</title></rect>
+<rect class="bar" x="104.8" y="226.6" width="9.9" height="73.4"><title>35.3 min</title></rect>
+<rect class="bar" x="116.7" y="233.8" width="9.9" height="66.2"><title>31.8 min</title></rect>
+<rect class="bar" x="128.7" y="236.7" width="9.9" height="63.3"><title>30.4 min</title></rect>
+<rect class="bar" x="140.6" y="241.2" width="9.9" height="58.8"><title>28.2 min</title></rect>
+<rect class="bar" x="152.5" y="241.5" width="9.9" height="58.5"><title>28.1 min</title></rect>
+<rect class="bar" x="164.5" y="248.6" width="9.9" height="51.4"><title>24.7 min</title></rect>
+<rect class="bar" x="176.4" y="249.5" width="9.9" height="50.5"><title>24.3 min</title></rect>
+<rect class="bar" x="188.4" y="252.6" width="9.9" height="47.4"><title>22.8 min</title></rect>
+<rect class="bar" x="200.3" y="260.4" width="9.9" height="39.6"><title>19.0 min</title></rect>
+<rect class="bar" x="212.2" y="262.0" width="9.9" height="38.0"><title>18.3 min</title></rect>
+<rect class="bar" x="224.2" y="270.0" width="9.9" height="30.0"><title>14.4 min</title></rect>
+<rect class="bar" x="236.1" y="270.2" width="9.9" height="29.8"><title>14.3 min</title></rect>
+<rect class="bar" x="248.1" y="273.7" width="9.9" height="26.3"><title>12.7 min</title></rect>
+<rect class="bar" x="260.0" y="280.0" width="9.9" height="20.0"><title>9.6 min</title></rect>
+<rect class="bar" x="272.0" y="280.7" width="9.9" height="19.3"><title>9.3 min</title></rect>
+<rect class="bar" x="283.9" y="285.0" width="9.9" height="15.0"><title>7.2 min</title></rect>
+<rect class="bar" x="295.8" y="285.9" width="9.9" height="14.1"><title>6.8 min</title></rect>
+<rect class="bar" x="307.8" y="294.3" width="9.9" height="5.7"><title>2.8 min</title></rect>
+<rect class="bar" x="319.7" y="300.0" width="9.9" height="0.0"><title>0.0 min</title></rect>
+<line class="median" x1="56.0" x2="330.7" y1="252.6" y2="252.6"/>
+<text class="median-label" x="330.7" y="246.6" text-anchor="end">median 22.8 min</text>
+<line class="axis" x1="56.0" x2="330.7" y1="300" y2="300"/>
+<text class="panel" x="358.7" y="80">60 kWh set · 24 scenarios</text>
+<rect class="bar" x="359.7" y="168.9" width="9.4" height="131.1"><title>63.0 min</title></rect>
+<rect class="bar" x="371.1" y="173.1" width="9.4" height="126.9"><title>61.0 min</title></rect>
+<rect class="bar" x="382.6" y="173.4" width="9.4" height="126.6"><title>60.9 min</title></rect>
+<rect class="bar" x="394.0" y="182.6" width="9.4" height="117.4"><title>56.4 min</title></rect>
+<rect class="bar" x="405.4" y="211.0" width="9.4" height="89.0"><title>42.8 min</title></rect>
+<rect class="bar" x="416.9" y="216.8" width="9.4" height="83.2"><title>40.0 min</title></rect>
+<rect class="bar" x="428.3" y="243.0" width="9.4" height="57.0"><title>27.4 min</title></rect>
+<rect class="bar" x="439.8" y="243.5" width="9.4" height="56.5"><title>27.1 min</title></rect>
+<rect class="bar" x="451.2" y="247.7" width="9.4" height="52.3"><title>25.2 min</title></rect>
+<rect class="bar" x="462.7" y="252.7" width="9.4" height="47.3"><title>22.8 min</title></rect>
+<rect class="bar" x="474.1" y="265.0" width="9.4" height="35.0"><title>16.8 min</title></rect>
+<rect class="bar" x="485.6" y="265.0" width="9.4" height="35.0"><title>16.8 min</title></rect>
+<rect class="bar" x="497.0" y="267.7" width="9.4" height="32.3"><title>15.6 min</title></rect>
+<rect class="bar" x="508.4" y="270.2" width="9.4" height="29.8"><title>14.3 min</title></rect>
+<rect class="bar" x="519.9" y="270.4" width="9.4" height="29.6"><title>14.2 min</title></rect>
+<rect class="bar" x="531.3" y="272.8" width="9.4" height="27.2"><title>13.1 min</title></rect>
+<rect class="bar" x="542.8" y="273.4" width="9.4" height="26.6"><title>12.8 min</title></rect>
+<rect class="bar" x="554.2" y="275.0" width="9.4" height="25.0"><title>12.0 min</title></rect>
+<rect class="bar" x="565.7" y="277.0" width="9.4" height="23.0"><title>11.1 min</title></rect>
+<rect class="bar" x="577.1" y="278.5" width="9.4" height="21.5"><title>10.3 min</title></rect>
+<rect class="bar" x="588.6" y="282.9" width="9.4" height="17.1"><title>8.2 min</title></rect>
+<rect class="bar" x="600.0" y="285.0" width="9.4" height="15.0"><title>7.2 min</title></rect>
+<rect class="bar" x="611.4" y="300.0" width="9.4" height="0.0"><title>0.0 min</title></rect>
+<rect class="bar" x="622.9" y="300.0" width="9.4" height="0.0"><title>0.0 min</title></rect>
+<line class="median" x1="358.7" x2="633.3" y1="266.3" y2="266.3"/>
+<text class="median-label" x="633.3" y="260.3" text-anchor="end">median 16.2 min</text>
+<line class="axis" x1="358.7" x2="633.3" y1="300" y2="300"/>
+<text class="panel" x="661.3" y="80">80 kWh set · 24 scenarios</text>
+<rect class="bar" x="662.3" y="95.2" width="9.4" height="204.8"><title>98.5 min</title></rect>
+<rect class="bar" x="673.8" y="140.5" width="9.4" height="159.5"><title>76.7 min</title></rect>
+<rect class="bar" x="685.2" y="166.4" width="9.4" height="133.6"><title>64.3 min</title></rect>
+<rect class="bar" x="696.7" y="178.0" width="9.4" height="122.0"><title>58.6 min</title></rect>
+<rect class="bar" x="708.1" y="203.4" width="9.4" height="96.6"><title>46.5 min</title></rect>
+<rect class="bar" x="719.6" y="213.4" width="9.4" height="86.6"><title>41.7 min</title></rect>
+<rect class="bar" x="731.0" y="227.0" width="9.4" height="73.0"><title>35.1 min</title></rect>
+<rect class="bar" x="742.4" y="228.6" width="9.4" height="71.4"><title>34.3 min</title></rect>
+<rect class="bar" x="753.9" y="228.9" width="9.4" height="71.1"><title>34.2 min</title></rect>
+<rect class="bar" x="765.3" y="230.6" width="9.4" height="69.4"><title>33.4 min</title></rect>
+<rect class="bar" x="776.8" y="233.2" width="9.4" height="66.8"><title>32.1 min</title></rect>
+<rect class="bar" x="788.2" y="236.7" width="9.4" height="63.3"><title>30.5 min</title></rect>
+<rect class="bar" x="799.7" y="237.4" width="9.4" height="62.6"><title>30.1 min</title></rect>
+<rect class="bar" x="811.1" y="238.1" width="9.4" height="61.9"><title>29.8 min</title></rect>
+<rect class="bar" x="822.6" y="239.3" width="9.4" height="60.7"><title>29.2 min</title></rect>
+<rect class="bar" x="834.0" y="245.9" width="9.4" height="54.1"><title>26.0 min</title></rect>
+<rect class="bar" x="845.4" y="246.8" width="9.4" height="53.2"><title>25.6 min</title></rect>
+<rect class="bar" x="856.9" y="265.3" width="9.4" height="34.7"><title>16.7 min</title></rect>
+<rect class="bar" x="868.3" y="266.6" width="9.4" height="33.4"><title>16.0 min</title></rect>
+<rect class="bar" x="879.8" y="274.8" width="9.4" height="25.2"><title>12.1 min</title></rect>
+<rect class="bar" x="891.2" y="284.7" width="9.4" height="15.3"><title>7.4 min</title></rect>
+<rect class="bar" x="902.7" y="300.0" width="9.4" height="0.0"><title>0.0 min</title></rect>
+<rect class="bar" x="914.1" y="300.0" width="9.4" height="0.0"><title>0.0 min</title></rect>
+<rect class="bar" x="925.6" y="300.0" width="9.4" height="0.0"><title>0.0 min</title></rect>
+<line class="median" x1="661.3" x2="936.0" y1="237.0" y2="237.0"/>
+<text class="median-label" x="936.0" y="231.0" text-anchor="end">median 30.3 min</text>
+<line class="axis" x1="661.3" x2="936.0" y1="300" y2="300"/>
+<text class="note" x="24" y="338">Ties show as empty slots at zero. The one scenario where the heuristic found no plan is left out. Source: docs/benchmarks/real-routes/trips_v1.jsonl.</text>
+</svg>

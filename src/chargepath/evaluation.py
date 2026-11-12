@@ -374,6 +374,9 @@ def _run_algorithm(
         vehicle=case.vehicle,
         stations=case.station_map(),
         soc_step_pct=step,
+        road_network=network,
+        origin_id=case.origin_id,
+        destination_id=case.destination_id,
     )
     return {
         "algorithm": algorithm,
