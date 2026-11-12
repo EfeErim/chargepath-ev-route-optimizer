@@ -22,14 +22,14 @@ from chargepath.corridor import (
 )
 from chargepath.evaluation import _nearest_rank_p95
 from chargepath.models import GeoJsonLineString, RoadLeg, Station
-from chargepath.providers.base import CoordinateLike
 from chargepath.providers.osrm import (
     CandidateGraphBuilder,
     CandidateNode,
     Coordinate,
     OsrmProviderError,
     OsrmResponseError,
-    OsrmTableResult,
+    RoadRouteClient,
+    RoadTableClient,
 )
 from chargepath.station_data import CompatibleStationOption, load_snapshot_options
 
@@ -37,12 +37,8 @@ GRAPH_SCHEMA_VERSION = 1
 GRAPH_EXPERIMENTS = ("E1", "E2", "E3", "E4", "E5")
 
 
-class CollectionClient(Protocol):
-    def table(self, coordinates: tuple[CoordinateLike, ...]) -> OsrmTableResult: ...
-
-    def route_geometry(
-        self, origin: CoordinateLike, destination: CoordinateLike
-    ) -> GeoJsonLineString: ...
+class CollectionClient(RoadTableClient, RoadRouteClient, Protocol):
+    """Both OSRM services; tests substitute an offline fake with a configurable data version."""
 
 
 @dataclass(frozen=True, slots=True, order=True)

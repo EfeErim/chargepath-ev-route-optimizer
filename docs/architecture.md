@@ -40,8 +40,8 @@ All paths are under `src/chargepath/`.
 | Planning | `baselines.py` | Shortest-driving-time, no-charging baseline for the benchmarks. |
 | Planning | `verification.py` | Independent replay of every returned plan: energy, charge time, reserve, connector checks, and optionally legs and endpoints against the road network. |
 | Planning | `redundancy.py` | Structural per-stop fallback note for the demo; knows nothing about reliability. |
-| Roads | `providers/static.py`, `providers/base.py` | In-memory road network and the provider protocols the planner depends on. |
-| Roads | `providers/osrm.py` | OSRM Route/Table adapter behind an injectable transport; builds candidate graphs, treats `null` cells as unreachable, fetches geometry only for selected legs. |
+| Roads | `providers/static.py`, `providers/base.py` | In-memory road network, and the `RoadNetwork` and `CoordinateLike` protocols the planner and clients depend on. |
+| Roads | `providers/osrm.py` | OSRM Route/Table adapter behind an injectable transport and table/route client protocols that tests stub; builds candidate graphs, treats `null` cells as unreachable, fetches geometry only for selected legs. |
 | Stations | `station_data.py` | EPDK response contract, reconciliation, provenance, CCS2 DC projection, and checksum-verified snapshot loading. |
 | Stations | `corridor.py` | Deterministic, prefix-monotonic corridor candidate selection that bounds OSRM Table size. |
 | Benchmarks | `fixtures.py`, `evaluation.py` | Synthetic fixture loading and the synthetic benchmark (correctness, sensitivity, runtime artifacts). |

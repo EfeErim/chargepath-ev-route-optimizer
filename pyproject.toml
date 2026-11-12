@@ -17,6 +17,11 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
 ]
 
+[project.urls]
+Homepage = "https://efeerim.github.io/chargepath-ev-route-optimizer/"
+Repository = "https://github.com/EfeErim/chargepath-ev-route-optimizer"
+Changelog = "https://github.com/EfeErim/chargepath-ev-route-optimizer/blob/main/CHANGELOG.md"
+
 [project.scripts]
 chargepath-demo = "chargepath.demo:main"
 

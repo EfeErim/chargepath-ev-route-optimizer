@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import Literal, Protocol
 from urllib.parse import urlsplit
 
-from chargepath import validation
 from chargepath.alternatives import (
     CompetitiveRoutePlanner,
     RouteOption,
@@ -27,7 +26,13 @@ from chargepath.corridor import (
 )
 from chargepath.demo.schema import VEHICLE_INPUT_BOUNDS, PlanRequest, PointInput, VehicleInputs
 from chargepath.fixtures import SyntheticScenario
-from chargepath.models import GeoJsonLineString, NoFeasibleRouteError, Station, VehicleProfile
+from chargepath.models import (
+    GeoJsonLineString,
+    NoFeasibleRouteError,
+    RoadLeg,
+    Station,
+    VehicleProfile,
+)
 from chargepath.providers.base import RoadNetwork
 from chargepath.providers.osrm import (
     CandidateGraph,
@@ -41,9 +46,7 @@ from chargepath.providers.osrm import (
 )
 from chargepath.providers.static import StaticRoadNetwork
 from chargepath.redundancy import stop_redundancy
-from chargepath.station_data import (
-    load_snapshot_options,
-)
+from chargepath.station_data import load_snapshot_options
 from chargepath.verification import verify_route_plan
 
 DEFAULT_TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -54,14 +57,7 @@ REFINED_SOC_STEP_PCT = 2
 OSRM_DEFAULT_MAX_TABLE_LOCATIONS = 100
 # The Table request also carries the origin and destination.
 DEFAULT_ADAPTIVE_CANDIDATE_CAP_LIMIT = OSRM_DEFAULT_MAX_TABLE_LOCATIONS - 2
-
-
-def _object(value: object, *, field: str) -> dict[str, object]:
-    return validation.json_object(value, field=field)
-
-
-def _text(value: object, *, field: str) -> str:
-    return validation.text(value, field=field).strip()
+FIXTURE_DATA_LABEL = "Synthetic fixture — freshness not applicable"
 
 
 class PlanningService(Protocol):
@@ -101,7 +97,7 @@ class FixturePlanningService:
     def public_config(self) -> dict[str, object]:
         return _public_config(
             mode="fixture",
-            data_label="Synthetic fixture — freshness not applicable",
+            data_label=FIXTURE_DATA_LABEL,
             tile_url=self._tile_url,
             vehicle=VehicleInputs.from_profile(self._scenario.vehicle),
             endpoints=self._points,
@@ -126,7 +122,7 @@ class FixturePlanningService:
             vehicle=vehicle,
             stations=stations,
             soc_step_pct=soc_step_pct,
-            data_label="Synthetic fixture — freshness not applicable",
+            data_label=FIXTURE_DATA_LABEL,
             road_network=network,
         )
 
@@ -216,16 +212,12 @@ class IntegrationPlanningService:
             route_client=self._client,
             known_geometries={("origin", "destination"): corridor_geometry},
         )
-        geometric_options = tuple(
-            RouteOption(
-                strategies=option.strategies,
-                plan=geometric_plan,
-            )
-            for option, geometric_plan in zip(result.options, geometric_plans, strict=True)
-        )
-        geometric_result = RouteOptionSet(
-            options=geometric_options,
-            unavailable_strategies=result.unavailable_strategies,
+        geometric_result = replace(
+            result,
+            options=tuple(
+                replace(option, plan=plan)
+                for option, plan in zip(result.options, geometric_plans, strict=True)
+            ),
         )
         return _serialize_result(
             geometric_result,
@@ -315,33 +307,27 @@ def _plan_with_soc_refinement(
     stations: dict[str, Station],
     road_network: RoadNetwork,
 ) -> tuple[RouteOptionSet, int]:
-    """Retry only a coarse infeasible result with the documented finer SOC grid."""
+    """Retry only a coarse infeasible result with the documented finer SOC grid.
 
-    try:
-        return (
-            CompetitiveRoutePlanner(soc_step_pct=SOC_STEP_PCT).plan(
+    If both fail, the coarse error is raised, chained to the refined one.
+    """
+
+    errors: list[NoFeasibleRouteError] = []
+    for soc_step_pct in (SOC_STEP_PCT, REFINED_SOC_STEP_PCT):
+        try:
+            result = CompetitiveRoutePlanner(soc_step_pct=soc_step_pct).plan(
                 origin_id=origin_id,
                 destination_id=destination_id,
                 vehicle=vehicle,
                 stations=stations,
                 road_network=road_network,
-            ),
-            SOC_STEP_PCT,
-        )
-    except NoFeasibleRouteError as coarse_error:
-        try:
-            return (
-                CompetitiveRoutePlanner(soc_step_pct=REFINED_SOC_STEP_PCT).plan(
-                    origin_id=origin_id,
-                    destination_id=destination_id,
-                    vehicle=vehicle,
-                    stations=stations,
-                    road_network=road_network,
-                ),
-                REFINED_SOC_STEP_PCT,
             )
-        except NoFeasibleRouteError as refined_error:
-            raise coarse_error from refined_error
+        except NoFeasibleRouteError as error:
+            errors.append(error)
+            continue
+        return result, soc_step_pct
+    coarse_error, refined_error = errors
+    raise coarse_error from refined_error
 
 
 def _next_candidate_cap(
@@ -415,23 +401,6 @@ def _serialize_result(
                     soc_step_pct=soc_step_pct,
                 )
             }
-        features: list[dict[str, object]] = []
-        for leg in plan.legs:
-            if leg.geometry is None:
-                raise ValueError("selected route leg is missing geometry")
-            features.append(
-                {
-                    "type": "Feature",
-                    "properties": {
-                        "origin_id": leg.origin_id,
-                        "destination_id": leg.destination_id,
-                    },
-                    "geometry": {
-                        "type": leg.geometry.type,
-                        "coordinates": [list(position) for position in leg.geometry.coordinates],
-                    },
-                }
-            )
         stops = [
             {
                 "station_id": stop.station_id,
@@ -463,7 +432,7 @@ def _serialize_result(
                     stations=stations,
                     soc_step_pct=soc_step_pct,
                 ),
-                "geometry": {"type": "FeatureCollection", "features": features},
+                "geometry": _feature_collection(plan.legs),
             }
         )
     return {
@@ -477,6 +446,24 @@ def _serialize_result(
         "options": options,
         "unavailable_strategies": [strategy.value for strategy in result.unavailable_strategies],
     }
+
+
+def _feature_collection(legs: Sequence[RoadLeg]) -> dict[str, object]:
+    features: list[dict[str, object]] = []
+    for leg in legs:
+        if leg.geometry is None:
+            raise ValueError("selected route leg is missing geometry")
+        features.append(
+            {
+                "type": "Feature",
+                "properties": {"origin_id": leg.origin_id, "destination_id": leg.destination_id},
+                "geometry": {
+                    "type": leg.geometry.type,
+                    "coordinates": [list(position) for position in leg.geometry.coordinates],
+                },
+            }
+        )
+    return {"type": "FeatureCollection", "features": features}
 
 
 def _soc_timeline(
