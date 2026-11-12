@@ -110,6 +110,38 @@ def test_tampered_charging_energy_is_rejected(plan: RoutePlan) -> None:
         )
 
 
+def test_plan_checked_against_its_network_passes(plan: RoutePlan) -> None:
+    verify_route_plan(
+        plan,
+        vehicle=VEHICLE,
+        stations=STATIONS,
+        road_network=NETWORK,
+        origin_id="a",
+        destination_id="c",
+    )
+
+
+def test_shortened_road_leg_is_rejected_against_the_network(plan: RoutePlan) -> None:
+    # Halving s -> c keeps every other contract intact, so only the network check catches it.
+    shorter = replace(plan.legs[1], distance_km=plan.legs[1].distance_km / 2)
+    tampered = RoutePlan.assemble(
+        node_ids=plan.node_ids,
+        legs=(plan.legs[0], shorter),
+        charging_stops=plan.charging_stops,
+        arrival_soc_pct=plan.arrival_soc_pct + 20,
+    )
+    verify_route_plan(tampered, vehicle=VEHICLE, stations=STATIONS)
+    with pytest.raises(PlanVerificationError, match="not offered by the road network"):
+        verify_route_plan(tampered, vehicle=VEHICLE, stations=STATIONS, road_network=NETWORK)
+
+
+def test_plan_for_other_endpoints_is_rejected(plan: RoutePlan) -> None:
+    with pytest.raises(PlanVerificationError, match="requested origin"):
+        verify_route_plan(plan, vehicle=VEHICLE, stations=STATIONS, origin_id="s")
+    with pytest.raises(PlanVerificationError, match="requested destination"):
+        verify_route_plan(plan, vehicle=VEHICLE, stations=STATIONS, destination_id="s")
+
+
 def test_charging_stop_off_the_path_is_rejected(plan: RoutePlan) -> None:
     stop = replace(plan.charging_stops[0], station_id="elsewhere")
     with pytest.raises(PlanVerificationError):

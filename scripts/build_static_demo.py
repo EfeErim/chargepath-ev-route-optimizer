@@ -19,6 +19,11 @@ FIXTURE = REPOSITORY_ROOT / "data" / "sample" / "synthetic_corridor.json"
 BRIDGE = Path(__file__).resolve().parent / "static-demo" / "static-api.js"
 # Pyodide 0.27 ships CPython 3.12, inside the project's supported 3.11+ range.
 PYODIDE_VERSION = "0.27.7"
+# Subresource-integrity hashes of each supported release's pyodide.js loader. The loader then
+# fetches the WebAssembly runtime and standard library from the same pinned CDN directory.
+PYODIDE_INTEGRITY = {
+    "0.27.7": "sha384-90so5tCKvl0xs9agU29IMKlAVzhfzFX7QO//YxQkRhJG58bBZrFN+2ZTRB026X5X",
+}
 WEB_ASSETS = ("app.css", "app.js", "leaflet.css", "leaflet.js")
 
 
@@ -27,6 +32,8 @@ def build(output: Path, *, pyodide_version: str = PYODIDE_VERSION) -> list[Path]
 
     if not re.fullmatch(r"\d+\.\d+\.\d+", pyodide_version):
         raise ValueError("pyodide_version must be an exact x.y.z release")
+    if pyodide_version not in PYODIDE_INTEGRITY:
+        raise ValueError(f"no integrity hash is recorded for Pyodide {pyodide_version}")
     if output.exists():
         shutil.rmtree(output)
     output.mkdir(parents=True)
@@ -60,8 +67,8 @@ def static_index(html: str, *, pyodide_version: str) -> str:
     if html.count(marker) != 1 or "/api/" in html:
         raise ValueError("index.html no longer matches the static build's expectations")
     loader = (
-        f'<script src="https://cdn.jsdelivr.net/pyodide/v{pyodide_version}/full/pyodide.js">'
-        "</script>\n    "
+        f'<script src="https://cdn.jsdelivr.net/pyodide/v{pyodide_version}/full/pyodide.js" '
+        f'integrity="{PYODIDE_INTEGRITY[pyodide_version]}" crossorigin="anonymous"></script>\n    '
         '<script src="static-api.js"></script>\n    '
     )
     return html.replace(marker, loader + marker)

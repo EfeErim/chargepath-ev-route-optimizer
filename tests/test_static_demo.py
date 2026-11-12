@@ -89,6 +89,7 @@ def test_static_build_is_relative_and_self_contained(tmp_path: Path) -> None:
     html = (output / "index.html").read_text(encoding="utf-8")
     assert 'href="/' not in html and 'src="/' not in html
     assert html.index("pyodide/v0.27.7/full/pyodide.js") < html.index('src="static-api.js"')
+    assert f'integrity="{script.PYODIDE_INTEGRITY["0.27.7"]}" crossorigin="anonymous"' in html
     assert html.index('src="static-api.js"') < html.index('src="app.js"')
     assert "__PYODIDE_VERSION__" not in (output / "static-api.js").read_text(encoding="utf-8")
     with zipfile.ZipFile(output / "chargepath-src.zip") as archive:
@@ -104,3 +105,8 @@ def test_static_build_is_relative_and_self_contained(tmp_path: Path) -> None:
 def test_static_build_rejects_a_floating_pyodide_version(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="exact"):
         _load_build_script().build(tmp_path / "site", pyodide_version="latest")
+
+
+def test_static_build_rejects_a_pyodide_version_without_a_hash(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="integrity hash"):
+        _load_build_script().build(tmp_path / "site", pyodide_version="0.0.1")

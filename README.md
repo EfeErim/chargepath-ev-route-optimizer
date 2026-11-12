@@ -34,7 +34,7 @@ cd chargepath-ev-route-optimizer
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install --editable ".[dev]"
 
-python -m pytest -q                       # 246 tests, about 30 s
+python -m pytest -q                       # 251 tests, under a minute
 python examples/run_synthetic_demo.py     # plan the synthetic trip on the command line
 python -m chargepath.demo                 # map demo on http://127.0.0.1:8743
 ```
@@ -46,6 +46,8 @@ Planning between arbitrary points needs a charger snapshot and a local OSRM serv
 [map demo guide](docs/map_demo.md) and [OSRM setup](docs/osrm_setup.md).
 
 ## Results
+
+![Minutes saved per scenario against charging to 80%, by vehicle set](docs/images/e1-savings.svg)
 
 | What | Data | Comparison | Result | Reproduce |
 |---|---|---|---|---|

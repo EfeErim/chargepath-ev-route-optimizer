@@ -6,6 +6,7 @@ planner on them. They can check that the published numbers follow from the commi
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import statistics
 from pathlib import Path
@@ -83,3 +84,17 @@ def test_every_returned_plan_was_replayed_without_violations() -> None:
     assert len(plans) == 2525
     assert all(result["reserve_violations"] == 0 for result in plans)
     assert "All 2,525 plans" in README
+
+
+def test_committed_savings_chart_matches_the_outcomes() -> None:
+    spec = importlib.util.spec_from_file_location(
+        "plot_e1_savings", ROOT / "scripts/plot_e1_savings.py"
+    )
+    assert spec is not None and spec.loader is not None
+    script = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(script)
+    savings = script.paired_savings(TRIPS)
+    assert sum(len(values) for values in savings.values()) == 71
+    committed = (ROOT / "docs/images/e1-savings.svg").read_bytes().decode("utf-8")
+    assert committed == script.render(savings), "rerun scripts/plot_e1_savings.py"
+    assert "docs/images/e1-savings.svg" in README

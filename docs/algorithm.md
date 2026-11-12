@@ -174,8 +174,11 @@ Reconstruction yields ordered road legs, charging stops, SOC values, and time to
 
 `verify_route_plan` does not inspect Dijkstra distances or predecessor state. It replays the returned
 charging stops and legs from the conservatively floored initial SOC, recomputes charge duration and
-energy consumption, and enforces the rounded-up reserve after every leg. Benchmark and demo output
-must pass this replay before being treated as valid evidence.
+energy consumption, and enforces the rounded-up reserve after every leg. When given the road
+network and the requested endpoints, it also checks that the plan starts and ends at those nodes and
+that every leg is one the network offers with the same distance and duration, so a plan cannot
+shorten or invent a road. Route options, the synthetic benchmark and the real-route evaluation pass
+all three. Benchmark and demo output must pass this replay before being treated as valid evidence.
 
 The replay calls the same `charging_minutes` and leg-bucket functions as the optimizer, so it
 catches search and reconstruction errors but not errors in those functions. The property tests in

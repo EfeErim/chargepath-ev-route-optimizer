@@ -413,6 +413,9 @@ class CompetitiveRoutePlanner:
                 taper_factor=self.taper_factor,
                 session_setup_minutes=self.session_setup_minutes,
                 consumption_model=self.consumption_model,
+                road_network=road_network,
+                origin_id=origin_id,
+                destination_id=destination_id,
             )
             existing_index = option_index.get(plan)
             if existing_index is None:
