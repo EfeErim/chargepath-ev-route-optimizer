@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import cast
 
 from chargepath.corridor import DEFAULT_CANDIDATE_SELECTION_CONFIG
+from chargepath.demo.schema import MAX_REQUEST_BYTES
 from chargepath.demo.services import (
     DEFAULT_ADAPTIVE_CANDIDATE_CAP_LIMIT,
     DEFAULT_TILE_URL,
@@ -25,7 +26,6 @@ from chargepath.demo.services import (
 from chargepath.fixtures import load_synthetic_scenario
 from chargepath.providers.osrm import DEFAULT_OSRM_ENDPOINT
 
-MAX_REQUEST_BYTES = 32_768
 DEFAULT_PORT = 8743
 HEALTH_API_VERSION = 3
 

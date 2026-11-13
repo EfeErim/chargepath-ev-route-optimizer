@@ -23,6 +23,7 @@ from chargepath.real_route_collection import (
     collect_graphs,
     load_frozen_options,
     load_stored_graph,
+    load_verified_graph,
     measure_osrm_runtime,
     required_graph_keys,
 )
@@ -425,3 +426,16 @@ def test_committed_evidence_contains_no_station_data() -> None:
         text = (REPOSITORY_ROOT / "docs/benchmarks/real-routes" / name).read_text(encoding="utf-8")
         for forbidden in ("epdk:", "ŞRJ/", "sarjIstasyonu", "latitude", "longitude"):
             assert forbidden not in text
+
+
+def test_verified_graph_loading_checks_bytes_and_outcome(tmp_path: Path) -> None:
+    expected = hashlib.sha256(FIXTURE.read_bytes()).hexdigest()
+    assert load_verified_graph(FIXTURE, expected_sha256=expected) == load_stored_graph(FIXTURE)
+    with pytest.raises(ValueError, match="checksum mismatch"):
+        load_verified_graph(FIXTURE, expected_sha256="0" * 64)
+    failed = tmp_path / "failed.json"
+    document = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    document["outcome"] = "provider_failure"
+    failed.write_text(json.dumps(document), encoding="utf-8")
+    with pytest.raises(ValueError, match="missing graph"):
+        load_verified_graph(failed, expected_sha256=hashlib.sha256(failed.read_bytes()).hexdigest())

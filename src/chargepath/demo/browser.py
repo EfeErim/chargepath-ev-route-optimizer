@@ -7,9 +7,10 @@ paths, payloads, status codes, and error messages as the loopback server's fixtu
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from pathlib import Path
 
-from chargepath.demo.server import MAX_REQUEST_BYTES
+from chargepath.demo.schema import MAX_REQUEST_BYTES
 from chargepath.demo.services import (
     DEFAULT_TILE_URL,
     FixturePlanningService,
@@ -36,7 +37,7 @@ def handle(method: str, path: str, body: str | None = None) -> str:
     return json.dumps({"status": status, "payload": payload}, ensure_ascii=False)
 
 
-def _dispatch(method: str, path: str, body: str | None) -> tuple[int, dict[str, object]]:
+def _dispatch(method: str, path: str, body: str | None) -> tuple[int, Mapping[str, object]]:
     if _service is None:
         return 503, {"error": "The in-browser planner has not started"}
     if method == "GET" and path == "/api/config":

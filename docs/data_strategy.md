@@ -137,8 +137,10 @@ without inventing geometry or contacting OSRM.
 
 The same source file is installed by the wheel under `share/chargepath/synthetic_corridor.json`.
 Source/editable execution prefers the repository path; an installed wheel resolves the copied build
-artifact under its environment prefix. The canonical wheel check compares the packaged bytes,
-installs the wheel non-editably, and proves the default fixture flow does not leak the repository path.
+artifact under its environment prefix. `scripts/check_wheel.py`, run in CI after the wheel is built,
+installs the wheel non-editably into a fresh environment, runs from a temporary directory without
+`PYTHONPATH`, checks that `chargepath` and the default fixture path resolve inside that environment,
+compares the packaged fixture bytes with this file, and replays the fixture plans.
 
 `tests/fixtures/epdk/observed_v1/synthetic_response.json` is also entirely project-authored and
 synthetic. It records only the observed schema shape and deliberate invalid/duplicate cases; it does

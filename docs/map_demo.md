@@ -51,9 +51,21 @@ jsDelivr and answers `/api/config` and `/api/plan` through `chargepath.demo.brow
 reuses the server's request schema, fixture service, and status mapping, so both builds return the
 same plans and errors. Integration mode, OSRM, and EPDK data are not included.
 
-The output is a plain static site. The `Demo site` workflow
-(`.github/workflows/pages.yml`) rebuilds it on every push to `main` and publishes it to
-[GitHub Pages](https://efeerim.github.io/chargepath-ev-route-optimizer/). The first load downloads
+The output is a plain static site. The `deploy` job in `.github/workflows/ci.yml` rebuilds it
+from the checked commit on a push to `main` (or a manual run on `main`) and publishes it to
+[GitHub Pages](https://efeerim.github.io/chargepath-ev-route-optimizer/), but only after the Python
+checks, the wheel check, and the browser smoke test pass for that commit. Pull requests never
+deploy.
+
+`browser_tests/` opens this build in real Chromium, lets Pyodide load from the CDN, blocks map
+tiles, plans the fixture through the page, and fails on unexpected JavaScript errors. It is not part
+of the offline gate:
+
+```powershell
+python -m pip install --editable ".[dev,browser]"
+python -m playwright install chromium
+python -m pytest -q browser_tests
+``` The first load downloads
 Pyodide (about 10 MB) from the CDN; map tiles still come from the configured tile server under its
 usage policy.
 

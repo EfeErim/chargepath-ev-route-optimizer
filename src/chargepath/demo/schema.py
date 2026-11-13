@@ -7,6 +7,9 @@ from dataclasses import dataclass
 from chargepath import validation
 from chargepath.models import VehicleProfile
 
+# Shared by the loopback server and the in-browser adapter.
+MAX_REQUEST_BYTES = 32_768
+
 # One table drives request validation and the bounds the browser form receives.
 VEHICLE_INPUT_BOUNDS: dict[str, tuple[float, float]] = {
     "usable_battery_kwh": (20, 200),

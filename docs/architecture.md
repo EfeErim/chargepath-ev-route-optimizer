@@ -46,8 +46,8 @@ All paths are under `src/chargepath/`.
 | Stations | `corridor.py` | Deterministic, prefix-monotonic corridor candidate selection that bounds OSRM Table size. |
 | Benchmarks | `fixtures.py`, `evaluation.py` | Synthetic fixture loading and the synthetic benchmark (correctness, sensitivity, runtime artifacts). |
 | Benchmarks | `real_route_benchmark.py`, `real_route_collection.py`, `real_route_evaluation.py` | Real-route benchmark: frozen route selection, the only OSRM-calling collection stage, and offline evaluation. |
-| Demo | `demo/schema.py`, `demo/services.py`, `demo/server.py` | Bounded request schema, fixture and integration planning services, loopback-only HTTP server. |
-| Demo | `demo/browser.py` | Entry point for the Pyodide build of the fixture demo served on GitHub Pages. |
+| Demo | `demo/schema.py`, `demo/services.py`, `demo/responses.py`, `demo/server.py` | Bounded request schema and request-size limit; fixture and integration services that plan, replay, and measure redundancy; typed JSON response builders that only format; loopback-only HTTP server. |
+| Demo | `demo/browser.py` | Entry point for the Pyodide build of the fixture demo served on GitHub Pages; imports neither `demo.server` nor `http.server`. |
 | Demo | `web/` | Leaflet presentation only: point selection, route drawing, option cards, estimate labels. It never computes feasibility. |
 
 ## Dependency direction

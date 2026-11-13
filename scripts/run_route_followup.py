@@ -16,7 +16,7 @@ from chargepath.models import NoFeasibleRouteError, RoutePlan, Station
 from chargepath.optimizer import EVRouteOptimizer
 from chargepath.providers.static import StaticRoadNetwork
 from chargepath.real_route_benchmark import canonical_bytes
-from chargepath.real_route_collection import StoredGraph, load_stored_graph
+from chargepath.real_route_collection import StoredGraph, load_verified_graph
 from chargepath.real_route_evaluation import Trip, assert_no_station_data, enumerate_trips
 from chargepath.verification import verify_route_plan
 
@@ -75,16 +75,10 @@ def run() -> None:
     reference = json.loads((ROOT / "docs/benchmarks/real-routes/summary_v1.json").read_bytes())
 
     def checked_graph(file_name: str) -> StoredGraph:
-        path = V1_GRAPHS / file_name
-        if (
-            hashlib.sha256(path.read_bytes()).hexdigest()
-            != reference["stored_graphs"][file_name]["sha256"]
-        ):
-            raise ValueError(f"graph checksum mismatch for {file_name}")
-        graph = load_stored_graph(path)
-        if graph.outcome != "graph":
-            raise ValueError(f"missing graph for {file_name}")
-        return graph
+        return load_verified_graph(
+            V1_GRAPHS / file_name,
+            expected_sha256=reference["stored_graphs"][file_name]["sha256"],
+        )
 
     rows = []
     timings = []

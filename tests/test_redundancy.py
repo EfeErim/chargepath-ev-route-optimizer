@@ -113,6 +113,7 @@ def test_demo_reports_redundancy_for_the_fastest_option_only() -> None:
     for option in options:
         for stop in option["charging_stops"]:
             if "fastest" in option["strategies"]:
+                assert stop["redundancy"] is not None
                 assert set(stop["redundancy"]) == {
                     "alternative_count",
                     "alternatives_checked",

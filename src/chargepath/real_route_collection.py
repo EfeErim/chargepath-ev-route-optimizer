@@ -7,6 +7,7 @@ dropped.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import statistics
 import time
@@ -210,6 +211,17 @@ def load_stored_graph(path: Path) -> StoredGraph:
         for origin, destination, km, mins in document["legs"]
     )
     return StoredGraph(key, "graph", document["eligible_count"], stations, legs)
+
+
+def load_verified_graph(path: Path, *, expected_sha256: str) -> StoredGraph:
+    """Load a stored graph whose bytes match a published checksum and that holds a graph."""
+
+    if hashlib.sha256(path.read_bytes()).hexdigest() != expected_sha256:
+        raise ValueError(f"graph checksum mismatch for {path.name}")
+    graph = load_stored_graph(path)
+    if graph.outcome != "graph":
+        raise ValueError(f"missing graph for {path.name}")
+    return graph
 
 
 def load_frozen_options(
