@@ -17,8 +17,13 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
 ]
 
+[project.urls]
+Homepage = "https://efeerim.github.io/chargepath-ev-route-optimizer/"
+Repository = "https://github.com/EfeErim/chargepath-ev-route-optimizer"
+Changelog = "https://github.com/EfeErim/chargepath-ev-route-optimizer/blob/main/CHANGELOG.md"
+
 [project.scripts]
-chargepath-demo = "chargepath.demo:main"
+chargepath-demo = "chargepath.demo.server:main"
 
 [project.optional-dependencies]
 dev = [
@@ -26,6 +31,10 @@ dev = [
   "mypy==2.4.1",
   "pytest==9.2.0",
   "ruff==0.17.4",
+]
+# Only for browser_tests/, which also needs `python -m playwright install chromium` and network.
+browser = [
+  "playwright==1.64.1",
 ]
 
 [tool.setuptools.packages.find]

@@ -3,6 +3,9 @@ from __future__ import annotations
 import hashlib
 import http.client
 import json
+import os
+import subprocess
+import sys
 import threading
 from collections.abc import Iterator
 from pathlib import Path
@@ -11,22 +14,25 @@ from typing import Any, cast
 import pytest
 
 import chargepath.demo as demo_module
+import chargepath.demo.responses as demo_responses
 import chargepath.demo.services as demo_services
+import chargepath.verification as verification_module
 from chargepath.alternatives import CompetitiveRoutePlanner
 from chargepath.corridor import CandidateSelectionConfig, CandidateSelectionResult
 from chargepath.demo import (
-    DEFAULT_PORT,
     DEFAULT_TILE_URL,
-    DemoServerConfig,
     FixturePlanningService,
     IntegrationPlanningService,
     PlanRequest,
-    create_server,
 )
+from chargepath.demo.responses import ConfigPayload, PlanPayload
+from chargepath.demo.server import DEFAULT_PORT, DemoServerConfig, create_server
 from chargepath.fixtures import load_synthetic_scenario
 from chargepath.models import GeoJsonLineString, NoFeasibleRouteError
+from chargepath.optimizer import EVRouteOptimizer
 from chargepath.providers.base import CoordinateLike
 from chargepath.providers.osrm import OsrmResponseError, OsrmTableCost, OsrmTableResult
+from chargepath.providers.static import StaticRoadNetwork
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 SYNTHETIC_FIXTURE = REPOSITORY_ROOT / "data/sample/synthetic_corridor.json"
@@ -531,10 +537,10 @@ def test_server_exposes_explicit_failure_states_without_internal_tracebacks(
 @pytest.mark.parametrize("failure", [ValueError("bad internal state"), KeyError("secret")])
 def test_server_does_not_misclassify_or_leak_internal_service_errors(failure: Exception) -> None:
     class FailingService:
-        def public_config(self) -> dict[str, object]:
+        def public_config(self) -> ConfigPayload:
             return _service().public_config()
 
-        def plan(self, request: PlanRequest) -> dict[str, object]:
+        def plan(self, request: PlanRequest) -> PlanPayload:
             raise failure
 
     server = create_server(DemoServerConfig(service=FailingService(), port=0))
@@ -582,3 +588,58 @@ def test_ui_keeps_basemap_local_attributed_and_optional() -> None:
     assert "route explanation remains usable" in combined
     # No public geocoder: map clicks never send coordinates to a search service.
     assert "nominatim" not in combined
+
+
+def test_response_formatting_runs_no_search_or_replay(monkeypatch: pytest.MonkeyPatch) -> None:
+    scenario = load_synthetic_scenario(SYNTHETIC_FIXTURE)
+    service = _service()
+    expected = service.plan(PlanRequest.from_payload(_payload()))
+    vehicle = PlanRequest.from_payload(_payload()).vehicle.to_profile()
+    network = StaticRoadNetwork(scenario.legs)
+    result = CompetitiveRoutePlanner(soc_step_pct=5).plan(
+        origin_id=scenario.origin_id,
+        destination_id=scenario.destination_id,
+        vehicle=vehicle,
+        stations=scenario.station_map(),
+        road_network=network,
+    )
+    trip = demo_services.analyze_options(
+        result,
+        vehicle=vehicle,
+        stations=scenario.station_map(),
+        road_network=network,
+        soc_step_pct=5,
+    )
+
+    def forbidden(*args: object, **kwargs: object) -> None:
+        raise AssertionError("formatting must not plan or replay")
+
+    monkeypatch.setattr(EVRouteOptimizer, "_optimize_with_cache", forbidden)
+    monkeypatch.setattr(verification_module, "verify_route_plan", forbidden)
+    monkeypatch.setattr(demo_services, "verify_route_plan", forbidden)
+    monkeypatch.setattr(demo_services, "stop_redundancy", forbidden)
+
+    formatted = demo_responses.plan_payload(trip, data_label=demo_services.FIXTURE_DATA_LABEL)
+
+    assert formatted == expected
+    assert any(
+        stop["redundancy"] is not None
+        for option in formatted["options"]
+        for stop in option["charging_stops"]
+    )
+
+
+def test_browser_adapter_does_not_import_the_http_server() -> None:
+    code = "; ".join(
+        (
+            "import sys, chargepath.demo.browser",
+            "names = ('chargepath.demo.server', 'http.server')",
+            "loaded = [name for name in names if name in sys.modules]",
+            "assert not loaded, loaded",
+        )
+    )
+    env = {**os.environ, "PYTHONPATH": str(REPOSITORY_ROOT / "src")}
+    completed = subprocess.run(
+        [sys.executable, "-c", code], env=env, capture_output=True, text=True, timeout=60
+    )
+    assert completed.returncode == 0, completed.stderr

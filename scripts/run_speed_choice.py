@@ -16,7 +16,7 @@ from chargepath.models import RoutePlan, Station
 from chargepath.optimizer import EVRouteOptimizer
 from chargepath.providers.static import StaticRoadNetwork
 from chargepath.real_route_benchmark import canonical_bytes
-from chargepath.real_route_collection import load_stored_graph
+from chargepath.real_route_collection import load_verified_graph
 from chargepath.real_route_evaluation import assert_no_station_data, enumerate_trips
 from chargepath.speed import (
     DEFAULT_SPEED_FACTORS,
@@ -59,13 +59,10 @@ def run() -> None:
     for trip in enumerate_trips(manifest):
         if trip.experiment != "E1":
             continue
-        path = V1_GRAPHS / trip.graph.file_name
-        expected = reference["stored_graphs"][trip.graph.file_name]["sha256"]
-        if hashlib.sha256(path.read_bytes()).hexdigest() != expected:
-            raise ValueError(f"graph checksum mismatch for {trip.graph.file_name}")
-        graph = load_stored_graph(path)
-        if graph.outcome != "graph":
-            raise ValueError(f"missing graph for {trip.graph.file_name}")
+        graph = load_verified_graph(
+            V1_GRAPHS / trip.graph.file_name,
+            expected_sha256=reference["stored_graphs"][trip.graph.file_name]["sha256"],
+        )
         stations = dict(graph.stations)
         all_stations.update(stations)
         base = StaticRoadNetwork(graph.legs)

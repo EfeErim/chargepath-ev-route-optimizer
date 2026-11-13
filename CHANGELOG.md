@@ -6,6 +6,28 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- The demo services plan and analyze (replay for the SOC timeline, redundancy for the fastest
+  plan) before `chargepath.demo.responses` formats the JSON; formatting starts no search, replay,
+  or provider call. Responses are typed with `TypedDict`s and are byte-identical to 0.3.0.
+- `MAX_REQUEST_BYTES` lives in `chargepath.demo.schema`. Importing `chargepath.demo` or
+  `chargepath.demo.browser` no longer imports the HTTP server; server names are imported from
+  `chargepath.demo.server`, and the `chargepath-demo` command points at `chargepath.demo.server:main`.
+- The Pages deploy moved into `ci.yml` as a job that needs the checks of the same commit; pull
+  requests never deploy, and `pages.yml` was removed.
+- `TableCost` and `RoadTable` were removed; the OSRM table and route client protocols live in
+  `chargepath.providers.osrm`. `[project.urls]` was added.
+- `run_route_followup.py` and `run_speed_choice.py` share `load_verified_graph`; both still
+  reproduce their committed outputs byte for byte.
+
+### Added
+
+- `scripts/check_wheel.py`, run in CI: installs the built wheel into a fresh environment and checks
+  imports, packaged fixture bytes, web assets, the demo command, and a replayed fixture plan.
+- `browser_tests/`, run in CI with the `browser` extra: the static demo in real Chromium with real
+  Pyodide, map tiles blocked, and unexpected JavaScript errors failing the test.
+
 ## [0.3.0] - 2026-11-12
 
 ### Changed

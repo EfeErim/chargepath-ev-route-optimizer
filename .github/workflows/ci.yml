@@ -1,8 +1,11 @@
 name: CI
 
+# One workflow so the Pages deploy can depend on the checks of the same commit. Pull requests and
+# other branches run the checks only; a push to main or a manual run on main also deploys.
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -27,3 +30,55 @@ jobs:
       - name: Run project gate
         shell: pwsh
         run: ./scripts/check.ps1
+      # Building needs the pinned setuptools from PyPI; the check itself installs offline.
+      - name: Build wheel
+        run: python -m pip wheel . --no-deps --wheel-dir dist
+      - name: Check installed wheel
+        run: python scripts/check_wheel.py dist/*.whl
+
+  browser:
+    # Real Chromium, real Pyodide from the CDN, and the real planner; needs network.
+    timeout-minutes: 15
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install project and browser test tools
+        run: python -m pip install --editable ".[dev,browser]"
+      - name: Install Chromium
+        run: python -m playwright install --with-deps chromium
+      - name: Run browser smoke test
+        run: python -m pytest -q browser_tests
+
+  deploy:
+    needs: [checks, browser]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: true
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      # The default checkout is github.sha, the commit the checks above ran on.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.11"
+      - name: Build static demo
+        run: python scripts/build_static_demo.py --output _site
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

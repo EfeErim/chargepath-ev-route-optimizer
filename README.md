@@ -34,13 +34,16 @@ cd chargepath-ev-route-optimizer
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install --editable ".[dev]"
 
-python -m pytest -q                       # 251 tests, under a minute
+python -m pytest -q                       # 254 tests, under a minute
 python examples/run_synthetic_demo.py     # plan the synthetic trip on the command line
 python -m chargepath.demo                 # map demo on http://127.0.0.1:8743
 ```
 
-CI runs `scripts/check.ps1`, which adds `ruff check`, `ruff format --check` and strict `mypy` to the
-commands above. [docs/demo.md](docs/demo.md) shows the real output of these commands.
+`scripts/check.ps1` adds `ruff check`, `ruff format --check` and strict `mypy` to the commands above
+and needs no network. CI runs it on Python 3.11 and 3.13, then installs the built wheel into a clean
+environment (`scripts/check_wheel.py`) and plans the fixture in real Chromium through Pyodide
+(`browser_tests/`). The Pages demo is deployed from the same workflow, only after those jobs pass
+for that commit. [docs/demo.md](docs/demo.md) shows the real output of the main commands.
 
 Planning between arbitrary points needs a charger snapshot and a local OSRM server; see the
 [map demo guide](docs/map_demo.md) and [OSRM setup](docs/osrm_setup.md).

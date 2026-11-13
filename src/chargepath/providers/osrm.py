@@ -14,7 +14,7 @@ from urllib.parse import quote, urlencode, urlsplit
 from urllib.request import Request, urlopen
 
 from chargepath.models import GeoJsonLineString, RoadLeg, RoutePlan
-from chargepath.providers.base import CoordinateLike, RoadRouteClient, RoadTableClient
+from chargepath.providers.base import CoordinateLike
 from chargepath.providers.static import StaticRoadNetwork
 
 DEFAULT_OSRM_ENDPOINT = "http://127.0.0.1:5000"
@@ -176,7 +176,33 @@ class HttpResponse:
             raise ValueError("HTTP response body must be bytes")
 
 
+class RoadTableClient(Protocol):
+    """Source of the pairwise cost table.
+
+    A protocol rather than ``OsrmHttpClient`` itself so tests and the offline demo can supply a
+    table without HTTP.
+    """
+
+    def table(self, coordinates: tuple[CoordinateLike, ...]) -> OsrmTableResult:
+        """Return directed fastest-route costs for every coordinate pair."""
+        ...
+
+
+class RoadRouteClient(Protocol):
+    """Source of geometry for selected legs; tests substitute a recording spy."""
+
+    def route_geometry(
+        self,
+        origin: CoordinateLike,
+        destination: CoordinateLike,
+    ) -> GeoJsonLineString:
+        """Return full GeoJSON geometry for one selected directed leg."""
+        ...
+
+
 class HttpTransport(Protocol):
+    """One HTTP GET. Tests inject offline fakes, including one that times out."""
+
     def get(self, url: str, *, timeout_seconds: float) -> HttpResponse:
         """Perform one HTTP GET without provider-specific parsing."""
         ...
@@ -188,7 +214,7 @@ class UrllibHttpTransport:
     def get(self, url: str, *, timeout_seconds: float) -> HttpResponse:
         request = Request(
             url,
-            headers={"Accept": "application/json", "User-Agent": "ChargePath/0.1"},
+            headers={"Accept": "application/json", "User-Agent": "ChargePath"},
         )
         try:
             with urlopen(request, timeout=timeout_seconds) as response:  # noqa: S310
@@ -387,13 +413,9 @@ class CandidateGraphBuilder:
                 if source_index == destination_index:
                     continue
                 cell = table.cells[source_index][destination_index]
-                if cell is None:
-                    continue
-                if not math.isfinite(cell.distance_km) or not math.isfinite(cell.duration_minutes):
-                    raise OsrmResponseError("road table costs must be finite")
-                if cell.distance_km < 0 or cell.duration_minutes < 0:
-                    raise OsrmResponseError("road table costs must not be negative")
-                if cell.distance_km <= 0 or cell.duration_minutes <= 0:
+                # OsrmTableCost already rejects negative and non-finite costs; a zero cost
+                # (coincident points) is not a usable leg.
+                if cell is None or cell.distance_km == 0 or cell.duration_minutes == 0:
                     continue
                 legs.append(
                     RoadLeg(

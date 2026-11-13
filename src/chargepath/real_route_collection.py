@@ -7,6 +7,7 @@ dropped.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import statistics
 import time
@@ -22,14 +23,14 @@ from chargepath.corridor import (
 )
 from chargepath.evaluation import _nearest_rank_p95
 from chargepath.models import GeoJsonLineString, RoadLeg, Station
-from chargepath.providers.base import CoordinateLike
 from chargepath.providers.osrm import (
     CandidateGraphBuilder,
     CandidateNode,
     Coordinate,
     OsrmProviderError,
     OsrmResponseError,
-    OsrmTableResult,
+    RoadRouteClient,
+    RoadTableClient,
 )
 from chargepath.station_data import CompatibleStationOption, load_snapshot_options
 
@@ -37,12 +38,8 @@ GRAPH_SCHEMA_VERSION = 1
 GRAPH_EXPERIMENTS = ("E1", "E2", "E3", "E4", "E5")
 
 
-class CollectionClient(Protocol):
-    def table(self, coordinates: tuple[CoordinateLike, ...]) -> OsrmTableResult: ...
-
-    def route_geometry(
-        self, origin: CoordinateLike, destination: CoordinateLike
-    ) -> GeoJsonLineString: ...
+class CollectionClient(RoadTableClient, RoadRouteClient, Protocol):
+    """Both OSRM services; tests substitute an offline fake with a configurable data version."""
 
 
 @dataclass(frozen=True, slots=True, order=True)
@@ -214,6 +211,17 @@ def load_stored_graph(path: Path) -> StoredGraph:
         for origin, destination, km, mins in document["legs"]
     )
     return StoredGraph(key, "graph", document["eligible_count"], stations, legs)
+
+
+def load_verified_graph(path: Path, *, expected_sha256: str) -> StoredGraph:
+    """Load a stored graph whose bytes match a published checksum and that holds a graph."""
+
+    if hashlib.sha256(path.read_bytes()).hexdigest() != expected_sha256:
+        raise ValueError(f"graph checksum mismatch for {path.name}")
+    graph = load_stored_graph(path)
+    if graph.outcome != "graph":
+        raise ValueError(f"missing graph for {path.name}")
+    return graph
 
 
 def load_frozen_options(
