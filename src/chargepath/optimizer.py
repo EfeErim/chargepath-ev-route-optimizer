@@ -29,7 +29,11 @@ from chargepath.models import (
 from chargepath.providers.base import RoadNetwork
 
 State = tuple[str, int]
-Priority = tuple[float, float, float]
+Priority = tuple[float, float, float, int]
+
+# Accumulated float sums that differ only by rounding noise are treated as ties, so the documented
+# tie-breaks decide between them instead of the last bits of the arithmetic.
+_PRIORITY_DECIMALS = 9
 
 
 class RoutePreference(StrEnum):
@@ -153,15 +157,24 @@ class EVRouteOptimizer:
         predecessors: dict[State, tuple[State, Action]] = {}
         queue: list[tuple[Priority, int, State]] = []
         sequence = itertools.count()
-        heapq.heappush(queue, (self._priority(_SearchMetrics()), next(sequence), start))
+        heapq.heappush(
+            queue, (self._priority(_SearchMetrics(), initial_bucket), next(sequence), start)
+        )
         destination_state: State | None = None
+        # Highest bucket already settled at each node. A state settled earlier has a priority no
+        # worse than any later one, and a higher bucket can replay every continuation of a lower
+        # one at no greater cost, so a lower-bucket state at the same node is dominated.
+        settled_bucket: dict[str, int] = {}
 
         while queue:
             current_priority, _, current = heapq.heappop(queue)
             current_metrics = best_metrics[current]
-            if current_priority != self._priority(current_metrics):
-                continue
             node_id, energy_bucket = current
+            if current_priority != self._priority(current_metrics, energy_bucket):
+                continue
+            if energy_bucket < settled_bucket.get(node_id, -1):
+                continue
+            settled_bucket[node_id] = energy_bucket
             if node_id == destination_id:
                 destination_state = current
                 break
@@ -251,32 +264,25 @@ class EVRouteOptimizer:
         queue: list[tuple[Priority, int, State]],
         sequence: itertools.count[int],
     ) -> None:
-        next_priority = self._priority(next_metrics)
+        next_priority = self._priority(next_metrics, next_state[1])
         existing = best_metrics.get(next_state)
-        if existing is not None and next_priority >= self._priority(existing):
+        if existing is not None and next_priority >= self._priority(existing, next_state[1]):
             return
         best_metrics[next_state] = next_metrics
         predecessors[next_state] = (current, action)
         heapq.heappush(queue, (next_priority, next(sequence), next_state))
 
-    def _priority(self, metrics: _SearchMetrics) -> Priority:
+    def _priority(self, metrics: _SearchMetrics, energy_bucket: int) -> Priority:
+        """Lexicographic priority; the last term prefers the higher battery level on full ties."""
+
+        minutes = round(metrics.total_minutes, _PRIORITY_DECIMALS)
+        distance = round(metrics.distance_km, _PRIORITY_DECIMALS)
+        sessions = float(metrics.charging_stops)
         if self.preference is RoutePreference.FASTEST:
-            return (
-                metrics.total_minutes,
-                float(metrics.charging_stops),
-                metrics.distance_km,
-            )
+            return (minutes, sessions, distance, -energy_bucket)
         if self.preference is RoutePreference.SHORTEST_DISTANCE:
-            return (
-                metrics.distance_km,
-                metrics.total_minutes,
-                float(metrics.charging_stops),
-            )
-        return (
-            float(metrics.charging_stops),
-            metrics.total_minutes,
-            metrics.distance_km,
-        )
+            return (distance, minutes, sessions, -energy_bucket)
+        return (sessions, minutes, distance, -energy_bucket)
 
     def _reconstruct(
         self,

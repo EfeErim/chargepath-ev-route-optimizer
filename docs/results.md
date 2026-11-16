@@ -33,7 +33,7 @@ starting SOC. The shortest-distance objective compares the distances of the legs
 | E3 · Candidate cap | Versus cap 200, median gaps for caps 12, 24, 50, and 98 were 2.7, 0.9, 0, and 0 min. Maxima were 92.0, 18.9, 5.8, and 1.3 min. Cap 200 is a finite reference. Greedy missed four plans at cap 12. |
 | E4 · Corridor width | With cap 50, widths 10 and 25 km both had a median gap of 0 versus 50 km. Gaps ranged from −5.1 to 2.7 min. A wider corridor can change which stations survive the cap. |
 | E5 · Vehicle inputs | On eight routes, exact search stayed feasible at every tested value. Median total times at the 50, 150, and 250 kW vehicle limits were 617.9, 551.0, and 542.5 min. |
-| E6 · Runtime | Over 72 scenarios per pass, median/p95 were 21.3/27.5 s for exact fastest, 3.9/4.8 s for greedy, and 0.32/0.56 s for road-only. OSRM was timed separately over 24 requests per pass, with medians of 0.65 s for Route and 1.15 s for Table. These are machine-specific batch timings. |
+| E6 · Runtime | Each figure is the wall time of one whole pass over 72 scenarios, not of one search. Median/p95 per pass were 21.3/27.5 s for exact fastest (about 0.3 s per scenario), 3.9/4.8 s for greedy, and 0.32/0.56 s for road-only. OSRM was timed separately over 24 requests per pass, with medians of 0.65 s for Route and 1.15 s for Table. These are machine-specific batch timings. |
 
 Driving was a median 87.5% of the greedy trip time, and that share is fixed by the road legs, so the
 percentage saving understates the effect on the part a charging planner controls. Median charging
@@ -76,10 +76,42 @@ The outage scenario keeps road legs and removes charging at the first selected s
 plans without charging are outside its denominator. This tests replanning with advance notice
 and retains the original candidate set. It does not simulate discovering the outage on arrival.
 A single pass across 72 nominal inputs measured median/p95 of 165/268 ms per exact search with
-replay on the recording machine, excluding graph loading, OSRM, and browser work.
+replay on the recording machine, excluding graph loading, OSRM, and browser work. Unlike E6, this
+is per search; E6 also counts per-scenario setup inside each pass. Both runs predate the
+dominance check added after 0.3.0, which leaves objective values unchanged and can only shorten
+searches.
 
 ```powershell
 python scripts/run_route_followup.py --output data/processed/real-routes/v1/followup-rerun.json
+```
+
+### Follow-up · Stronger heuristic baseline
+
+Fixed-80 is a deliberately simple rule, so E1 says little about what exact search adds over a
+careful heuristic. The [baseline artifact](benchmarks/real-routes/lookahead_baseline_v1.json) compares
+exact fastest with `LookaheadGreedyOptimizer` on the same 72 E1 scenarios and checksum-verified
+graphs. The heuristic, the comparison, and a reading rule were recorded in the project plan before
+the heuristic was run on any real-route graph. At each node it considers every progressing direct
+leg to the destination or an unused compatible station and every charge level here, and scores each
+pair by charging time here, leg time, remaining shortest driving time, and an optimistic estimate of
+later charging at the next station's power. It commits and never backtracks. Fixed-80 was rerun
+alongside, and both it and exact fastest reproduced the committed follow-up totals scenario by
+scenario.
+
+| Exact fastest versus | Paired | Ties | Heuristic failures | Median saving | p90 saving | Maximum saving | Median heuristic charging |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Fixed-80 greedy | 71 | 6 | 1 | 24.7 min (4.2%) | 60.9 min (9.5%) | 98.5 min (16.0%) | 70.7 min |
+| Lookahead heuristic | 72 | 22 | 0 | 2.6 min (0.5%) | 12.0 min (1.5%) | 26.5 min (2.7%) | 54.6 min |
+
+Exact fastest charged for a median 53.0 minutes. The lookahead heuristic closes about nine tenths of
+the median fixed-80 gap and solved the scenario fixed-80 could not. The pre-registered reading rule
+applies: the median saving is below 5 minutes, so on this benchmark exact search adds little over a
+good heuristic in the typical case. Its value is the tail, up to 26.5 minutes here, and the
+guarantee that no plan on the same graph and SOC grid is faster. All 215 returned plans replayed
+against their road graphs with zero reserve violations.
+
+```powershell
+python scripts/run_baseline_comparison.py --output docs/benchmarks/real-routes/lookahead_baseline_v1.json
 ```
 
 ### Follow-up · Speed choice

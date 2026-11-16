@@ -8,6 +8,14 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- Exact search breaks full objective ties toward the higher arrival SOC, and compares minutes and
+  kilometres after rounding to nine decimal places so floating-point noise cannot decide a tie.
+  The exact-arithmetic property reference now checks the arrival SOC as well.
+- Exact search skips a state when a higher battery bucket at the same node was already settled.
+  The pruning is dominance-safe and does not change any objective value.
+- `docs/results.md` states that E6 runtimes are per 72-scenario pass, not per search; the Baum et
+  al. citation year is consistent (2020).
+
 - The demo services plan and analyze (replay for the SOC timeline, redundancy for the fastest
   plan) before `chargepath.demo.responses` formats the JSON; formatting starts no search, replay,
   or provider call. Responses are typed with `TypedDict`s and are byte-identical to 0.3.0.
@@ -23,6 +31,12 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- `chargepath.lookahead.LookaheadGreedyOptimizer`, a one-step lookahead heuristic that picks each
+  next charger and charge amount; it is an evaluation baseline, not a route option.
+  `scripts/run_baseline_comparison.py` compares it with exact fastest on the 72 E1 scenarios
+  (pre-registered as M9) and writes `docs/benchmarks/real-routes/lookahead_baseline_v1.json`.
+  Exact fastest was a median 2.6 min (0.5%) faster, p90 12.0, maximum 26.5, with 22 ties and no
+  heuristic failures. The README now says that a careful heuristic gets close on this benchmark.
 - `scripts/check_wheel.py`, run in CI: installs the built wheel into a fresh environment and checks
   imports, packaged fixture bytes, web assets, the demo command, and a replayed fixture plan.
 - `browser_tests/`, run in CI with the `browser` extra: the static demo in real Chromium with real

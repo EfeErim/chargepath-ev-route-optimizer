@@ -458,3 +458,32 @@ def test_fastest_breaks_time_ties_on_charging_stops_before_distance() -> None:
     assert plan.total_minutes == 100
     assert plan.node_ids == ("a", "c")
     assert plan.charging_stops == ()
+
+
+def test_full_ties_prefer_the_higher_arrival_soc() -> None:
+    @dataclass(frozen=True, slots=True)
+    class CheaperViaC:
+        def leg_energy(self, leg: RoadLeg, vehicle: VehicleProfile) -> LegEnergy:
+            if leg.origin_id == "c":
+                return LegEnergy(net_kwh=3.0, peak_kwh=3.0)
+            return ConstantConsumption().leg_energy(leg, vehicle)
+
+    # Both paths take 100 minutes over 100 km with no charging; the one via c uses less energy.
+    network = StaticRoadNetwork(
+        [
+            RoadLeg("a", "c", 50, 50),
+            RoadLeg("c", "d", 50, 50),
+            RoadLeg("a", "b", 50, 50),
+            RoadLeg("b", "d", 50, 50),
+        ]
+    )
+    for preference in RoutePreference:
+        plan = EVRouteOptimizer(preference=preference, consumption_model=CheaperViaC()).optimize(
+            origin_id="a",
+            destination_id="d",
+            vehicle=make_vehicle(initial_soc_pct=80),
+            stations={},
+            road_network=network,
+        )
+        assert plan.node_ids == ("a", "c", "d")
+        assert plan.arrival_soc_pct == 55

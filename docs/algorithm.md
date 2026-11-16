@@ -109,12 +109,16 @@ The authoritative search uses additive non-negative metrics and a lexicographic 
 preferences compete over the same legal drive and charge transitions:
 
 ```text
-fastest:               (total_minutes, charging_sessions, distance_km)
-shortest_distance:     (distance_km, total_minutes, charging_sessions)
-fewest_charging_stops: (charging_sessions, total_minutes, distance_km)
+fastest:               (total_minutes, charging_sessions, distance_km, -arrival_bucket)
+shortest_distance:     (distance_km, total_minutes, charging_sessions, -arrival_bucket)
+fewest_charging_stops: (charging_sessions, total_minutes, distance_km, -arrival_bucket)
 ```
 
-Secondary fields are explicit deterministic tie-break objectives, not hidden weighted sums. The
+Secondary fields are explicit deterministic tie-break objectives, not hidden weighted sums. The last
+field prefers the plan that arrives with more battery when every other field ties. Minutes and
+kilometres are compared after rounding to nine decimal places, so sums that differ only by
+floating-point noise count as ties and the declared tie-breaks decide, not the last bits of the
+arithmetic. The
 default remains `fastest`, preserving the foundation solver's modeled objective.
 
 Future objective terms may include station reliability, waiting time, price, or uncertainty only when evidence exists.
@@ -122,7 +126,15 @@ Future objective terms may include station reliability, waiting time, price, or 
 ## Search
 
 Dijkstra's label-setting algorithm is applied to the expanded state graph because all components of
-each lexicographic transition cost are non-negative.
+each lexicographic transition cost are non-negative. The arrival-bucket field can fall on a charge or
+a recuperating leg, but every leg has positive duration and distance and every charge adds time and a
+session, so an earlier field always rises first.
+
+A popped state is skipped when a higher bucket at the same node was settled earlier. That state has
+no worse priority, and from a higher bucket every continuation of the lower one is available at no
+greater cost: drive feasibility and the remaining bucket are monotone in the starting bucket, and
+charging from a higher SOC to a given target takes no longer. The check prunes dominated states
+without changing the returned plan's objective.
 
 The first popped destination state is optimal within:
 
@@ -146,6 +158,25 @@ directly reachable, unvisited compatible station by:
 
 It never raises its target above 80% and may therefore fail on a case solved by exact search. That
 failure is reported as an unavailable strategy, not converted into a partial plan.
+
+## Lookahead heuristic
+
+`chargepath.lookahead.LookaheadGreedyOptimizer` is a stronger evaluation baseline. It is not one of
+the route options the planner or the demo returns. From the current node and bucket `b` it considers
+each direct leg to the destination or to an unvisited compatible station whose shortest remaining
+driving time is strictly lower than the current node's, and each departure bucket `d` from `b` up to
+full when the current node is a compatible station (only `b` otherwise). A pair is legal when the leg
+keeps the reserve. Its score is:
+
+```text
+charge_minutes(b → d) + leg_minutes + remaining_minutes(next)
+  + [setup + 60 × missing_kwh / effective_kw(next)]   when energy is missing on arrival
+```
+
+`missing_kwh` is the energy needed to drive the next node's remaining shortest path above reserve,
+minus what arrives. The estimate ignores taper and is therefore optimistic. Ties go to the lower
+departure bucket, then the lower node identifier. The heuristic commits to the best pair and repeats.
+Strict progress keeps the walk finite; with no legal pair it raises `NoFeasibleRouteError`.
 
 ## Shortest-driving-time baseline
 

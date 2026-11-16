@@ -37,6 +37,7 @@ All paths are under `src/chargepath/`.
 | Energy | `terrain.py` | Experimental, opt-in climb/recuperation consumption model; not the default. |
 | Planning | `optimizer.py` | Exact Dijkstra over `(node, energy bucket)` with lexicographic fastest, shortest-distance, and fewest-stop objectives. |
 | Planning | `alternatives.py` | Runs the three exact objectives plus the greedy fixed-80 heuristic, verifies each plan, and merges identical plans. |
+| Evaluation baseline | `lookahead.py` | One-step lookahead heuristic used only to measure what exact search adds; not a returned route option. |
 | Planning | `baselines.py` | Shortest-driving-time, no-charging baseline for the benchmarks. |
 | Planning | `verification.py` | Independent replay of every returned plan: energy, charge time, reserve, connector checks, and optionally legs and endpoints against the road network. |
 | Planning | `redundancy.py` | Structural per-stop fallback note for the demo; knows nothing about reliability. |

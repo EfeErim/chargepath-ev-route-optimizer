@@ -98,3 +98,29 @@ def test_committed_savings_chart_matches_the_outcomes() -> None:
     committed = (ROOT / "docs/images/e1-savings.svg").read_bytes().decode("utf-8")
     assert committed == script.render(savings), "rerun scripts/plot_e1_savings.py"
     assert "docs/images/e1-savings.svg" in README
+
+
+def test_lookahead_baseline_matches_the_readme() -> None:
+    artifact = json.loads(
+        (ROOT / "docs/benchmarks/real-routes/lookahead_baseline_v1.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    savings: list[float] = []
+    percent: list[float] = []
+    for row in artifact["scenarios"]:
+        exact, lookahead = row["exact_fastest"], row["lookahead"]
+        assert lookahead is not None, "the lookahead heuristic solved every E1 scenario"
+        saved = lookahead["total_minutes"] - exact["total_minutes"]
+        assert saved >= -1e-9, "exact fastest must never be slower than the heuristic"
+        savings.append(saved)
+        percent.append(100 * saved / lookahead["total_minutes"])
+
+    assert len(savings) == 72
+    assert sum(1 for saved in savings if abs(saved) <= 1e-6) == 22
+    assert round(statistics.median(savings), 1) == 2.6
+    assert round(statistics.median(percent), 1) == 0.5
+    assert round(max(savings), 1) == 26.5
+    assert artifact["reserve_violations_on_returned_plans"] == 0
+    assert "median **2.6 minutes (0.5%) faster**, tied in 22 of 72 scenarios" in README
+    assert "at most 26.5 minutes faster" in README

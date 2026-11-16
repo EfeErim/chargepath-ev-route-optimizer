@@ -1,0 +1,1631 @@
+{
+  "input_benchmark": "chargepath-m6-real-route-v1",
+  "manifest_sha256": "1c637e15d52fb053ac52d7721a4223b294927729cae6aa9bdb7d82724f76cadf",
+  "preregistration": "PROJECT_PLAN.md, M9",
+  "reserve_violations_on_returned_plans": 0,
+  "scenarios": [
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 30.8,
+        "charging_stops": 1,
+        "total_minutes": 263.368
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 15.0,
+        "charging_minutes": 37.6,
+        "charging_stops": 2,
+        "total_minutes": 270.168
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 30.8,
+        "charging_stops": 1,
+        "total_minutes": 263.368
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r01"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 26.0,
+        "charging_stops": 1,
+        "total_minutes": 221.33
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 30.0,
+        "charging_minutes": 35.6,
+        "charging_stops": 1,
+        "total_minutes": 230.93
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 26.0,
+        "charging_stops": 1,
+        "total_minutes": 221.33
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r02"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 26.0,
+        "charging_stops": 1,
+        "total_minutes": 265.365
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 20.0,
+        "charging_minutes": 33.2,
+        "charging_stops": 1,
+        "total_minutes": 272.565
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 26.0,
+        "charging_stops": 1,
+        "total_minutes": 265.365
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r03"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 4.4,
+        "charging_stops": 1,
+        "total_minutes": 127.427
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 4.4,
+        "charging_stops": 1,
+        "total_minutes": 127.427
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 4.4,
+        "charging_stops": 1,
+        "total_minutes": 127.427
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r04"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 14.0,
+        "charging_stops": 1,
+        "total_minutes": 170.8
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 35.0,
+        "charging_minutes": 28.4,
+        "charging_stops": 1,
+        "total_minutes": 185.2
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 14.0,
+        "charging_stops": 1,
+        "total_minutes": 170.8
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r05"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 9.2,
+        "charging_stops": 1,
+        "total_minutes": 152.49
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 40.0,
+        "charging_minutes": 28.0,
+        "charging_stops": 2,
+        "total_minutes": 180.738
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 14.133,
+        "charging_stops": 2,
+        "total_minutes": 155.603
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r06"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 87.6,
+        "charging_stops": 3,
+        "total_minutes": 534.935
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 15.0,
+        "charging_minutes": 97.2,
+        "charging_stops": 3,
+        "total_minutes": 557.745
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 91.6,
+        "charging_stops": 5,
+        "total_minutes": 539.415
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r07"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 67.067,
+        "charging_stops": 3,
+        "total_minutes": 404.757
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 30.0,
+        "charging_minutes": 75.6,
+        "charging_stops": 3,
+        "total_minutes": 419.077
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 69.067,
+        "charging_stops": 4,
+        "total_minutes": 409.762
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r08"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 40.0,
+        "charging_stops": 2,
+        "total_minutes": 275.615
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 40.0,
+        "charging_minutes": 59.2,
+        "charging_stops": 2,
+        "total_minutes": 299.895
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 40.0,
+        "charging_stops": 2,
+        "total_minutes": 275.98
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r09"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 68.8,
+        "charging_stops": 2,
+        "total_minutes": 397.095
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 68.8,
+        "charging_stops": 2,
+        "total_minutes": 399.853
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 79.6,
+        "charging_stops": 5,
+        "total_minutes": 407.928
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r10"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 101.6,
+        "charging_stops": 4,
+        "total_minutes": 529.303
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 111.2,
+        "charging_stops": 4,
+        "total_minutes": 564.575
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 106.0,
+        "charging_stops": 5,
+        "total_minutes": 533.907
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r11"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 63.6,
+        "charging_stops": 3,
+        "total_minutes": 374.915
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 70.0,
+        "charging_minutes": 97.2,
+        "charging_stops": 3,
+        "total_minutes": 430.972
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 63.6,
+        "charging_stops": 3,
+        "total_minutes": 374.915
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r12"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 139.6,
+        "charging_stops": 5,
+        "total_minutes": 710.818
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 15.0,
+        "charging_minutes": 158.0,
+        "charging_stops": 5,
+        "total_minutes": 729.092
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 146.0,
+        "charging_stops": 7,
+        "total_minutes": 719.072
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r13"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 198.8,
+        "charging_stops": 7,
+        "total_minutes": 923.692
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 35.0,
+        "charging_minutes": 217.6,
+        "charging_stops": 8,
+        "total_minutes": 955.522
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 203.2,
+        "charging_stops": 8,
+        "total_minutes": 926.958
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r14"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 184.8,
+        "charging_stops": 6,
+        "total_minutes": 772.508
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 15.0,
+        "charging_minutes": 191.6,
+        "charging_stops": 7,
+        "total_minutes": 797.202
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 191.2,
+        "charging_stops": 8,
+        "total_minutes": 782.267
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r15"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 163.2,
+        "charging_stops": 6,
+        "total_minutes": 763.542
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 30.0,
+        "charging_minutes": 175.6,
+        "charging_stops": 5,
+        "total_minutes": 782.557
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 174.0,
+        "charging_stops": 9,
+        "total_minutes": 774.19
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r16"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 139.6,
+        "charging_stops": 5,
+        "total_minutes": 613.76
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 50.0,
+        "charging_minutes": 163.6,
+        "charging_stops": 5,
+        "total_minutes": 656.153
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 150.8,
+        "charging_stops": 7,
+        "total_minutes": 624.62
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r17"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 151.2,
+        "charging_stops": 6,
+        "total_minutes": 739.79
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 40.0,
+        "charging_minutes": 172.4,
+        "charging_stops": 7,
+        "total_minutes": 767.928
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 153.2,
+        "charging_stops": 7,
+        "total_minutes": 742.155
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r18"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 275.333,
+        "charging_stops": 9,
+        "total_minutes": 1089.503
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 45.0,
+        "charging_minutes": 300.4,
+        "charging_stops": 11,
+        "total_minutes": 1119.933
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 287.2,
+        "charging_stops": 14,
+        "total_minutes": 1107.717
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r19"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 373.2,
+        "charging_stops": 13,
+        "total_minutes": 1470.852
+      },
+      "greedy_fixed_80": null,
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 372.8,
+        "charging_stops": 14,
+        "total_minutes": 1473.257
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r20"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 402.0,
+        "charging_stops": 15,
+        "total_minutes": 1546.697
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 15.0,
+        "charging_minutes": 407.6,
+        "charging_stops": 13,
+        "total_minutes": 1555.995
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 424.533,
+        "charging_stops": 20,
+        "total_minutes": 1573.183
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r21"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 246.0,
+        "charging_stops": 9,
+        "total_minutes": 1117.707
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 253.2,
+        "charging_stops": 9,
+        "total_minutes": 1130.373
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 256.4,
+        "charging_stops": 13,
+        "total_minutes": 1129.758
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r22"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 220.533,
+        "charging_stops": 8,
+        "total_minutes": 1063.913
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 35.0,
+        "charging_minutes": 253.2,
+        "charging_stops": 9,
+        "total_minutes": 1150.988
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 229.333,
+        "charging_stops": 10,
+        "total_minutes": 1074.413
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r23"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 251.333,
+        "charging_stops": 9,
+        "total_minutes": 1164.452
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 60.0,
+        "charging_minutes": 286.4,
+        "charging_stops": 10,
+        "total_minutes": 1237.308
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 264.133,
+        "charging_stops": 13,
+        "total_minutes": 1179.842
+      },
+      "profile": "set-40kwh",
+      "route": "m6-r24"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 9.2,
+        "charging_stops": 1,
+        "total_minutes": 242.597
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 50.0,
+        "charging_minutes": 22.3,
+        "charging_stops": 2,
+        "total_minutes": 255.697
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 10.667,
+        "charging_stops": 1,
+        "total_minutes": 243.795
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r01"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 6.8,
+        "charging_stops": 1,
+        "total_minutes": 202.357
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 50.0,
+        "charging_minutes": 17.6,
+        "charging_stops": 1,
+        "total_minutes": 213.41
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 8.0,
+        "charging_stops": 1,
+        "total_minutes": 203.397
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r02"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 8.0,
+        "charging_stops": 1,
+        "total_minutes": 247.365
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 45.0,
+        "charging_minutes": 17.6,
+        "charging_stops": 1,
+        "total_minutes": 259.395
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 8.0,
+        "charging_stops": 1,
+        "total_minutes": 247.365
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r03"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 25.0,
+        "charging_minutes": 0,
+        "charging_stops": 0,
+        "total_minutes": 123.027
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 20.0,
+        "charging_minutes": 0,
+        "charging_stops": 0,
+        "total_minutes": 123.027
+      },
+      "lookahead": {
+        "arrival_soc_pct": 25.0,
+        "charging_minutes": 0,
+        "charging_stops": 0,
+        "total_minutes": 123.027
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r04"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 0,
+        "charging_stops": 0,
+        "total_minutes": 156.8
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 45.0,
+        "charging_minutes": 12.8,
+        "charging_stops": 1,
+        "total_minutes": 169.6
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 0,
+        "charging_stops": 0,
+        "total_minutes": 156.8
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r05"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 15.0,
+        "charging_minutes": 0,
+        "charging_stops": 0,
+        "total_minutes": 141.47
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 0,
+        "charging_stops": 0,
+        "total_minutes": 141.47
+      },
+      "lookahead": {
+        "arrival_soc_pct": 15.0,
+        "charging_minutes": 0,
+        "charging_stops": 0,
+        "total_minutes": 141.47
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r06"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 30.4,
+        "charging_stops": 2,
+        "total_minutes": 477.26
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 40.0,
+        "charging_minutes": 37.6,
+        "charging_stops": 2,
+        "total_minutes": 484.46
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 35.067,
+        "charging_stops": 3,
+        "total_minutes": 480.94
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r07"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 17.6,
+        "charging_stops": 1,
+        "total_minutes": 354.81
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 75.0,
+        "charging_minutes": 45.0,
+        "charging_stops": 3,
+        "total_minutes": 382.21
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 17.6,
+        "charging_stops": 1,
+        "total_minutes": 355.665
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r08"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 13.067,
+        "charging_stops": 1,
+        "total_minutes": 249.062
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 40.0,
+        "charging_minutes": 18.8,
+        "charging_stops": 1,
+        "total_minutes": 257.265
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 13.067,
+        "charging_stops": 1,
+        "total_minutes": 249.062
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r09"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 24.4,
+        "charging_stops": 2,
+        "total_minutes": 351.068
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 60.0,
+        "charging_minutes": 41.8,
+        "charging_stops": 2,
+        "total_minutes": 367.885
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 27.6,
+        "charging_stops": 3,
+        "total_minutes": 355.833
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r10"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 38.133,
+        "charging_stops": 2,
+        "total_minutes": 465.837
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 15.0,
+        "charging_minutes": 45.3,
+        "charging_stops": 3,
+        "total_minutes": 481.388
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 43.067,
+        "charging_stops": 4,
+        "total_minutes": 472.762
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r11"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 20.8,
+        "charging_stops": 2,
+        "total_minutes": 330.978
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 65.0,
+        "charging_minutes": 38.8,
+        "charging_stops": 2,
+        "total_minutes": 356.145
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 22.0,
+        "charging_stops": 2,
+        "total_minutes": 333.452
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r12"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 52.967,
+        "charging_stops": 4,
+        "total_minutes": 624.65
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 15.0,
+        "charging_minutes": 55.2,
+        "charging_stops": 3,
+        "total_minutes": 667.422
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 58.267,
+        "charging_stops": 5,
+        "total_minutes": 628.743
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r13"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 76.0,
+        "charging_stops": 4,
+        "total_minutes": 800.067
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 70.0,
+        "charging_minutes": 98.7,
+        "charging_stops": 6,
+        "total_minutes": 822.818
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 80.933,
+        "charging_stops": 6,
+        "total_minutes": 806.352
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r14"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 68.0,
+        "charging_stops": 4,
+        "total_minutes": 647.78
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 30.0,
+        "charging_minutes": 81.0,
+        "charging_stops": 6,
+        "total_minutes": 662.128
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 77.867,
+        "charging_stops": 7,
+        "total_minutes": 660.737
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r15"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 62.0,
+        "charging_stops": 4,
+        "total_minutes": 656.317
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 45.0,
+        "charging_minutes": 75.8,
+        "charging_stops": 4,
+        "total_minutes": 670.53
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 62.0,
+        "charging_stops": 4,
+        "total_minutes": 659.332
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r16"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 53.867,
+        "charging_stops": 4,
+        "total_minutes": 517.313
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 15.0,
+        "charging_minutes": 83.1,
+        "charging_stops": 3,
+        "total_minutes": 544.453
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 56.267,
+        "charging_stops": 4,
+        "total_minutes": 520.43
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r17"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 57.467,
+        "charging_stops": 4,
+        "total_minutes": 646.442
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 30.0,
+        "charging_minutes": 88.9,
+        "charging_stops": 5,
+        "total_minutes": 707.435
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 61.2,
+        "charging_stops": 6,
+        "total_minutes": 650.2
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r18"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 104.4,
+        "charging_stops": 6,
+        "total_minutes": 911.962
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 25.0,
+        "charging_minutes": 115.1,
+        "charging_stops": 7,
+        "total_minutes": 922.278
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 114.267,
+        "charging_stops": 9,
+        "total_minutes": 924.728
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r19"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 141.6,
+        "charging_stops": 8,
+        "total_minutes": 1226.662
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 65.0,
+        "charging_minutes": 181.2,
+        "charging_stops": 9,
+        "total_minutes": 1287.547
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 146.8,
+        "charging_stops": 10,
+        "total_minutes": 1235.328
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r20"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 159.2,
+        "charging_stops": 9,
+        "total_minutes": 1284.935
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 75.0,
+        "charging_minutes": 189.2,
+        "charging_stops": 10,
+        "total_minutes": 1324.938
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 170.833,
+        "charging_stops": 13,
+        "total_minutes": 1303.335
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r21"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 98.633,
+        "charging_stops": 6,
+        "total_minutes": 970.902
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 25.0,
+        "charging_minutes": 158.2,
+        "charging_stops": 8,
+        "total_minutes": 1033.937
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 98.0,
+        "charging_stops": 7,
+        "total_minutes": 976.233
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r22"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 91.433,
+        "charging_stops": 5,
+        "total_minutes": 928.982
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 75.0,
+        "charging_minutes": 141.2,
+        "charging_stops": 7,
+        "total_minutes": 985.417
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 87.867,
+        "charging_stops": 6,
+        "total_minutes": 934.067
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r23"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 96.267,
+        "charging_stops": 6,
+        "total_minutes": 1009.793
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 25.0,
+        "charging_minutes": 111.0,
+        "charging_stops": 6,
+        "total_minutes": 1026.602
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 101.467,
+        "charging_stops": 8,
+        "total_minutes": 1015.367
+      },
+      "profile": "set-60kwh",
+      "route": "m6-r24"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 4.667,
+        "charging_stops": 1,
+        "total_minutes": 237.235
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 70.0,
+        "charging_minutes": 34.0,
+        "charging_stops": 2,
+        "total_minutes": 271.543
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 4.667,
+        "charging_stops": 1,
+        "total_minutes": 237.235
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r01"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 3.333,
+        "charging_stops": 1,
+        "total_minutes": 198.313
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 70.0,
+        "charging_minutes": 30.0,
+        "charging_stops": 1,
+        "total_minutes": 228.767
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 3.333,
+        "charging_stops": 1,
+        "total_minutes": 198.313
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r02"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 3.92,
+        "charging_stops": 1,
+        "total_minutes": 243.285
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 55.0,
+        "charging_minutes": 50.0,
+        "charging_stops": 1,
+        "total_minutes": 289.75
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 3.92,
+        "charging_stops": 1,
+        "total_minutes": 243.285
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r03"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 30.0,
+        "charging_minutes": 0,
+        "charging_stops": 0,
+        "total_minutes": 123.027
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 30.0,
+        "charging_minutes": 0,
+        "charging_stops": 0,
+        "total_minutes": 123.027
+      },
+      "lookahead": {
+        "arrival_soc_pct": 30.0,
+        "charging_minutes": 0,
+        "charging_stops": 0,
+        "total_minutes": 123.027
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r04"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 15.0,
+        "charging_minutes": 0,
+        "charging_stops": 0,
+        "total_minutes": 156.8
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 15.0,
+        "charging_minutes": 0,
+        "charging_stops": 0,
+        "total_minutes": 156.8
+      },
+      "lookahead": {
+        "arrival_soc_pct": 20.0,
+        "charging_minutes": 0,
+        "charging_stops": 0,
+        "total_minutes": 156.8
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r05"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 25.0,
+        "charging_minutes": 0,
+        "charging_stops": 0,
+        "total_minutes": 141.47
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 20.0,
+        "charging_minutes": 0,
+        "charging_stops": 0,
+        "total_minutes": 141.47
+      },
+      "lookahead": {
+        "arrival_soc_pct": 25.0,
+        "charging_minutes": 0,
+        "charging_stops": 0,
+        "total_minutes": 141.47
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r06"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 26.963,
+        "charging_stops": 2,
+        "total_minutes": 471.328
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 65.0,
+        "charging_minutes": 86.0,
+        "charging_stops": 2,
+        "total_minutes": 529.963
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 26.963,
+        "charging_stops": 2,
+        "total_minutes": 471.328
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r07"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 10.64,
+        "charging_stops": 1,
+        "total_minutes": 347.85
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 15.0,
+        "charging_minutes": 18.0,
+        "charging_stops": 1,
+        "total_minutes": 355.21
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 10.64,
+        "charging_stops": 1,
+        "total_minutes": 347.85
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r08"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 6.8,
+        "charging_stops": 1,
+        "total_minutes": 243.008
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 55.0,
+        "charging_minutes": 30.0,
+        "charging_stops": 1,
+        "total_minutes": 268.585
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 6.8,
+        "charging_stops": 1,
+        "total_minutes": 243.008
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r09"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 15.52,
+        "charging_stops": 2,
+        "total_minutes": 342.925
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 20.0,
+        "charging_minutes": 30.0,
+        "charging_stops": 1,
+        "total_minutes": 355.022
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 16.48,
+        "charging_stops": 2,
+        "total_minutes": 344.098
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r10"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 24.48,
+        "charging_stops": 2,
+        "total_minutes": 452.322
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 55.0,
+        "charging_minutes": 50.0,
+        "charging_stops": 3,
+        "total_minutes": 482.088
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 25.48,
+        "charging_stops": 3,
+        "total_minutes": 454.868
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r11"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 14.347,
+        "charging_stops": 2,
+        "total_minutes": 323.977
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 30.0,
+        "charging_minutes": 30.0,
+        "charging_stops": 1,
+        "total_minutes": 340.012
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 13.6,
+        "charging_stops": 2,
+        "total_minutes": 325.052
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r12"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 38.667,
+        "charging_stops": 3,
+        "total_minutes": 608.075
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 65.0,
+        "charging_minutes": 72.333,
+        "charging_stops": 3,
+        "total_minutes": 649.727
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 38.44,
+        "charging_stops": 4,
+        "total_minutes": 608.313
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r13"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 57.551,
+        "charging_stops": 4,
+        "total_minutes": 782.939
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 15.0,
+        "charging_minutes": 88.0,
+        "charging_stops": 4,
+        "total_minutes": 812.103
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 57.551,
+        "charging_stops": 4,
+        "total_minutes": 782.939
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r14"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 53.013,
+        "charging_stops": 4,
+        "total_minutes": 629.162
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 25.0,
+        "charging_minutes": 61.467,
+        "charging_stops": 5,
+        "total_minutes": 659.252
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 52.987,
+        "charging_stops": 5,
+        "total_minutes": 635.898
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r15"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 46.24,
+        "charging_stops": 4,
+        "total_minutes": 644.4
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 35.0,
+        "charging_minutes": 62.0,
+        "charging_stops": 3,
+        "total_minutes": 670.422
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 47.44,
+        "charging_stops": 3,
+        "total_minutes": 646.668
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r16"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 36.907,
+        "charging_stops": 3,
+        "total_minutes": 501.345
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 50.0,
+        "charging_minutes": 68.467,
+        "charging_stops": 3,
+        "total_minutes": 536.443
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 39.387,
+        "charging_stops": 3,
+        "total_minutes": 510.98
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r17"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 42.48,
+        "charging_stops": 3,
+        "total_minutes": 631.082
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 70.667,
+        "charging_stops": 4,
+        "total_minutes": 663.183
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 43.813,
+        "charging_stops": 3,
+        "total_minutes": 632.528
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r18"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 74.427,
+        "charging_stops": 5,
+        "total_minutes": 880.557
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 55.0,
+        "charging_minutes": 108.747,
+        "charging_stops": 7,
+        "total_minutes": 913.91
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 75.04,
+        "charging_stops": 6,
+        "total_minutes": 887.01
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r19"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 108.4,
+        "charging_stops": 7,
+        "total_minutes": 1203.227
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 30.0,
+        "charging_minutes": 114.107,
+        "charging_stops": 7,
+        "total_minutes": 1219.903
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 107.843,
+        "charging_stops": 7,
+        "total_minutes": 1212.641
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r20"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 122.062,
+        "charging_stops": 8,
+        "total_minutes": 1245.302
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 40.0,
+        "charging_minutes": 164.238,
+        "charging_stops": 8,
+        "total_minutes": 1309.556
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 122.323,
+        "charging_stops": 8,
+        "total_minutes": 1257.338
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r21"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 71.32,
+        "charging_stops": 6,
+        "total_minutes": 945.137
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 50.0,
+        "charging_minutes": 102.56,
+        "charging_stops": 6,
+        "total_minutes": 979.32
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 72.579,
+        "charging_stops": 6,
+        "total_minutes": 946.818
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r22"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 71.807,
+        "charging_stops": 5,
+        "total_minutes": 909.322
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 20.0,
+        "charging_minutes": 138.0,
+        "charging_stops": 5,
+        "total_minutes": 1007.778
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 65.387,
+        "charging_stops": 5,
+        "total_minutes": 911.893
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r23"
+    },
+    {
+      "exact_fastest": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 80.708,
+        "charging_stops": 5,
+        "total_minutes": 985.933
+      },
+      "greedy_fixed_80": {
+        "arrival_soc_pct": 70.0,
+        "charging_minutes": 150.853,
+        "charging_stops": 6,
+        "total_minutes": 1062.633
+      },
+      "lookahead": {
+        "arrival_soc_pct": 10.0,
+        "charging_minutes": 80.708,
+        "charging_stops": 5,
+        "total_minutes": 985.933
+      },
+      "profile": "set-80kwh",
+      "route": "m6-r24"
+    }
+  ],
+  "summary": {
+    "exact_vs_greedy_fixed_80": {
+      "heuristic_failures": 1,
+      "median_heuristic_charging_minutes": 70.667,
+      "paired": 71,
+      "saving_minutes": {
+        "count": 71,
+        "maximum": 98.456,
+        "median": 24.694,
+        "minimum": 0.0,
+        "p90": 60.885
+      },
+      "saving_percent": {
+        "count": 71,
+        "maximum": 16.036,
+        "median": 4.157,
+        "minimum": 0.0,
+        "p90": 9.523
+      },
+      "ties": 6
+    },
+    "exact_vs_lookahead": {
+      "heuristic_failures": 0,
+      "median_heuristic_charging_minutes": 54.627,
+      "paired": 72,
+      "saving_minutes": {
+        "count": 72,
+        "maximum": 26.486,
+        "median": 2.559,
+        "minimum": 0.0,
+        "p90": 12.036
+      },
+      "saving_percent": {
+        "count": 72,
+        "maximum": 2.656,
+        "median": 0.501,
+        "minimum": 0.0,
+        "p90": 1.465
+      },
+      "ties": 22
+    },
+    "median_exact_charging_minutes": 52.99,
+    "scenarios": 72
+  }
+}

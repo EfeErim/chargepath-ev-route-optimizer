@@ -188,7 +188,7 @@ def _priority(
     return (sessions, minutes, distance)
 
 
-def reference_optimum(case: Case, pref: RoutePreference) -> Objective | None:
+def reference_optimum(case: Case, pref: RoutePreference) -> tuple[Objective, int] | None:
     """Exhaustive label-correcting search over the expanded state graph, in exact arithmetic."""
 
     model = ExactModel(case)
@@ -225,9 +225,16 @@ def reference_optimum(case: Case, pref: RoutePreference) -> Objective | None:
                     changed = True
 
     finals = [
-        _priority(*label, pref) for (node, _), label in labels.items() if node == case.destination
+        (_priority(*label, pref), -bucket)
+        for (node, bucket), label in labels.items()
+        if node == case.destination
     ]
-    return min(finals) if finals else None
+    if not finals:
+        return None
+    best = min(objective for objective, _ in finals)
+    # Full ties on the objective go to the highest arrival bucket, as in the optimizer.
+    arrival_bucket = -min(neg for objective, neg in finals if objective == best)
+    return best, arrival_bucket
 
 
 def exact_replay(case: Case, plan: RoutePlan) -> None:
@@ -294,7 +301,9 @@ def test_optimizer_matches_exact_reference(case: Case, pref: RoutePreference) ->
         assert plan is None
         return
     assert plan is not None
-    _approx_objective(_plan_priority(plan, pref), expected)
+    objective, arrival_bucket = expected
+    _approx_objective(_plan_priority(plan, pref), objective)
+    assert plan.arrival_soc_pct == arrival_bucket * case.soc_step
     verify_route_plan(
         plan, vehicle=case.vehicle(), stations=case.station_map(), soc_step_pct=case.soc_step
     )
