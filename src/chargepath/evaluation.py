@@ -9,8 +9,10 @@ import os
 import platform
 import statistics
 import time
-from dataclasses import dataclass
+from collections.abc import Callable
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
+from functools import partial
 from pathlib import Path
 from typing import Any
 
@@ -46,16 +48,10 @@ REQUIRED_TOPOLOGY_CLASSES = frozenset(
         "infeasible",
     }
 )
-EXACT_ALGORITHMS = (
-    "fastest",
-    "shortest_distance",
-    "fewest_charging_stops",
-)
-PLAN_ALGORITHMS = (
-    "shortest_driving_time",
-    *EXACT_ALGORITHMS,
-    "greedy_fixed_80",
-)
+EXACT_ALGORITHMS = ("fastest", "shortest_distance", "fewest_charging_stops")
+# Strategies that can return a charging plan; the road-only baseline cannot.
+OPTION_ALGORITHMS = (*EXACT_ALGORITHMS, "greedy_fixed_80")
+PLAN_ALGORITHMS = ("shortest_driving_time", *OPTION_ALGORITHMS)
 
 
 @dataclass(frozen=True, slots=True)
@@ -77,7 +73,6 @@ class BenchmarkCase:
 
 @dataclass(frozen=True, slots=True)
 class BenchmarkManifest:
-    path: Path
     benchmark_id: str
     algorithm_version: str
     result_serialization_version: int
@@ -86,9 +81,6 @@ class BenchmarkManifest:
     cases: tuple[BenchmarkCase, ...]
     sensitivity_runs: tuple[dict[str, Any], ...]
     pruning_audits: tuple[dict[str, Any], ...]
-
-    def case_map(self) -> dict[str, BenchmarkCase]:
-        return {case.id: case for case in self.cases}
 
 
 _object = validation.json_object
@@ -210,7 +202,6 @@ def load_benchmark_manifest(path: str | Path) -> BenchmarkManifest:
             raise ValueError("pruning audit references an unknown case")
 
     return BenchmarkManifest(
-        path=manifest_path,
         benchmark_id=_text(payload.get("benchmark_id"), field="benchmark_id"),
         algorithm_version=_text(payload.get("algorithm_version"), field="algorithm_version"),
         result_serialization_version=_integer(
@@ -334,50 +325,94 @@ def _serialize_plan(plan: RoutePlan) -> dict[str, Any]:
     }
 
 
-def _optimizer_for(algorithm: str, soc_step_pct: int) -> Any:
+def plan_route(
+    algorithm: str,
+    *,
+    origin_id: str,
+    destination_id: str,
+    vehicle: VehicleProfile,
+    stations: dict[str, Station],
+    road_network: StaticRoadNetwork,
+    soc_step_pct: int,
+) -> RoutePlan:
+    """Run one benchmark algorithm; the road-only baseline ignores the stations."""
+
     if algorithm == "shortest_driving_time":
-        return ShortestDrivingTimeBaseline(soc_step_pct=soc_step_pct)
+        return ShortestDrivingTimeBaseline(soc_step_pct=soc_step_pct).optimize(
+            origin_id=origin_id,
+            destination_id=destination_id,
+            vehicle=vehicle,
+            road_network=road_network,
+        )
+    optimizer: EVRouteOptimizer | GreedyFixedTargetOptimizer
     if algorithm == "greedy_fixed_80":
-        return GreedyFixedTargetOptimizer(soc_step_pct=soc_step_pct)
-    preferences = {
-        "fastest": RoutePreference.FASTEST,
-        "shortest_distance": RoutePreference.SHORTEST_DISTANCE,
-        "fewest_charging_stops": RoutePreference.FEWEST_CHARGING_STOPS,
-    }
-    try:
-        preference = preferences[algorithm]
-    except KeyError as exc:
-        raise ValueError(f"unsupported benchmark algorithm: {algorithm}") from exc
-    return EVRouteOptimizer(preference=preference, soc_step_pct=soc_step_pct)
+        optimizer = GreedyFixedTargetOptimizer(soc_step_pct=soc_step_pct)
+    elif algorithm in EXACT_ALGORITHMS:
+        optimizer = EVRouteOptimizer(
+            preference=RoutePreference(algorithm), soc_step_pct=soc_step_pct
+        )
+    else:
+        raise ValueError(f"unsupported benchmark algorithm: {algorithm}")
+    return optimizer.optimize(
+        origin_id=origin_id,
+        destination_id=destination_id,
+        vehicle=vehicle,
+        stations=stations,
+        road_network=road_network,
+    )
+
+
+def evaluate_plan(
+    algorithm: str,
+    *,
+    origin_id: str,
+    destination_id: str,
+    vehicle: VehicleProfile,
+    stations: dict[str, Station],
+    road_network: StaticRoadNetwork,
+    soc_step_pct: int,
+) -> RoutePlan:
+    """Plan one synthetic or frozen real-route case and replay it independently.
+
+    Infeasibility and replay defects propagate so each report keeps its own outcome format.
+    """
+    plan = plan_route(
+        algorithm,
+        origin_id=origin_id,
+        destination_id=destination_id,
+        vehicle=vehicle,
+        stations=stations,
+        road_network=road_network,
+        soc_step_pct=soc_step_pct,
+    )
+    verify_route_plan(
+        plan,
+        vehicle=vehicle,
+        stations=stations,
+        soc_step_pct=soc_step_pct,
+        road_network=road_network,
+        origin_id=origin_id,
+        destination_id=destination_id,
+    )
+    return plan
 
 
 def _run_algorithm(
     case: BenchmarkCase, algorithm: str, *, soc_step_pct: int | None = None
 ) -> dict[str, Any]:
     step = case.soc_step_pct if soc_step_pct is None else soc_step_pct
-    optimizer = _optimizer_for(algorithm, step)
-    network = StaticRoadNetwork(case.legs)
-    kwargs: dict[str, Any] = {
-        "origin_id": case.origin_id,
-        "destination_id": case.destination_id,
-        "vehicle": case.vehicle,
-        "road_network": network,
-    }
-    if algorithm != "shortest_driving_time":
-        kwargs["stations"] = case.station_map()
     try:
-        plan = optimizer.optimize(**kwargs)
+        plan = evaluate_plan(
+            algorithm,
+            origin_id=case.origin_id,
+            destination_id=case.destination_id,
+            vehicle=case.vehicle,
+            stations=case.station_map(),
+            road_network=StaticRoadNetwork(case.legs),
+            soc_step_pct=step,
+        )
     except NoFeasibleRouteError as exc:
         return {"algorithm": algorithm, "feasible": False, "reason": str(exc)}
-    verify_route_plan(
-        plan,
-        vehicle=case.vehicle,
-        stations=case.station_map(),
-        soc_step_pct=step,
-        road_network=network,
-        origin_id=case.origin_id,
-        destination_id=case.destination_id,
-    )
     return {
         "algorithm": algorithm,
         "feasible": True,
@@ -388,18 +423,12 @@ def _run_algorithm(
 
 
 def _option_summary(runs: list[dict[str, Any]]) -> dict[str, Any]:
-    option_algorithms = {
-        "fastest",
-        "shortest_distance",
-        "fewest_charging_stops",
-        "greedy_fixed_80",
-    }
     grouped: dict[str, list[str]] = {}
     plans: dict[str, dict[str, Any]] = {}
     unavailable: list[str] = []
     for run in runs:
         algorithm = str(run["algorithm"])
-        if algorithm not in option_algorithms:
+        if algorithm not in OPTION_ALGORITHMS:
             continue
         if not run["feasible"]:
             unavailable.append(algorithm)
@@ -453,7 +482,7 @@ def build_correctness_artifact(manifest: BenchmarkManifest) -> dict[str, Any]:
         }
 
     sensitivity_results = []
-    cases_by_id = manifest.case_map()
+    cases_by_id = {case.id: case for case in manifest.cases}
     for sensitivity in manifest.sensitivity_runs:
         case = cases_by_id[str(sensitivity["case_id"])]
         sensitivity_results.append(
@@ -524,16 +553,11 @@ def build_correctness_artifact(manifest: BenchmarkManifest) -> dict[str, Any]:
 
 def _run_pruning_audit(audit: dict[str, Any], case: BenchmarkCase) -> dict[str, Any]:
     geometry_row = _object(audit.get("route_geometry"), field="pruning route_geometry")
-    coordinate_rows = _array(geometry_row.get("coordinates"), field="route coordinates")
-    geometry = GeoJsonLineString(
-        tuple(
-            (
-                float(_array(value, field="route coordinate")[0]),
-                float(_array(value, field="route coordinate")[1]),
-            )
-            for value in coordinate_rows
-        )
+    positions = (
+        _array(value, field="route coordinate")
+        for value in _array(geometry_row.get("coordinates"), field="route coordinates")
     )
+    geometry = GeoJsonLineString(tuple((float(lon), float(lat)) for lon, lat in positions))
     config_row = _object(audit.get("selection_config"), field="selection_config")
     config = CandidateSelectionConfig(
         corridor_width_km=float(config_row["corridor_width_km"]),
@@ -575,15 +599,8 @@ def _run_pruning_audit(audit: dict[str, Any], case: BenchmarkCase) -> dict[str, 
         and (leg.destination_id not in case.station_map() or leg.destination_id in selected_ids)
     )
     unpruned = _run_algorithm(case, "fastest")
-    pruned_case = BenchmarkCase(
-        id=case.id,
-        topology_class=case.topology_class,
-        soc_step_pct=case.soc_step_pct,
-        expected_feasible=case.expected_feasible,
-        expected_feasibility_source=case.expected_feasibility_source,
-        origin_id=case.origin_id,
-        destination_id=case.destination_id,
-        vehicle=case.vehicle,
+    pruned_case = replace(
+        case,
         stations=tuple(station for station in case.stations if station.id in selected_ids),
         legs=pruned_legs,
     )
@@ -650,9 +667,22 @@ def _run_suite_once(manifest: BenchmarkManifest, algorithm: str) -> None:
         _run_algorithm(case, algorithm)
 
 
-def _nearest_rank_p95(values: list[float]) -> float:
+def nearest_rank(values: list[float], fraction: float) -> float:
     ordered = sorted(values)
-    return ordered[math.ceil(0.95 * len(ordered)) - 1]
+    return ordered[math.ceil(fraction * len(ordered)) - 1]
+
+
+def time_passes(run_pass: Callable[[], None], *, warmups: int, repetitions: int) -> list[float]:
+    """Run the warm-up passes, then return each measured pass in milliseconds."""
+
+    for _ in range(warmups):
+        run_pass()
+    samples: list[float] = []
+    for _ in range(repetitions):
+        started = time.perf_counter_ns()
+        run_pass()
+        samples.append((time.perf_counter_ns() - started) / 1_000_000)
+    return samples
 
 
 def build_runtime_artifact(
@@ -661,28 +691,21 @@ def build_runtime_artifact(
     warmup_count: int,
     measured_repetitions: int,
     command: str,
-    generated_at_utc: str | None = None,
 ) -> dict[str, Any]:
     """Measure complete offline benchmark passes with a declared warm-up protocol."""
 
-    if warmup_count < 0:
-        raise ValueError("warmup_count must not be negative")
-    if measured_repetitions <= 0:
-        raise ValueError("measured_repetitions must be positive")
     algorithm_results: list[dict[str, Any]] = []
     for algorithm in (*PLAN_ALGORITHMS, "competitive_options"):
-        for _ in range(warmup_count):
-            _run_suite_once(manifest, algorithm)
-        durations_ms: list[float] = []
-        for _ in range(measured_repetitions):
-            started = time.perf_counter_ns()
-            _run_suite_once(manifest, algorithm)
-            durations_ms.append((time.perf_counter_ns() - started) / 1_000_000)
+        durations_ms = time_passes(
+            partial(_run_suite_once, manifest, algorithm),
+            warmups=warmup_count,
+            repetitions=measured_repetitions,
+        )
         algorithm_results.append(
             {
                 "algorithm": algorithm,
                 "median_ms": _rounded(statistics.median(durations_ms)),
-                "p95_ms": _rounded(_nearest_rank_p95(durations_ms)),
+                "p95_ms": _rounded(nearest_rank(durations_ms, 0.95)),
                 "measured_samples_ms": [_rounded(value) for value in durations_ms],
             }
         )
@@ -702,8 +725,9 @@ def build_runtime_artifact(
             "network_access": "none",
         },
         "environment": {
-            "generated_at_utc": generated_at_utc
-            or datetime.now(UTC).isoformat(timespec="seconds").replace("+00:00", "Z"),
+            "generated_at_utc": datetime.now(UTC)
+            .isoformat(timespec="seconds")
+            .replace("+00:00", "Z"),
             "python_version": platform.python_version(),
             "python_implementation": platform.python_implementation(),
             "platform": platform.platform(),

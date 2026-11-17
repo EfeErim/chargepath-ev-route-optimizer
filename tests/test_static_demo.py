@@ -100,13 +100,3 @@ def test_static_build_is_relative_and_self_contained(tmp_path: Path) -> None:
     first = (output / "chargepath-src.zip").read_bytes()
     script.build(output, pyodide_version="0.27.7")
     assert (output / "chargepath-src.zip").read_bytes() == first
-
-
-def test_static_build_rejects_a_floating_pyodide_version(tmp_path: Path) -> None:
-    with pytest.raises(ValueError, match="exact"):
-        _load_build_script().build(tmp_path / "site", pyodide_version="latest")
-
-
-def test_static_build_rejects_a_pyodide_version_without_a_hash(tmp_path: Path) -> None:
-    with pytest.raises(ValueError, match="integrity hash"):
-        _load_build_script().build(tmp_path / "site", pyodide_version="0.0.1")

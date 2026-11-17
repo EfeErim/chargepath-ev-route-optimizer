@@ -144,11 +144,7 @@ class IntegrationPlanningService:
         candidate_cap: int = DEFAULT_CANDIDATE_SELECTION_CONFIG.candidate_cap,
         adaptive_candidate_cap_limit: int = DEFAULT_ADAPTIVE_CANDIDATE_CAP_LIMIT,
     ) -> None:
-        if (
-            isinstance(adaptive_candidate_cap_limit, bool)
-            or not isinstance(adaptive_candidate_cap_limit, int)
-            or adaptive_candidate_cap_limit < candidate_cap
-        ):
+        if adaptive_candidate_cap_limit < candidate_cap:
             raise ValueError(
                 "adaptive candidate cap limit must be an integer at least candidate_cap"
             )
@@ -196,18 +192,12 @@ class IntegrationPlanningService:
         origin = Coordinate(request.origin.longitude, request.origin.latitude)
         destination = Coordinate(request.destination.longitude, request.destination.latitude)
         corridor_geometry = self._client.route_geometry(origin, destination)
-        selected = select_corridor_candidates(
-            route_geometry=corridor_geometry,
-            options=self._options,
-            config=self._candidate_config,
-        )
         vehicle = request.vehicle.to_profile()
         selected, graph, stations, result, soc_step_pct = self._plan_with_adaptive_candidates(
             origin=origin,
             destination=destination,
             vehicle=vehicle,
             corridor_geometry=corridor_geometry,
-            initial_selection=selected,
         )
         geometric_plans = fetch_selected_plans_geometry(
             tuple(option.plan for option in result.options),
@@ -248,7 +238,6 @@ class IntegrationPlanningService:
         destination: Coordinate,
         vehicle: VehicleProfile,
         corridor_geometry: GeoJsonLineString,
-        initial_selection: CandidateSelectionResult,
     ) -> tuple[
         CandidateSelectionResult,
         CandidateGraph,
@@ -256,9 +245,12 @@ class IntegrationPlanningService:
         RouteOptionSet,
         int,
     ]:
-        selected = initial_selection
+        config = self._candidate_config
         last_infeasible: NoFeasibleRouteError | None = None
         while True:
+            selected = select_corridor_candidates(
+                route_geometry=corridor_geometry, options=self._options, config=config
+            )
             candidate_options = tuple(candidate.option for candidate in selected.candidates)
             nodes = (
                 CandidateNode("origin", origin),
@@ -296,11 +288,7 @@ class IntegrationPlanningService:
                 )
                 if next_cap is None:
                     raise
-                selected = select_corridor_candidates(
-                    route_geometry=corridor_geometry,
-                    options=self._options,
-                    config=replace(self._candidate_config, candidate_cap=next_cap),
-                )
+                config = replace(config, candidate_cap=next_cap)
                 continue
             return selected, graph, stations, result, soc_step_pct
 
@@ -422,8 +410,6 @@ def _require_fixture_point(actual: PointInput, expected: PointInput, *, role: st
 
 
 def _validate_tile_url(value: str) -> str:
-    if not isinstance(value, str):
-        raise ValueError("tile URL must be text")
     url = value.strip()
     parsed = urlsplit(url)
     if (

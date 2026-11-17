@@ -7,10 +7,10 @@ import hashlib
 import json
 from pathlib import Path
 
+from chargepath.evaluation import canonical_json_bytes
 from chargepath.providers.osrm import Coordinate, OsrmHttpClient
 from chargepath.real_route_benchmark import (
     build_manifest,
-    canonical_bytes,
     distance_key,
     load_provinces,
     select_routes,
@@ -93,7 +93,7 @@ def main() -> None:
                     cell.distance_km, 1
                 )
 
-    distances_bytes = canonical_bytes(
+    distances_bytes = canonical_json_bytes(
         {
             "schema_version": 1,
             "description": (
@@ -119,7 +119,7 @@ def main() -> None:
         output_dir.mkdir(parents=True)
         (output_dir / "provinces.json").write_bytes(provinces_path.read_bytes())
     (output_dir / "selection_distances.json").write_bytes(distances_bytes)
-    (output_dir / "manifest.json").write_bytes(canonical_bytes(manifest))
+    (output_dir / "manifest.json").write_bytes(canonical_json_bytes(manifest))
     for route in routes:
         print(
             f"{route.route_id} {route.band:>9} slot={route.slot} "

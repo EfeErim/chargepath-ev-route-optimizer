@@ -12,12 +12,11 @@ import json
 from pathlib import Path
 from statistics import median
 
+from chargepath.evaluation import canonical_json_bytes
 from chargepath.models import RoutePlan, Station
 from chargepath.optimizer import EVRouteOptimizer
 from chargepath.providers.static import StaticRoadNetwork
-from chargepath.real_route_benchmark import canonical_bytes
-from chargepath.real_route_collection import load_verified_graph
-from chargepath.real_route_evaluation import assert_no_station_data, enumerate_trips
+from chargepath.real_route_evaluation import assert_no_station_data, verified_e1_graphs
 from chargepath.speed import (
     DEFAULT_SPEED_FACTORS,
     PILOT_QUADRATIC_SHARE,
@@ -56,13 +55,7 @@ def run() -> None:
     rows = []
     savings: list[float] = []
     all_stations: dict[str, Station] = {}
-    for trip in enumerate_trips(manifest):
-        if trip.experiment != "E1":
-            continue
-        graph = load_verified_graph(
-            V1_GRAPHS / trip.graph.file_name,
-            expected_sha256=reference["stored_graphs"][trip.graph.file_name]["sha256"],
-        )
+    for trip, graph in verified_e1_graphs(manifest, graphs_dir=V1_GRAPHS, summary=reference):
         stations = dict(graph.stations)
         all_stations.update(stations)
         base = StaticRoadNetwork(graph.legs)
@@ -128,7 +121,7 @@ def run() -> None:
     }
     assert_no_station_data(evidence, all_stations)
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_bytes(canonical_bytes(evidence))
+    args.output.write_bytes(canonical_json_bytes(evidence))
     print(json.dumps(evidence["summary"]))
 
 

@@ -10,7 +10,7 @@ import hashlib
 import json
 from collections import Counter
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
@@ -31,9 +31,9 @@ class DistanceBand:
     maximum_km: float | None
 
     def contains(self, distance_km: float) -> bool:
-        if distance_km < self.minimum_km:
-            return False
-        return self.maximum_km is None or distance_km < self.maximum_km
+        return self.minimum_km <= distance_km and (
+            self.maximum_km is None or distance_km < self.maximum_km
+        )
 
 
 DISTANCE_BANDS = (
@@ -73,16 +73,7 @@ class SelectedRoute:
 
 def load_provinces(path: str | Path) -> tuple[Province, ...]:
     document = json.loads(Path(path).read_text(encoding="utf-8"))
-    provinces = tuple(
-        Province(
-            plate=row["plate"],
-            name=row["name"],
-            region=row["region"],
-            latitude=row["latitude"],
-            longitude=row["longitude"],
-        )
-        for row in document["provinces"]
-    )
+    provinces = tuple(Province(**row) for row in document["provinces"])
     if [province.plate for province in provinces] != list(range(1, len(provinces) + 1)):
         raise ValueError("provinces must be ordered by consecutive plate number")
     return provinces
@@ -152,16 +143,6 @@ def select_routes(
     return tuple(routes)
 
 
-def _endpoint(province: Province) -> dict[str, Any]:
-    return {
-        "plate": province.plate,
-        "name": province.name,
-        "region": province.region,
-        "latitude": province.latitude,
-        "longitude": province.longitude,
-    }
-
-
 def _vehicle(
     *, battery_kwh: float, max_dc_kw: float, consumption: float, initial_soc: float = 80
 ) -> dict[str, float]:
@@ -229,8 +210,8 @@ def build_manifest(
                 "slot": route.slot,
                 "eastern": route.is_eastern,
                 "selection_road_km": route.selection_road_km,
-                "origin": _endpoint(route.origin),
-                "destination": _endpoint(route.destination),
+                "origin": asdict(route.origin),
+                "destination": asdict(route.destination),
             }
             for route in routes
         ],
@@ -344,8 +325,3 @@ def build_manifest(
             "Not real-world SOC accuracy, arrival time, or charger availability."
         ),
     }
-
-
-def canonical_bytes(payload: Mapping[str, Any]) -> bytes:
-    text = json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True)
-    return (text + "\n").encode("utf-8")

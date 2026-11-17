@@ -80,7 +80,34 @@ def main() -> None:
             "Git-ignored data/raw and data/processed directories. No retry or polling is performed."
         )
     )
-    parser.parse_args()
+    parser.add_argument(
+        "--raw-response", type=Path, help="Inspect an existing response without fetching"
+    )
+    parser.add_argument("--retrieved-at", help="Original UTC retrieval timestamp ending in Z")
+    parser.add_argument("--response-status", type=int, default=200)
+    parser.add_argument("--manifest-out", type=Path)
+    parser.add_argument("--report-out", type=Path)
+    args = parser.parse_args()
+    if args.raw_response is not None:
+        if args.retrieved_at is None:
+            parser.error("--raw-response requires --retrieved-at")
+        manifest, options = inspect_snapshot(
+            args.raw_response,
+            retrieved_at=args.retrieved_at,
+            response_status=args.response_status,
+            manifest_out=args.manifest_out,
+            report_out=args.report_out,
+        )
+        print(f"snapshot_id={manifest.snapshot_id}")
+        print(f"sites={manifest.source_record_count}")
+        print(f"sockets={manifest.source_socket_count}")
+        print(f"compatible_ccs2_sites={len(options)}")
+        print(f"site_reconciliation={manifest.reconciliation['sites']}")
+        print(f"socket_reconciliation={manifest.reconciliation['sockets']}")
+        print(f"reuse_status={manifest.reuse_status}")
+        return
+    if args.retrieved_at or args.manifest_out or args.report_out or args.response_status != 200:
+        parser.error("inspection options require --raw-response")
     status, body = fetch_response()
     if status == 429:
         raise SystemExit(

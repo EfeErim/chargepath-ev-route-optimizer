@@ -1,6 +1,6 @@
-# Local map demo
+# Demo guide
 
-## Fixture-first command
+## Fixture mode
 
 From the repository root, after the editable development install:
 
@@ -54,8 +54,7 @@ same plans and errors. Integration mode, OSRM, and EPDK data are not included.
 The output is a plain static site. The `deploy` job in `.github/workflows/ci.yml` rebuilds it
 from the checked commit on a push to `main` (or a manual run on `main`) and publishes it to
 [GitHub Pages](https://efeerim.github.io/chargepath-ev-route-optimizer/), but only after the Python
-checks, the wheel check, and the browser smoke test pass for that commit. Pull requests never
-deploy.
+checks and the browser smoke test pass for that commit. Pull requests never deploy.
 
 `browser_tests/` opens this build in real Chromium, lets Pyodide load from the CDN, blocks map
 tiles, plans the fixture through the page, and fails on unexpected JavaScript errors. It is not part
@@ -65,9 +64,10 @@ of the offline gate:
 python -m pip install --editable ".[dev,browser]"
 python -m playwright install chromium
 python -m pytest -q browser_tests
-``` The first load downloads
-Pyodide (about 10 MB) from the CDN; map tiles still come from the configured tile server under its
-usage policy.
+```
+
+The first load downloads Pyodide (about 10 MB) from the CDN; map tiles still come from the
+configured tile server under its usage policy.
 
 ## Explicit integration mode
 
@@ -89,15 +89,12 @@ graph, runs the competitive planner, and requests geometry only for selected rou
 adapter deduplicates shared directed legs across options and uses at most four concurrent geometry
 requests. It still rejects non-loopback endpoints unless the caller explicitly opts in.
 
-With the public OSRM server, use `--candidate-cap 24` to bound the remote Table
-request. The optimizer has no one-stop or fixed stop-count rule, but this pool necessarily bounds a
-plan to those 24 distinct station nodes. Candidate selection is prefix-monotonic and spreads that set
-across route progress while letting corridor quality resolve close coverage choices. In loopback OSRM
-mode, an infeasible capped search widens the same deterministic selection up to
-`--adaptive-candidate-cap-limit` (default: 98, which fits `osrm-routed`'s default 100-location Table
-limit once the origin and destination are included) before reporting no feasible route. See
-[local OSRM setup](osrm_setup.md) to raise both limits together. The service never performs that
-automatic widening against a remote OSRM endpoint.
+With the public OSRM server, use `--candidate-cap 24` to bound the remote Table request; a plan can
+then use only those 24 station nodes. Candidate selection is prefix-monotonic and spreads the set
+across route progress. In loopback OSRM mode, an infeasible capped search widens the same selection
+up to `--adaptive-candidate-cap-limit` before reporting no feasible route; [local OSRM
+setup](osrm_setup.md#self-hosted-docker-example) explains the default of 98 and how to raise it. The
+service never widens automatically against a remote OSRM endpoint.
 
 The planner first evaluates the configured 5% SOC grid. If every route strategy is infeasible at that
 coarse resolution, it retries once at 2% and returns a `model_resolution` label with the response.
@@ -110,16 +107,6 @@ it does not receive the source snapshot or the full normalized station set.
 A snapshot is retrieved once, on request, with `python scripts/fetch_epdk_snapshot.py`. The script
 performs no retry or polling and refuses to replace a snapshot from the same day. The service's quota
 is undocumented and it has returned HTTP 429 to a repeat request, so retrieve snapshots sparingly.
-
-With a snapshot and a local OSRM server, start integration mode directly (replace the date with
-your snapshot's):
-
-```powershell
-python -m chargepath.demo --mode integration `
-  --station-snapshot data/raw/epdk/2026-08-09/response.json `
-  --station-manifest data/processed/epdk/2026-08-09/manifest.json `
-  --osrm-endpoint http://127.0.0.1:5000
-```
 
 Without a local OSRM instance, the public OSRM demo server can stand in. Selected origin,
 destination, and candidate station coordinates then leave the machine, so the server refuses a

@@ -1,8 +1,7 @@
-"""Compare exact fastest with the M9 lookahead heuristic on the frozen real-route E1 scenarios.
+"""Compare exact fastest with the lookahead heuristic on the frozen real-route E1 scenarios.
 
-The experiment and its reading rule are pre-registered in ``PROJECT_PLAN.md`` (M9). Fixed-80 greedy
-is rerun alongside, and both it and exact fastest must reproduce the committed follow-up artifact
-scenario by scenario. Every returned plan is replayed against its road network.
+Fixed-80 greedy is rerun alongside, and both it and exact fastest must reproduce the committed
+follow-up artifact scenario by scenario. Every returned plan is replayed against its road network.
 """
 
 from __future__ import annotations
@@ -16,13 +15,17 @@ from statistics import median
 from typing import Any
 
 from chargepath.alternatives import GreedyFixedTargetOptimizer
+from chargepath.evaluation import canonical_json_bytes
 from chargepath.lookahead import LookaheadGreedyOptimizer
 from chargepath.models import NoFeasibleRouteError, RoutePlan, Station
 from chargepath.optimizer import EVRouteOptimizer
 from chargepath.providers.static import StaticRoadNetwork
-from chargepath.real_route_benchmark import canonical_bytes
-from chargepath.real_route_collection import load_verified_graph
-from chargepath.real_route_evaluation import Trip, assert_no_station_data, enumerate_trips
+from chargepath.real_route_evaluation import (
+    Trip,
+    assert_no_station_data,
+    summary_stats,
+    verified_e1_graphs,
+)
 from chargepath.verification import verify_route_plan
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -34,17 +37,6 @@ Planner = EVRouteOptimizer | GreedyFixedTargetOptimizer | LookaheadGreedyOptimiz
 
 def _round(value: float) -> float:
     return round(value, 3)
-
-
-def _stats(values: list[float]) -> dict[str, Any]:
-    ordered = sorted(values)
-    return {
-        "count": len(ordered),
-        "median": _round(median(ordered)),
-        "p90": _round(ordered[math.ceil(0.9 * len(ordered)) - 1]),
-        "minimum": _round(ordered[0]),
-        "maximum": _round(ordered[-1]),
-    }
 
 
 def _metrics(plan: RoutePlan | None) -> dict[str, float | int] | None:
@@ -98,8 +90,8 @@ def _paired(rows: list[dict[str, Any]], heuristic: str) -> dict[str, Any]:
         "paired": len(minutes),
         "heuristic_failures": sum(row[heuristic] is None for row in rows),
         "ties": sum(abs(value) <= TIE_MINUTES for value in minutes),
-        "saving_minutes": _stats(minutes),
-        "saving_percent": _stats(percent),
+        "saving_minutes": summary_stats(minutes),
+        "saving_percent": summary_stats(percent),
         "median_heuristic_charging_minutes": _round(median(charging)),
     }
 
@@ -116,13 +108,7 @@ def run() -> None:
 
     rows: list[dict[str, Any]] = []
     all_stations: dict[str, Station] = {}
-    for trip in enumerate_trips(manifest):
-        if trip.experiment != "E1":
-            continue
-        graph = load_verified_graph(
-            V1_GRAPHS / trip.graph.file_name,
-            expected_sha256=reference["stored_graphs"][trip.graph.file_name]["sha256"],
-        )
+    for trip, graph in verified_e1_graphs(manifest, graphs_dir=V1_GRAPHS, summary=reference):
         stations = dict(graph.stations)
         all_stations.update(stations)
         network = StaticRoadNetwork(graph.legs)
@@ -172,7 +158,7 @@ def run() -> None:
     }
     assert_no_station_data(evidence, all_stations)
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_bytes(canonical_bytes(evidence))
+    args.output.write_bytes(canonical_json_bytes(evidence))
     print(json.dumps(evidence["summary"], indent=2))
 
 

@@ -7,6 +7,7 @@ import hashlib
 import json
 from pathlib import Path
 
+from chargepath.evaluation import canonical_json_bytes
 from chargepath.models import Station
 from chargepath.real_route_collection import load_stored_graph
 from chargepath.real_route_evaluation import (
@@ -14,7 +15,6 @@ from chargepath.real_route_evaluation import (
     enumerate_trips,
     evaluate,
     measure_planner_runtime,
-    summary_bytes,
     trips_bytes,
 )
 
@@ -47,7 +47,7 @@ def main() -> None:
     assert_no_station_data({"summary": summary, "trips": trips}, stations)
 
     args.evidence_dir.mkdir(parents=True, exist_ok=True)
-    (args.evidence_dir / "summary_v1.json").write_bytes(summary_bytes(summary))
+    (args.evidence_dir / "summary_v1.json").write_bytes(canonical_json_bytes(summary))
     (args.evidence_dir / "trips_v1.jsonl").write_bytes(trips_bytes(trips))
     print(json.dumps(summary["reconciliation"], indent=2))
 

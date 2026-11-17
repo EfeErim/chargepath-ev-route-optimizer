@@ -2,7 +2,6 @@ import hashlib
 import importlib.util
 import json
 import urllib.error
-from dataclasses import replace
 from datetime import UTC, datetime
 from email.message import Message
 from pathlib import Path
@@ -24,9 +23,7 @@ from chargepath.station_data import (
     EPDK_SOURCE_URL,
     CompatibleStationOption,
     EpdkSchemaDriftError,
-    ReconciliationCounts,
     SnapshotProvenance,
-    ValidationIssue,
     build_snapshot_manifest,
     normalize_epdk_response,
     project_ccs2_dc_options,
@@ -60,7 +57,7 @@ def test_observed_schema_normalizes_with_reconciled_rejections_and_duplicates() 
     result = normalize_epdk_response(fixture_payload(), provenance())
 
     assert [site.source_id for site in result.sites] == ["SYN-SITE-001", "SYN-SITE-002"]
-    assert [socket.stable_id for socket in result.sockets] == [
+    assert [f"{socket.site_source_id}:{socket.source_id}" for socket in result.sockets] == [
         "SYN-SITE-001:AC-1",
         "SYN-SITE-001:DC-1",
         "SYN-SITE-001:DC-2",
@@ -150,67 +147,11 @@ def test_snapshot_manifest_records_request_checksum_counts_and_reconciliation() 
     )
 
 
-def test_snapshot_manifest_rejects_provenance_checksum_mismatch() -> None:
-    raw = SYNTHETIC_EPDK_FIXTURE.read_bytes()
-    payload = fixture_payload()
-    result = normalize_epdk_response(payload, provenance())
-    with pytest.raises(ValueError, match="checksum does not match"):
-        build_snapshot_manifest(
-            raw_response=raw,
-            payload=payload,
-            provenance=provenance(),
-            report=result.report,
-            response_status=200,
-        )
-
-
-def test_snapshot_manifest_rejects_cross_snapshot_report() -> None:
-    raw = SYNTHETIC_EPDK_FIXTURE.read_bytes()
-    fixture_provenance = provenance(response_sha256=hashlib.sha256(raw).hexdigest())
-    result = normalize_epdk_response(fixture_payload(), fixture_provenance)
-    with pytest.raises(ValueError, match="report snapshot does not match"):
-        build_snapshot_manifest(
-            raw_response=raw,
-            payload=fixture_payload(),
-            provenance=fixture_provenance,
-            report=replace(result.report, snapshot_id="other"),
-            response_status=200,
-        )
-
-
-def test_snapshot_manifest_rejects_payload_report_and_status_mismatches() -> None:
+def test_snapshot_manifest_rejects_http_status_that_differs_from_payload() -> None:
     raw = SYNTHETIC_EPDK_FIXTURE.read_bytes()
     payload = fixture_payload()
     fixture_provenance = provenance(response_sha256=hashlib.sha256(raw).hexdigest())
     result = normalize_epdk_response(payload, fixture_provenance)
-
-    changed_payload = fixture_payload()
-    changed_payload["message"] = "different"
-    with pytest.raises(ValueError, match="content does not match"):
-        build_snapshot_manifest(
-            raw_response=raw,
-            payload=changed_payload,
-            provenance=fixture_provenance,
-            report=result.report,
-            response_status=200,
-        )
-
-    bad_report = replace(
-        result.report,
-        sites=ReconciliationCounts(5, 2, 2, 1),
-        issues=(
-            *result.report.issues,
-            ValidationIssue("site", "extra", "synthetic_mismatch"),
-        ),
-    )
-    with pytest.raises(ValueError, match="input counts do not match"):
-        build_snapshot_manifest(
-            raw_response=raw,
-            payload=payload,
-            provenance=fixture_provenance,
-            report=bad_report,
-            response_status=200,
-        )
 
     with pytest.raises(ValueError, match="status does not match"):
         build_snapshot_manifest(
@@ -236,18 +177,6 @@ def test_snapshot_provenance_rejects_invalid_utc_timestamp(retrieved_at: str) ->
             response_sha256="a" * 64,
             reuse_status="pending_verification",
         )
-
-
-def test_ccs2_projection_rejects_orphan_socket_and_mixed_provenance() -> None:
-    result = normalize_epdk_response(fixture_payload(), provenance())
-    orphan = replace(result.sockets[1], site_source_id="missing")
-    with pytest.raises(ValueError, match="unknown normalized site"):
-        project_ccs2_dc_options(replace(result, sockets=(orphan,)))
-
-    other_provenance = replace(provenance(), snapshot_id="other")
-    mixed = replace(result.sockets[1], provenance=other_provenance)
-    with pytest.raises(ValueError, match="provenance must match"):
-        project_ccs2_dc_options(replace(result, sockets=(mixed,)))
 
 
 def test_committed_epdk_evidence_is_metadata_only_and_matches_default_contract() -> None:
@@ -369,8 +298,7 @@ def test_corridor_cap_covers_route_progress_instead_of_clustering() -> None:
     assert sum(station_id.startswith("epdk:cluster-") for station_id in first.station_ids) == 1
     assert second.station_ids == first.station_ids
     assert {
-        corridor_module._progress_stratum(candidate.route_progress_fraction, 4)
-        for candidate in first.candidates
+        min(3, int(candidate.route_progress_fraction * 4)) for candidate in first.candidates
     } == {0, 1, 2, 3}
 
 

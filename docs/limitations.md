@@ -17,7 +17,7 @@ ChargePath is a planning demonstration, not safety-certified navigation. It does
 
 ## Station data
 
-- The 2026-08-09 EPDK spike verified access and one observed schema, and a 2026-11-05 response
+- The 2026-08-09 EPDK check verified access and one observed schema, and a 2026-11-05 response
   still matched it. A later request that day returned HTTP 429, so a rate limit exists, but quota,
   update cadence, cross-snapshot identifier behavior, and redistribution conditions remain
   undocumented.
@@ -27,15 +27,15 @@ ChargePath is a planning demonstration, not safety-certified navigation. It does
   the stop's charger is removed before planning. It knows nothing about occupancy, outages, or
   reliability, and it is not a probability that a fallback will work.
 - A coordinate can represent the site rather than the correct road entrance or carriageway.
-- The current public EPDK Swagger does not publish a response schema. The implemented ingestion layer
-  uses a synthetic reviewed fixture and fails closed on unreviewed schema fields.
+- The public EPDK Swagger publishes no response schema. Ingestion is tested against a synthetic
+  fixture of the observed shape and fails closed on unreviewed fields.
 
 ## Energy model
 
 - Constant consumption ignores speed, grade, traffic, wind, temperature, precipitation, cabin load, payload, tire state, degradation, and driving style.
 - The safety factor is not a substitute for calibration.
 - An experimental terrain model (`chargepath.terrain`) adds climb and recuperation energy from
-  caller-supplied per-leg ascent and descent. It failed its pre-registered held-out check (lower
+  caller-supplied per-leg ascent and descent. It failed its held-out check (lower
   hillier-section error, higher whole-trip error) and is not the default. The project supplies no
   elevation data; a digital elevation model sampled along OSRM geometry would also misread bridges,
   tunnels, and cuttings.
@@ -51,15 +51,14 @@ ChargePath is a planning demonstration, not safety-certified navigation. It does
   none, and a curve still ignores temperature, preconditioning, and power sharing.
 - Vehicle and battery temperature, charger voltage/current limits, power sharing, handshake time, and thermal throttling are not modeled.
 - Station power is a cap, not a promise of delivered power.
-- The first release supports modeled CCS2 DC compatibility only. AC charging and other connectors are
-  outside its optimization claim.
+- Only CCS2 DC charging is modeled; AC charging and other connectors are outside the optimization
+  claim.
 
 ## Optimization claim
 
-The foundation search is optimal only within the supplied candidate graph, discrete SOC grid, and model assumptions. It is not globally optimal for the real, time-dependent transportation system.
-
-The fastest, shortest-distance, and fewest-session options are each exact only for their declared
-lexicographic objective under those same boundaries. The greedy fixed-80 strategy is intentionally
+Each exact option (fastest, shortest distance, fewest sessions) is optimal for its lexicographic
+objective only within the supplied candidate graph, discrete SOC grid, and model assumptions, not for
+the real, time-dependent transportation system. The greedy fixed-80 strategy is intentionally
 heuristic and may fail even when exact search finds a feasible plan. More options do not imply that
 one is operationally safer or more reliable with static station data.
 

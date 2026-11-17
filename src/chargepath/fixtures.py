@@ -27,6 +27,7 @@ class SyntheticScenario:
 _object = validation.json_object
 _array = validation.json_array
 _text = validation.text
+_exact_keys = validation.exact_fields
 
 
 def _number(value: Any, *, field: str) -> float:
@@ -36,10 +37,6 @@ def _number(value: Any, *, field: str) -> float:
     if not math.isfinite(result):
         raise ValueError(f"{field} must be finite")
     return result
-
-
-def _exact_keys(value: dict[str, Any], *, field: str, expected: set[str]) -> None:
-    validation.exact_fields(value, field=field, expected=expected)
 
 
 def _geojson_line_string(value: Any, *, field: str) -> GeoJsonLineString:

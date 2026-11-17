@@ -18,10 +18,9 @@ planner can shorten it. Measured against the part a planner does control, the me
 charging fell from 70.7 to 53.0 minutes, a median cut of 28.7% in the 66 scenarios where the
 heuristic charged.
 
-Most of that gain is available without exact search. A stronger heuristic, pre-registered before it
-was run, picks each next charger and how much to charge there by a one-step lookahead. Against it the
-exact planner was a median **2.6 minutes (0.5%) faster**, tied in 22 of 72 scenarios and at most
-26.5 minutes faster; the heuristic never failed. On this benchmark a careful heuristic gets close.
+Most of that gain is available without exact search. A stronger heuristic picks each next charger and
+how much to charge there by a one-step lookahead. Against it the exact planner
+was a median **2.6 minutes (0.5%) faster**, tied in 22 of 72 scenarios and at most 26.5 minutes faster; the heuristic never failed. On this benchmark a careful heuristic gets close.
 What exact search adds is the worst cases, a guarantee that no plan on the same graph and SOC grid
 is faster, and the yardstick itself: without the optimum, the heuristic's 2.6-minute gap could not
 be measured. Whether the gap widens with sparser chargers or vehicle-specific charging curves is
@@ -46,16 +45,15 @@ cd chargepath-ev-route-optimizer
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install --editable ".[dev]"
 
-python -m pytest -q                       # 263 tests, under a minute
+python -m pytest -q                       # unit and integration tests
 python examples/run_synthetic_demo.py     # plan the synthetic trip on the command line
 python -m chargepath.demo                 # map demo on http://127.0.0.1:8743
 ```
 
 `scripts/check.ps1` adds `ruff check`, `ruff format --check` and strict `mypy` to the commands above
-and needs no network. CI runs it on Python 3.11 and 3.13, then installs the built wheel into a clean
-environment (`scripts/check_wheel.py`) and plans the fixture in real Chromium through Pyodide
-(`browser_tests/`). The Pages demo is deployed from the same workflow, only after those jobs pass
-for that commit. [docs/demo.md](docs/demo.md) shows the real output of the main commands.
+and needs no network. CI runs it on Python 3.11 and 3.13 and plans the fixture in real Chromium
+through Pyodide (`browser_tests/`). The Pages demo is deployed only after those jobs pass for the
+same commit.
 
 Planning between arbitrary points needs a charger snapshot and a local OSRM server; see the
 [map demo guide](docs/map_demo.md) and [OSRM setup](docs/osrm_setup.md).
@@ -77,10 +75,10 @@ Planning between arbitrary points needs a charger snapshot and a local OSRM serv
 The real-route numbers depend on a road graph and an EPDK station snapshot that are kept outside Git
 because their redistribution terms are unclear. A clone can check the published numbers against the
 committed per-scenario outcomes, but cannot rerun the planner on those graphs. The 80% heuristic is a
-deliberately simple baseline, and even the lookahead heuristic is not a commercial planner. None of these numbers measure whether the
-energy model matches a real car; the [field pilots](docs/results.md#field-pilot--volkswagen-id3)
-test that separately on public telemetry from two cars. Full tables and methods are in
-[results](docs/results.md).
+deliberately simple baseline, and even the lookahead heuristic is not a commercial planner. None of
+these numbers measure whether the energy model matches a real car; the
+[field pilots](docs/results.md#field-pilot--volkswagen-id3) test that separately on public telemetry
+from two cars. Full tables and methods are in [results](docs/results.md).
 
 ## How it works
 

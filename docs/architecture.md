@@ -1,8 +1,7 @@
 # Architecture
 
-## Design goal
-
-Keep the portfolio decision logic visible: road routing is a provider, while EV feasibility and charging decisions remain in a deterministic Python core.
+Road routing is a provider; EV feasibility and charging decisions stay in a deterministic Python
+core.
 
 ## Components
 

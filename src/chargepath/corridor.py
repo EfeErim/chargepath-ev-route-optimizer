@@ -10,25 +10,9 @@ from chargepath.models import GeoJsonLineString
 from chargepath.station_data import CompatibleStationOption
 
 EARTH_RADIUS_KM = 6371.0088
-LEGACY_ALGORITHM = "equirectangular-segment-v1"
-PROGRESS_STRATA_ALGORITHM = "equirectangular-segment-progress-strata-v2"
 FARTHEST_PROGRESS_ALGORITHM = "equirectangular-segment-farthest-progress-v3"
-PROGRESS_STRATA_COVERAGE_POLICY = "one-best-per-equal-progress-stratum-then-global-fill"
 FARTHEST_PROGRESS_COVERAGE_POLICY = "prefix-monotonic-largest-progress-gap-then-quality"
 PROGRESS_COVERAGE_TOLERANCE_FRACTION = 0.02
-LEGACY_RANKING_KEYS = (
-    "corridor_distance_km_asc",
-    "route_progress_fraction_asc",
-    "max_power_kw_desc",
-    "stable_station_id_asc",
-)
-PROGRESS_STRATA_RANKING_KEYS = (
-    "progress_stratum_asc",
-    "corridor_distance_km_asc",
-    "max_power_kw_desc",
-    "route_progress_fraction_asc",
-    "stable_station_id_asc",
-)
 RANKING_KEYS = (
     "route_progress_coverage_gap_desc_with_tolerance",
     "corridor_distance_km_asc",
@@ -46,45 +30,25 @@ class CandidateSelectionConfig:
     ranking_keys: tuple[str, ...] = RANKING_KEYS
 
     def __post_init__(self) -> None:
-        if (
-            isinstance(self.corridor_width_km, bool)
-            or not isinstance(self.corridor_width_km, (int, float))
-            or not math.isfinite(self.corridor_width_km)
-            or self.corridor_width_km <= 0
-        ):
+        if not math.isfinite(self.corridor_width_km) or self.corridor_width_km <= 0:
             raise ValueError("corridor_width_km must be finite and positive")
-        if (
-            isinstance(self.candidate_cap, bool)
-            or not isinstance(self.candidate_cap, int)
-            or self.candidate_cap <= 0
-        ):
+        if self.candidate_cap <= 0:
             raise ValueError("candidate_cap must be positive")
-        if not isinstance(self.algorithm, str):
-            raise ValueError("corridor-selection algorithm must be text")
-        expected_ranking_keys = {
-            LEGACY_ALGORITHM: LEGACY_RANKING_KEYS,
-            PROGRESS_STRATA_ALGORITHM: PROGRESS_STRATA_RANKING_KEYS,
-            FARTHEST_PROGRESS_ALGORITHM: RANKING_KEYS,
-        }.get(self.algorithm)
-        if expected_ranking_keys is None:
+        if self.algorithm != FARTHEST_PROGRESS_ALGORITHM:
             raise ValueError("unsupported corridor-selection algorithm")
-        if self.ranking_keys != expected_ranking_keys:
+        if self.ranking_keys != RANKING_KEYS:
             raise ValueError("ranking_keys must match the selected deterministic algorithm")
 
     def to_manifest(self) -> dict[str, Any]:
-        manifest: dict[str, Any] = {
+        return {
             "algorithm": self.algorithm,
             "corridor_width_km": self.corridor_width_km,
             "candidate_cap": self.candidate_cap,
             "ranking_keys": list(self.ranking_keys),
             "final_tie_break": "stable_station_id_asc",
+            "coverage_policy": FARTHEST_PROGRESS_COVERAGE_POLICY,
+            "progress_gap_tolerance_fraction": PROGRESS_COVERAGE_TOLERANCE_FRACTION,
         }
-        if self.algorithm == PROGRESS_STRATA_ALGORITHM:
-            manifest["coverage_policy"] = PROGRESS_STRATA_COVERAGE_POLICY
-        if self.algorithm == FARTHEST_PROGRESS_ALGORITHM:
-            manifest["coverage_policy"] = FARTHEST_PROGRESS_COVERAGE_POLICY
-            manifest["progress_gap_tolerance_fraction"] = PROGRESS_COVERAGE_TOLERANCE_FRACTION
-        return manifest
 
 
 DEFAULT_CANDIDATE_SELECTION_CONFIG = CandidateSelectionConfig(
@@ -136,12 +100,7 @@ def select_corridor_candidates(
         if match is not None:
             distance, progress = match
             candidates.append(CorridorCandidate(option, distance, progress))
-    if config.algorithm == LEGACY_ALGORITHM:
-        selected = sorted(candidates, key=_legacy_ranking_key)[: config.candidate_cap]
-    elif config.algorithm == PROGRESS_STRATA_ALGORITHM:
-        selected = _select_progress_strata(candidates, candidate_cap=config.candidate_cap)
-    else:
-        selected = _select_farthest_progress(candidates, candidate_cap=config.candidate_cap)
+    selected = _select_farthest_progress(candidates, candidate_cap=config.candidate_cap)
     return CandidateSelectionResult(
         candidates=tuple(selected),
         eligible_count=len(candidates),
@@ -149,56 +108,13 @@ def select_corridor_candidates(
     )
 
 
-def _legacy_ranking_key(candidate: CorridorCandidate) -> tuple[float, float, float, str]:
-    return (
-        candidate.corridor_distance_km,
-        candidate.route_progress_fraction,
-        -candidate.option.station.max_power_kw,
-        candidate.option.station.id,
-    )
-
-
-def _progress_stratum(progress: float, candidate_cap: int) -> int:
-    return min(candidate_cap - 1, math.floor(progress * candidate_cap))
-
-
-def _stratum_quality_key(candidate: CorridorCandidate) -> tuple[float, float, float, str]:
+def _quality_key(candidate: CorridorCandidate) -> tuple[float, float, float, str]:
     return (
         candidate.corridor_distance_km,
         -candidate.option.station.max_power_kw,
         candidate.route_progress_fraction,
         candidate.option.station.id,
     )
-
-
-def _select_progress_strata(
-    candidates: list[CorridorCandidate], *, candidate_cap: int
-) -> list[CorridorCandidate]:
-    """Cover route progress before using spare capacity for globally strong candidates."""
-
-    quality_order = sorted(candidates, key=_stratum_quality_key)
-    selected_by_stratum: dict[int, CorridorCandidate] = {}
-    for candidate in quality_order:
-        stratum = _progress_stratum(candidate.route_progress_fraction, candidate_cap)
-        selected_by_stratum.setdefault(stratum, candidate)
-
-    selected = list(selected_by_stratum.values())
-    selected_ids = {candidate.option.station.id for candidate in selected}
-    for candidate in quality_order:
-        if len(selected) >= candidate_cap:
-            break
-        if candidate.option.station.id in selected_ids:
-            continue
-        selected.append(candidate)
-        selected_ids.add(candidate.option.station.id)
-
-    selected.sort(
-        key=lambda candidate: (
-            _progress_stratum(candidate.route_progress_fraction, candidate_cap),
-            *_stratum_quality_key(candidate),
-        )
-    )
-    return selected[:candidate_cap]
 
 
 def _select_farthest_progress(
@@ -208,7 +124,7 @@ def _select_farthest_progress(
 
     if not candidates:
         return []
-    remaining = sorted(candidates, key=_stratum_quality_key)
+    remaining = sorted(candidates, key=_quality_key)
     earliest_progress = min(candidate.route_progress_fraction for candidate in remaining)
     first = min(
         (
@@ -217,7 +133,7 @@ def _select_farthest_progress(
             if candidate.route_progress_fraction
             <= earliest_progress + PROGRESS_COVERAGE_TOLERANCE_FRACTION
         ),
-        key=_stratum_quality_key,
+        key=_quality_key,
     )
     selected = [first]
     remaining.remove(first)
@@ -236,7 +152,7 @@ def _select_farthest_progress(
                 if minimum_gap[candidate.option.station.id]
                 >= largest_gap - PROGRESS_COVERAGE_TOLERANCE_FRACTION
             ),
-            key=_stratum_quality_key,
+            key=_quality_key,
         )
         selected.append(next_candidate)
         remaining.remove(next_candidate)

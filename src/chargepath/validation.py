@@ -55,23 +55,6 @@ def soc_step(value: object) -> int:
     return value
 
 
-def charge_model(
-    *,
-    taper_start_pct: object,
-    taper_factor: object,
-    session_setup_minutes: object,
-) -> tuple[float, float, float]:
-    """Validate the generic charging-curve parameters shared by every strategy and replay."""
-
-    if not is_finite_number(taper_start_pct) or not 0 < float(taper_start_pct) < 100:
-        raise ValueError("taper_start_pct must be between 0 and 100")
-    if not is_finite_number(taper_factor) or not 0 < float(taper_factor) <= 1:
-        raise ValueError("taper_factor must be between 0 and 1")
-    if not is_finite_number(session_setup_minutes) or float(session_setup_minutes) < 0:
-        raise ValueError("session_setup_minutes must not be negative")
-    return float(taper_start_pct), float(taper_factor), float(session_setup_minutes)
-
-
 def json_object(value: Any, *, field: str) -> dict[str, Any]:
     if not isinstance(value, dict) or any(not isinstance(key, str) for key in value):
         raise ValueError(f"{field} must be a JSON object")

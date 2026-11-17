@@ -14,7 +14,7 @@ from itertools import pairwise
 from pathlib import Path
 from statistics import mean, variance
 
-from chargepath.real_route_benchmark import canonical_bytes
+from chargepath.evaluation import canonical_json_bytes
 
 SOURCE_SHA256 = "fb59fa697344794321319c7e9d73968d563ee78500f2b173d445f78ff3cc40f5"
 COLUMNS = (
@@ -236,7 +236,7 @@ def main() -> None:
         ),
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_bytes(canonical_bytes(result))
+    args.output.write_bytes(canonical_json_bytes(result))
     print(f"BMW winter trips accepted: {len(drives)}/{len(members)}")
 
 

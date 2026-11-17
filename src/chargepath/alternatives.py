@@ -29,6 +29,8 @@ from chargepath.optimizer import EVRouteOptimizer, RoutePreference
 from chargepath.providers.base import RoadNetwork
 from chargepath.verification import verify_route_plan
 
+GREEDY_TARGET_SOC_PCT = 80
+
 
 class RouteStrategy(StrEnum):
     """Stable public identifiers for the route-option algorithms."""
@@ -46,16 +48,6 @@ class RouteOption:
     strategies: tuple[RouteStrategy, ...]
     plan: RoutePlan
 
-    def __post_init__(self) -> None:
-        if not isinstance(self.strategies, tuple) or not self.strategies:
-            raise ValueError("route option must name at least one strategy")
-        if any(not isinstance(strategy, RouteStrategy) for strategy in self.strategies):
-            raise ValueError("route option strategies must be RouteStrategy values")
-        if len(set(self.strategies)) != len(self.strategies):
-            raise ValueError("route option strategies must not contain duplicates")
-        if not isinstance(self.plan, RoutePlan):
-            raise ValueError("route option plan must be a RoutePlan")
-
 
 @dataclass(frozen=True, slots=True)
 class RouteOptionSet:
@@ -65,14 +57,8 @@ class RouteOptionSet:
     unavailable_strategies: tuple[RouteStrategy, ...] = ()
 
     def __post_init__(self) -> None:
-        if not isinstance(self.options, tuple) or not self.options:
+        if not self.options:
             raise ValueError("route option set must contain at least one option")
-        if any(not isinstance(option, RouteOption) for option in self.options):
-            raise ValueError("route option set options must be RouteOption values")
-        if not isinstance(self.unavailable_strategies, tuple) or any(
-            not isinstance(strategy, RouteStrategy) for strategy in self.unavailable_strategies
-        ):
-            raise ValueError("unavailable strategies must be RouteStrategy values")
         available = [strategy for option in self.options for strategy in option.strategies]
         if len(set(available)) != len(available):
             raise ValueError("a route strategy must not appear in multiple options")
@@ -91,30 +77,10 @@ class GreedyFixedTargetOptimizer:
         self,
         *,
         soc_step_pct: int = 5,
-        target_soc_pct: float = 80.0,
-        taper_start_pct: float = 80.0,
-        taper_factor: float = 0.45,
-        session_setup_minutes: float = 2.0,
         consumption_model: ConsumptionModel = DEFAULT_CONSUMPTION,
     ) -> None:
         validation.soc_step(soc_step_pct)
-        if (
-            isinstance(target_soc_pct, bool)
-            or not isinstance(target_soc_pct, (int, float))
-            or not math.isfinite(target_soc_pct)
-            or not 0 < target_soc_pct <= 100
-        ):
-            raise ValueError("target_soc_pct must be between 0 and 100")
-        validation.charge_model(
-            taper_start_pct=taper_start_pct,
-            taper_factor=taper_factor,
-            session_setup_minutes=session_setup_minutes,
-        )
         self.soc_step_pct = soc_step_pct
-        self.target_soc_pct = target_soc_pct
-        self.taper_start_pct = taper_start_pct
-        self.taper_factor = taper_factor
-        self.session_setup_minutes = session_setup_minutes
         self.consumption_model = consumption_model
 
     def optimize(
@@ -155,9 +121,8 @@ class GreedyFixedTargetOptimizer:
 
         reserve_bucket = math.ceil(vehicle.reserve_soc_pct / self.soc_step_pct)
         bucket_kwh = vehicle.usable_battery_kwh * self.soc_step_pct / 100
-        target_bucket = math.ceil(self.target_soc_pct / self.soc_step_pct)
+        target_bucket = math.ceil(GREEDY_TARGET_SOC_PCT / self.soc_step_pct)
         maximum_bucket = 100 // self.soc_step_pct
-        target_bucket = min(target_bucket, maximum_bucket)
         leg_lookup = leg_bucket_lookup(
             required_buckets_cache,
             vehicle=vehicle,
@@ -291,15 +256,7 @@ class GreedyFixedTargetOptimizer:
     ) -> ChargingStop:
         arrival_soc = energy_bucket * self.soc_step_pct
         departure_soc = target_bucket * self.soc_step_pct
-        minutes = charging_minutes(
-            vehicle,
-            station.max_power_kw,
-            arrival_soc,
-            departure_soc,
-            taper_start_pct=self.taper_start_pct,
-            taper_factor=self.taper_factor,
-            setup_minutes=self.session_setup_minutes,
-        )
+        minutes = charging_minutes(vehicle, station.max_power_kw, arrival_soc, departure_soc)
         return ChargingStop(
             station_id=station.id,
             arrival_soc_pct=float(arrival_soc),
@@ -316,22 +273,10 @@ class CompetitiveRoutePlanner:
         self,
         *,
         soc_step_pct: int = 5,
-        taper_start_pct: float = 80.0,
-        taper_factor: float = 0.45,
-        session_setup_minutes: float = 2.0,
         consumption_model: ConsumptionModel = DEFAULT_CONSUMPTION,
     ) -> None:
-        EVRouteOptimizer(
-            soc_step_pct=soc_step_pct,
-            taper_start_pct=taper_start_pct,
-            taper_factor=taper_factor,
-            session_setup_minutes=session_setup_minutes,
-            consumption_model=consumption_model,
-        )
+        validation.soc_step(soc_step_pct)
         self.soc_step_pct = soc_step_pct
-        self.taper_start_pct = taper_start_pct
-        self.taper_factor = taper_factor
-        self.session_setup_minutes = session_setup_minutes
         self.consumption_model = consumption_model
 
     def plan(
@@ -355,9 +300,6 @@ class CompetitiveRoutePlanner:
             optimizer = EVRouteOptimizer(
                 preference=preference,
                 soc_step_pct=self.soc_step_pct,
-                taper_start_pct=self.taper_start_pct,
-                taper_factor=self.taper_factor,
-                session_setup_minutes=self.session_setup_minutes,
                 consumption_model=self.consumption_model,
             )
             try:
@@ -375,11 +317,7 @@ class CompetitiveRoutePlanner:
             candidates.append((strategy, plan))
 
         greedy = GreedyFixedTargetOptimizer(
-            soc_step_pct=self.soc_step_pct,
-            taper_start_pct=self.taper_start_pct,
-            taper_factor=self.taper_factor,
-            session_setup_minutes=self.session_setup_minutes,
-            consumption_model=self.consumption_model,
+            soc_step_pct=self.soc_step_pct, consumption_model=self.consumption_model
         )
         try:
             greedy_plan = greedy._optimize_with_cache(
@@ -409,9 +347,6 @@ class CompetitiveRoutePlanner:
                 vehicle=vehicle,
                 stations=stations,
                 soc_step_pct=self.soc_step_pct,
-                taper_start_pct=self.taper_start_pct,
-                taper_factor=self.taper_factor,
-                session_setup_minutes=self.session_setup_minutes,
                 consumption_model=self.consumption_model,
                 road_network=road_network,
                 origin_id=origin_id,

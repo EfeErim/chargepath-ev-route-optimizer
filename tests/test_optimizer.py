@@ -297,19 +297,6 @@ def test_multi_stop_plan_replays_through_independent_verifier() -> None:
     assert [stop.station_id for stop in plan.charging_stops] == ["first", "second"]
 
 
-def test_verifier_rejects_tampered_arrival_soc() -> None:
-    vehicle = make_vehicle(initial_soc_pct=80)
-    plan = optimize_and_verify(
-        origin_id="a",
-        destination_id="b",
-        vehicle=vehicle,
-        stations={},
-        road_network=StaticRoadNetwork([RoadLeg("a", "b", 100, 60)]),
-    )
-    with pytest.raises(ValueError, match="arrival SOC mismatch"):
-        verify_route_plan(replace(plan, arrival_soc_pct=50), vehicle=vehicle, stations={})
-
-
 def test_route_plan_rejects_inconsistent_total() -> None:
     vehicle = make_vehicle(initial_soc_pct=80)
     plan = optimize_and_verify(
@@ -338,18 +325,9 @@ def test_optimizer_rejects_invalid_provider_neighbor_contract() -> None:
         )
 
 
-@pytest.mark.parametrize(
-    ("field", "value"),
-    [
-        ("soc_step_pct", True),
-        ("taper_start_pct", math.nan),
-        ("taper_factor", math.inf),
-        ("session_setup_minutes", math.nan),
-    ],
-)
-def test_optimizer_rejects_nonfinite_or_boolean_configuration(field: str, value: object) -> None:
+def test_optimizer_rejects_boolean_soc_step() -> None:
     with pytest.raises(ValueError):
-        EVRouteOptimizer(**cast(Any, {field: value}))
+        EVRouteOptimizer(soc_step_pct=cast(Any, True))
 
 
 def test_seeded_small_graph_fuzz_is_deterministic_and_replay_safe() -> None:

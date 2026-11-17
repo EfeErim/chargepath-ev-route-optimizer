@@ -10,8 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 import statistics
-import time
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
@@ -21,7 +20,7 @@ from chargepath.corridor import (
     CandidateSelectionConfig,
     select_corridor_candidates,
 )
-from chargepath.evaluation import _nearest_rank_p95
+from chargepath.evaluation import nearest_rank, time_passes
 from chargepath.models import GeoJsonLineString, RoadLeg, Station
 from chargepath.providers.osrm import (
     CandidateGraphBuilder,
@@ -115,7 +114,6 @@ def collect_graphs(
     options: tuple[CompatibleStationOption, ...],
     client: CollectionClient,
     output_dir: Path,
-    keys: Iterable[GraphKey] | None = None,
 ) -> tuple[GraphKey, ...]:
     """Build and store each required candidate graph, recording provider failures as outcomes."""
 
@@ -124,7 +122,7 @@ def collect_graphs(
     if corridor_algorithm != FARTHEST_PROGRESS_ALGORITHM:
         raise ValueError(f"unsupported corridor algorithm: {corridor_algorithm}")
     routes = {route["id"]: route for route in manifest["routes"]}
-    selected_keys = tuple(sorted(keys)) if keys is not None else required_graph_keys(manifest)
+    selected_keys = required_graph_keys(manifest)
     data_version = frozen["road_graph"]["data_version"]
     first_origin, first_destination = route_endpoints(routes[selected_keys[0].route_id])
     observed = client.table((first_origin, first_destination)).data_version
@@ -273,16 +271,15 @@ def measure_osrm_runtime(
 
     results: dict[str, Any] = {"requests_per_pass": len(requests)}
     for name, run_pass in (("route", run_route_pass), ("table", run_table_pass)):
-        for _ in range(protocol["warmups"]):
-            run_pass()
-        samples: list[float] = []
-        for _ in range(protocol["repetitions"]):
-            started = time.perf_counter_ns()
-            run_pass()
-            samples.append((time.perf_counter_ns() - started) / 1_000_000)
-        results[name] = {
-            "median_ms": round(statistics.median(samples), 3),
-            "p95_ms": round(_nearest_rank_p95(samples), 3),
-            "samples_ms": [round(sample, 3) for sample in samples],
-        }
+        results[name] = timing_summary(
+            time_passes(run_pass, warmups=protocol["warmups"], repetitions=protocol["repetitions"])
+        )
     return results
+
+
+def timing_summary(samples: list[float]) -> dict[str, Any]:
+    return {
+        "median_ms": round(statistics.median(samples), 3),
+        "p95_ms": round(nearest_rank(samples, 0.95), 3),
+        "samples_ms": [round(sample, 3) for sample in samples],
+    }

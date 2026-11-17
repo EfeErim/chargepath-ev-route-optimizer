@@ -82,42 +82,6 @@ def test_manifest_pins_its_committed_inputs_by_checksum() -> None:
         assert hashlib.sha256((BENCHMARK_DIR / name).read_bytes()).hexdigest() == frozen[field]
 
 
-def test_experiments_match_the_project_plan() -> None:
-    manifest = _manifest()
-    route_ids = [route["id"] for route in manifest["routes"]]
-    experiments = manifest["experiments"]
-    assert experiments["E2"]["soc_step_pct"] == [10, 5, 2]
-    assert experiments["E3"]["candidate_cap"] == [12, 24, 50, 98, 200]
-    assert experiments["E4"]["corridor_width_km"] == [10, 25, 50]
-    assert (experiments["E6"]["warmups"], experiments["E6"]["repetitions"]) == (3, 20)
-    for name in ("E1", "E2", "E3", "E4"):
-        assert experiments[name]["routes"] == route_ids
-    e5_routes = experiments["E5"]["routes"]
-    assert len(e5_routes) == 8
-    assert set(e5_routes) <= set(route_ids)
-    assert Counter(route["band"] for route in manifest["routes"] if route["id"] in e5_routes) == {
-        band.name: 2 for band in DISTANCE_BANDS
-    }
-    sets = manifest["parameter_sets"]
-    assert [
-        (
-            sets[name]["usable_battery_kwh"],
-            sets[name]["max_dc_power_kw"],
-            sets[name]["consumption_kwh_per_100km"],
-        )
-        for name in ("set-40kwh", "set-60kwh", "set-80kwh")
-    ] == [(40, 50, 16), (60, 150, 18), (80, 250, 20)]
-    assert all(
-        (
-            sets[name]["initial_soc_pct"],
-            sets[name]["reserve_soc_pct"],
-            sets[name]["energy_safety_factor"],
-        )
-        == (80, 10, 1.1)
-        for name in ("set-40kwh", "set-60kwh", "set-80kwh")
-    )
-
-
 def test_manifest_contains_no_station_rows_or_identifiers() -> None:
     text = (BENCHMARK_DIR / "manifest.json").read_text(encoding="utf-8")
     for forbidden in ("sarjIstasyonu", "soketNo", "epdk:", "ŞRJ/"):

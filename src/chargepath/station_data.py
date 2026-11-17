@@ -11,7 +11,7 @@ import json
 import math
 from collections import defaultdict
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal
@@ -74,11 +74,14 @@ class SnapshotProvenance:
     source_freshness: str | None = None
 
     def __post_init__(self) -> None:
+        # Fields come from a station manifest on disk, so each one is checked here.
         if not isinstance(self.snapshot_id, str) or not self.snapshot_id.strip():
             raise ValueError("snapshot_id must not be empty")
-        if not isinstance(self.source_name, str) or not self.source_name.strip():
-            raise ValueError("source name and HTTPS URL are required")
-        if not isinstance(self.source_url, str):
+        if (
+            not isinstance(self.source_name, str)
+            or not self.source_name.strip()
+            or not isinstance(self.source_url, str)
+        ):
             raise ValueError("source name and HTTPS URL are required")
         parsed_url = urlsplit(self.source_url)
         if (
@@ -123,28 +126,6 @@ class NormalizedSite:
     access: Literal["public", "private"]
     provenance: SnapshotProvenance
 
-    def __post_init__(self) -> None:
-        if any(
-            not isinstance(value, str) or not value.strip()
-            for value in (self.source_id, self.name, self.operator)
-        ):
-            raise ValueError("normalized site identifiers and text must not be empty")
-        if (
-            isinstance(self.latitude, bool)
-            or not isinstance(self.latitude, (int, float))
-            or not math.isfinite(self.latitude)
-            or not -90 <= self.latitude <= 90
-            or isinstance(self.longitude, bool)
-            or not isinstance(self.longitude, (int, float))
-            or not math.isfinite(self.longitude)
-            or not -180 <= self.longitude <= 180
-        ):
-            raise ValueError("normalized site coordinates must be finite WGS84 values")
-        if self.access not in {"public", "private"}:
-            raise ValueError("normalized site access is unsupported")
-        if not isinstance(self.provenance, SnapshotProvenance):
-            raise ValueError("normalized site provenance is required")
-
 
 @dataclass(frozen=True, slots=True)
 class NormalizedSocket:
@@ -155,47 +136,12 @@ class NormalizedSocket:
     max_power_kw: float
     provenance: SnapshotProvenance
 
-    def __post_init__(self) -> None:
-        if any(
-            not isinstance(value, str) or not value.strip()
-            for value in (self.source_id, self.site_source_id)
-        ):
-            raise ValueError("normalized socket identifiers must not be empty")
-        if self.current_type not in {"AC", "DC"}:
-            raise ValueError("normalized socket current type is unsupported")
-        if self.connector_type not in {"TYPE2", "CCS2", "CHADEMO"}:
-            raise ValueError("normalized socket connector type is unsupported")
-        if (self.current_type == "AC") != (self.connector_type == "TYPE2"):
-            raise ValueError("normalized socket current and connector types are inconsistent")
-        if (
-            isinstance(self.max_power_kw, bool)
-            or not isinstance(self.max_power_kw, (int, float))
-            or not math.isfinite(self.max_power_kw)
-            or self.max_power_kw <= 0
-        ):
-            raise ValueError("normalized socket power must be finite and positive")
-        if not isinstance(self.provenance, SnapshotProvenance):
-            raise ValueError("normalized socket provenance is required")
-
-    @property
-    def stable_id(self) -> str:
-        return f"{self.site_source_id}:{self.source_id}"
-
 
 @dataclass(frozen=True, slots=True)
 class ValidationIssue:
     entity: Literal["site", "socket"]
     source_id: str
     reason: str
-
-    def __post_init__(self) -> None:
-        if self.entity not in {"site", "socket"}:
-            raise ValueError("validation issue entity is unsupported")
-        if any(
-            not isinstance(value, str) or not value.strip()
-            for value in (self.source_id, self.reason)
-        ):
-            raise ValueError("validation issue source and reason must not be empty")
 
 
 @dataclass(frozen=True, slots=True)
@@ -206,13 +152,6 @@ class ReconciliationCounts:
     duplicates: int
 
     def __post_init__(self) -> None:
-        if any(
-            isinstance(value, bool) or not isinstance(value, int)
-            for value in (self.input, self.accepted, self.rejected, self.duplicates)
-        ):
-            raise ValueError("reconciliation counts must be integers")
-        if min(self.input, self.accepted, self.rejected, self.duplicates) < 0:
-            raise ValueError("reconciliation counts must not be negative")
         if self.input != self.accepted + self.rejected + self.duplicates:
             raise ValueError("input must equal accepted plus rejected plus duplicates")
 
@@ -225,16 +164,6 @@ class StationValidationReport:
     issues: tuple[ValidationIssue, ...]
 
     def __post_init__(self) -> None:
-        if not isinstance(self.snapshot_id, str) or not self.snapshot_id.strip():
-            raise ValueError("validation report snapshot_id must not be empty")
-        if not isinstance(self.sites, ReconciliationCounts) or not isinstance(
-            self.sockets, ReconciliationCounts
-        ):
-            raise ValueError("validation report reconciliation counts are required")
-        if not isinstance(self.issues, tuple) or any(
-            not isinstance(issue, ValidationIssue) for issue in self.issues
-        ):
-            raise ValueError("validation report issues must be ValidationIssue values")
         expected_issue_count = (
             self.sites.rejected
             + self.sites.duplicates
@@ -245,15 +174,7 @@ class StationValidationReport:
             raise ValueError("validation report issue count does not match reconciliation")
 
     def to_dict(self) -> dict[str, Any]:
-        return {
-            "snapshot_id": self.snapshot_id,
-            "sites": _counts_dict(self.sites),
-            "sockets": _counts_dict(self.sockets),
-            "issues": [
-                {"entity": issue.entity, "source_id": issue.source_id, "reason": issue.reason}
-                for issue in self.issues
-            ],
-        }
+        return asdict(self)
 
 
 @dataclass(frozen=True, slots=True)
@@ -271,24 +192,6 @@ class CompatibleStationOption:
     site_source_id: str
     socket_source_ids: tuple[str, ...]
     provenance: SnapshotProvenance
-
-    def __post_init__(self) -> None:
-        if not isinstance(self.station, Station):
-            raise ValueError("compatible option station must be a Station")
-        if not isinstance(self.site_source_id, str) or not self.site_source_id.strip():
-            raise ValueError("compatible option site_source_id must not be empty")
-        if (
-            not isinstance(self.socket_source_ids, tuple)
-            or not self.socket_source_ids
-            or any(
-                not isinstance(socket_id, str) or not socket_id.strip()
-                for socket_id in self.socket_source_ids
-            )
-            or len(set(self.socket_source_ids)) != len(self.socket_source_ids)
-        ):
-            raise ValueError("compatible option socket ids must be unique non-empty text")
-        if not isinstance(self.provenance, SnapshotProvenance):
-            raise ValueError("compatible option provenance is required")
 
 
 @dataclass(frozen=True, slots=True)
@@ -312,25 +215,7 @@ class SnapshotManifest:
     reconciliation: dict[str, dict[str, int]]
 
     def to_dict(self) -> dict[str, Any]:
-        return {
-            "manifest_version": self.manifest_version,
-            "snapshot_id": self.snapshot_id,
-            "source": self.source,
-            "source_url": self.source_url,
-            "request_fingerprint_sha256": self.request_fingerprint_sha256,
-            "retrieved_at": self.retrieved_at,
-            "response_status": self.response_status,
-            "response_sha256": self.response_sha256,
-            "response_bytes": self.response_bytes,
-            "source_record_count": self.source_record_count,
-            "source_socket_count": self.source_socket_count,
-            "source_schema_version": self.source_schema_version,
-            "transformation_version": self.transformation_version,
-            "reuse_status": self.reuse_status,
-            "source_freshness": self.source_freshness,
-            "quota_status": self.quota_status,
-            "reconciliation": self.reconciliation,
-        }
+        return asdict(self)
 
 
 def request_fingerprint(*, method: str, url: str, headers: Mapping[str, str], body: str) -> str:
@@ -358,37 +243,12 @@ def build_snapshot_manifest(
     report: StationValidationReport,
     response_status: int,
 ) -> SnapshotManifest:
-    """Build metadata-only evidence for a raw snapshot that remains outside Git."""
+    """Build metadata-only evidence for a raw snapshot that remains outside Git.
 
-    if report.snapshot_id != provenance.snapshot_id:
-        raise ValueError("validation report snapshot does not match provenance")
-    if (
-        isinstance(response_status, bool)
-        or not isinstance(response_status, int)
-        or not 100 <= response_status <= 599
-    ):
-        raise ValueError("response_status must be a valid HTTP status code")
-    try:
-        decoded_response = json.loads(raw_response)
-    except (UnicodeDecodeError, json.JSONDecodeError) as error:
-        raise ValueError("raw snapshot must contain valid JSON") from error
-    if decoded_response != payload:
-        raise ValueError("raw snapshot content does not match the supplied payload")
-    data = payload.get("data")
-    if not isinstance(data, list):
-        raise ValueError("snapshot payload data must be a list")
-    actual_checksum = hashlib.sha256(raw_response).hexdigest()
-    if actual_checksum != provenance.response_sha256:
-        raise ValueError("raw response checksum does not match snapshot provenance")
-    socket_count = sum(
-        len(row.get("soketler", []))
-        for row in data
-        if isinstance(row, Mapping) and isinstance(row.get("soketler"), list)
-    )
-    if report.sites.input != len(data) or report.sockets.input != socket_count:
-        raise ValueError("validation report input counts do not match the snapshot payload")
-    payload_status = payload.get("statusCode")
-    if payload_status != response_status:
+    ``report`` must come from normalizing ``payload``, the decoded ``raw_response``.
+    """
+
+    if payload.get("statusCode") != response_status:
         raise ValueError("HTTP response status does not match the snapshot payload")
     return SnapshotManifest(
         manifest_version=1,
@@ -403,18 +263,18 @@ def build_snapshot_manifest(
         ),
         retrieved_at=provenance.retrieved_at,
         response_status=response_status,
-        response_sha256=actual_checksum,
+        response_sha256=provenance.response_sha256,
         response_bytes=len(raw_response),
-        source_record_count=len(data),
-        source_socket_count=socket_count,
+        source_record_count=report.sites.input,
+        source_socket_count=report.sockets.input,
         source_schema_version="epdk-observed-2026-08-09-v1",
         transformation_version="chargepath-normalize-v1",
         reuse_status=provenance.reuse_status,
         source_freshness=provenance.source_freshness or "unknown_not_supplied_by_response",
         quota_status="unknown_not_documented",
         reconciliation={
-            "sites": _counts_dict(report.sites),
-            "sockets": _counts_dict(report.sockets),
+            "sites": asdict(report.sites),
+            "sockets": asdict(report.sockets),
         },
     )
 
@@ -577,14 +437,10 @@ def project_ccs2_dc_options(result: NormalizationResult) -> tuple[CompatibleStat
 
     options: list[CompatibleStationOption] = []
     for site_id in sorted(compatible):
-        site = sites.get(site_id)
-        if site is None:
-            raise ValueError("compatible socket references an unknown normalized site")
+        site = sites[site_id]
         if site.access != "public":
             continue
         site_sockets = sorted(compatible[site_id], key=lambda socket: socket.source_id)
-        if any(socket.provenance != site.provenance for socket in site_sockets):
-            raise ValueError("site and compatible socket provenance must match")
         options.append(
             CompatibleStationOption(
                 station=Station(
@@ -780,12 +636,3 @@ def _positive_power(value: Any) -> float:
     if not math.isfinite(result) or result <= 0:
         raise ValueError("socket power must be finite and positive")
     return result
-
-
-def _counts_dict(counts: ReconciliationCounts) -> dict[str, int]:
-    return {
-        "input": counts.input,
-        "accepted": counts.accepted,
-        "rejected": counts.rejected,
-        "duplicates": counts.duplicates,
-    }

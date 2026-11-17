@@ -6,16 +6,31 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Removed
+
+- `chargepath.examples`; its telemetry-derived vehicle inputs now live with their speed-model tests.
+- Dependabot automation; action versions remain pinned to commit SHAs.
+- Charging-model arguments that were never changed: `taper_start_pct`, `taper_factor` and
+  `session_setup_minutes` on `EVRouteOptimizer`, `GreedyFixedTargetOptimizer`,
+  `CompetitiveRoutePlanner` and `verify_route_plan`, and `target_soc_pct` on the greedy heuristic.
+  `charging_minutes` keeps them. Also `OsrmHttpClient(profile=...)` (always `driving`) and
+  `fetch_selected_plan_geometry`.
+- Re-validation in normalized EPDK records, route options and candidate graphs of values their
+  only producers already check, and the payload cross-checks in `build_snapshot_manifest` that its
+  caller already guarantees.
+
 ### Changed
 
 - Exact search breaks full objective ties toward the higher arrival SOC, and compares minutes and
   kilometres after rounding to nine decimal places so floating-point noise cannot decide a tie.
   The exact-arithmetic property reference now checks the arrival SOC as well.
+- Regenerated `summary_v1.json` and `trips_v1.jsonl` with these tie-breaks. Only shortest-distance
+  charging statistics, distinct-option counts and some detours in the third decimal changed; plan
+  validity and feasibility counts are unchanged.
 - Exact search skips a state when a higher battery bucket at the same node was already settled.
   The pruning is dominance-safe and does not change any objective value.
 - `docs/results.md` states that E6 runtimes are per 72-scenario pass, not per search; the Baum et
   al. citation year is consistent (2020).
-
 - The demo services plan and analyze (replay for the SOC timeline, redundancy for the fastest
   plan) before `chargepath.demo.responses` formats the JSON; formatting starts no search, replay,
   or provider call. Responses are typed with `TypedDict`s and are byte-identical to 0.3.0.
@@ -26,19 +41,18 @@ All notable changes to this project are documented here. The format follows
   requests never deploy, and `pages.yml` was removed.
 - `TableCost` and `RoadTable` were removed; the OSRM table and route client protocols live in
   `chargepath.providers.osrm`. `[project.urls]` was added.
-- `run_route_followup.py` and `run_speed_choice.py` share `load_verified_graph`; both still
-  reproduce their committed outputs byte for byte.
+- The synthetic and real-route evaluations share one plan-and-replay function, one timing loop and
+  one serializer for indented JSON evidence (`canonical_json_bytes`), and the three follow-up scripts share
+  `verified_e1_graphs`. Every committed result is byte-identical.
 
 ### Added
 
 - `chargepath.lookahead.LookaheadGreedyOptimizer`, a one-step lookahead heuristic that picks each
   next charger and charge amount; it is an evaluation baseline, not a route option.
   `scripts/run_baseline_comparison.py` compares it with exact fastest on the 72 E1 scenarios
-  (pre-registered as M9) and writes `docs/benchmarks/real-routes/lookahead_baseline_v1.json`.
+  and writes `docs/benchmarks/real-routes/lookahead_baseline_v1.json`.
   Exact fastest was a median 2.6 min (0.5%) faster, p90 12.0, maximum 26.5, with 22 ties and no
   heuristic failures. The README now says that a careful heuristic gets close on this benchmark.
-- `scripts/check_wheel.py`, run in CI: installs the built wheel into a fresh environment and checks
-  imports, packaged fixture bytes, web assets, the demo command, and a replayed fixture plan.
 - `browser_tests/`, run in CI with the `browser` extra: the static demo in real Chromium with real
   Pyodide, map tiles blocked, and unexpected JavaScript errors failing the test.
 
@@ -111,13 +125,13 @@ All notable changes to this project are documented here. The format follows
   structure only.
 - A static browser build of the fixture demo that runs the planner in Pyodide
   (`scripts/build_static_demo.py`), published to GitHub Pages by the `Demo site` workflow.
-- An experimental terrain consumption model (`chargepath.terrain`) and its pre-registered held-out
+- An experimental terrain consumption model (`chargepath.terrain`) and its held-out
   evaluation on the BMW i3 pilot data, which it did not pass; it is not the default.
 - Literature additions in `docs/research.md`.
 - Tests that the replay checker rejects tampered plans, that the fastest objective breaks time ties
   on charging stops before distance, and that the README headline follows from the committed
   real-route outcomes.
-- `docs/demo.md` with captured output of the main commands.
+- `docs/map_demo.md` with captured output of the main commands.
 
 ## [0.2.0] - 2026-11-07
 

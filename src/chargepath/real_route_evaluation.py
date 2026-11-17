@@ -8,28 +8,35 @@ from __future__ import annotations
 
 import hashlib
 import json
-import math
 import platform
 import statistics
 import sys
-import time
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from functools import lru_cache
+from functools import lru_cache, partial
 from pathlib import Path
 from typing import Any
 
 from chargepath.baselines import ShortestDrivingTimeBaseline
-from chargepath.evaluation import _optimizer_for
+from chargepath.evaluation import (
+    OPTION_ALGORITHMS,
+    evaluate_plan,
+    nearest_rank,
+    plan_route,
+    time_passes,
+)
 from chargepath.models import NoFeasibleRouteError, RoutePlan, Station, VehicleProfile
 from chargepath.providers.static import StaticRoadNetwork
-from chargepath.real_route_collection import GraphKey, StoredGraph, load_stored_graph
-from chargepath.verification import verify_route_plan
+from chargepath.real_route_collection import (
+    GraphKey,
+    StoredGraph,
+    load_stored_graph,
+    load_verified_graph,
+    timing_summary,
+)
 
-ROAD_ONLY = "shortest_driving_time"
 FASTEST = "fastest"
 GREEDY = "greedy_fixed_80"
-OPTION_ALGORITHMS = (FASTEST, "shortest_distance", "fewest_charging_stops", GREEDY)
 GAP_REFERENCES = {"E2": 2, "E3": 200, "E4": 50}
 MINUTE_TOLERANCE = 1e-6
 FORBIDDEN_EVIDENCE_KEYS = frozenset(
@@ -93,92 +100,61 @@ def enumerate_trips(manifest: Mapping[str, Any]) -> tuple[Trip, ...]:
 
     def add(
         name: str,
+        settings: Mapping[str, Any],
         group: str,
         variant: str,
         value: float | str,
-        *,
-        width: int,
-        cap: int,
-        soc: int,
         vehicle: VehicleProfile,
     ) -> None:
-        for route_id in experiments[name]["routes"]:
-            trips.append(
-                Trip(
-                    experiment=name,
-                    group=group,
-                    variant=variant,
-                    value=value,
-                    route_id=route_id,
-                    band=bands[route_id],
-                    graph=GraphKey(route_id, width, cap),
-                    soc_step_pct=soc,
-                    vehicle=vehicle,
-                )
+        trips.extend(
+            Trip(
+                experiment=name,
+                group=group,
+                variant=variant,
+                value=value,
+                route_id=route_id,
+                band=bands[route_id],
+                graph=GraphKey(route_id, settings["corridor_width_km"], settings["candidate_cap"]),
+                soc_step_pct=settings["soc_step_pct"],
+                vehicle=vehicle,
             )
-
-    e1, e2, e3, e4, e5 = (experiments[name] for name in ("E1", "E2", "E3", "E4", "E5"))
-    for set_id in e1["parameter_sets"]:
-        add(
-            "E1",
-            set_id,
-            set_id,
-            set_id,
-            width=e1["corridor_width_km"],
-            cap=e1["candidate_cap"],
-            soc=e1["soc_step_pct"],
-            vehicle=_vehicle(set_id, sets[set_id]),
+            for route_id in experiments[name]["routes"]
         )
-    for set_id in e2["parameter_sets"]:
-        for soc in e2["soc_step_pct"]:
-            add(
-                "E2",
-                set_id,
-                f"{set_id}|soc={soc}",
-                soc,
-                width=e2["corridor_width_km"],
-                cap=e2["candidate_cap"],
-                soc=soc,
-                vehicle=_vehicle(set_id, sets[set_id]),
-            )
-    for set_id in e3["parameter_sets"]:
-        for cap in e3["candidate_cap"]:
-            add(
-                "E3",
-                set_id,
-                f"{set_id}|cap={cap}",
-                cap,
-                width=e3["corridor_width_km"],
-                cap=cap,
-                soc=e3["soc_step_pct"],
-                vehicle=_vehicle(set_id, sets[set_id]),
-            )
-    for set_id in e4["parameter_sets"]:
-        for width in e4["corridor_width_km"]:
-            add(
-                "E4",
-                set_id,
-                f"{set_id}|width={width}",
-                width,
-                width=width,
-                cap=e4["candidate_cap"],
-                soc=e4["soc_step_pct"],
-                vehicle=_vehicle(set_id, sets[set_id]),
-            )
+
+    e1 = experiments["E1"]
+    for set_id in e1["parameter_sets"]:
+        add("E1", e1, set_id, set_id, set_id, _vehicle(set_id, sets[set_id]))
+    # E2-E4 each sweep one setting over the same parameter sets.
+    for name, swept, label in (
+        ("E2", "soc_step_pct", "soc"),
+        ("E3", "candidate_cap", "cap"),
+        ("E4", "corridor_width_km", "width"),
+    ):
+        experiment = experiments[name]
+        for set_id in experiment["parameter_sets"]:
+            for value in experiment[swept]:
+                settings = {**experiment, swept: value}
+                vehicle = _vehicle(set_id, sets[set_id])
+                add(name, settings, set_id, f"{set_id}|{label}={value}", value, vehicle)
+    e5 = experiments["E5"]
     base = sets[e5["base_parameter_set"]]
     for factor, values in e5["factors"].items():
         for value in values:
-            add(
-                "E5",
-                factor,
-                f"{factor}={value}",
-                value,
-                width=e5["corridor_width_km"],
-                cap=e5["candidate_cap"],
-                soc=e5["soc_step_pct"],
-                vehicle=_vehicle(f"{factor}={value}", {**base, factor: value}),
-            )
+            variant = f"{factor}={value}"
+            add("E5", e5, factor, variant, value, _vehicle(variant, {**base, factor: value}))
     return tuple(trips)
+
+
+def verified_e1_graphs(
+    manifest: Mapping[str, Any], *, graphs_dir: Path, summary: Mapping[str, Any]
+) -> Iterator[tuple[Trip, StoredGraph]]:
+    """Yield each E1 trip with its stored graph, checked against the published checksum."""
+
+    for trip in enumerate_trips(manifest):
+        if trip.experiment == "E1":
+            name = trip.graph.file_name
+            sha256 = summary["stored_graphs"][name]["sha256"]
+            yield trip, load_verified_graph(graphs_dir / name, expected_sha256=sha256)
 
 
 def _plan_fingerprint(plan: RoutePlan) -> tuple[object, ...]:
@@ -228,30 +204,20 @@ def run_trip_on_graph(
     results: dict[str, Any] = {}
     fingerprints: set[tuple[object, ...]] = set()
     for algorithm in algorithms:
-        optimizer = _optimizer_for(algorithm, soc_step_pct)
-        arguments: dict[str, Any] = {
-            "origin_id": "origin",
-            "destination_id": "destination",
-            "vehicle": vehicle,
-            "road_network": network,
-        }
-        if algorithm != ROAD_ONLY:
-            arguments["stations"] = stations
         try:
-            plan = optimizer.optimize(**arguments)
+            plan = evaluate_plan(
+                algorithm,
+                origin_id="origin",
+                destination_id="destination",
+                vehicle=vehicle,
+                stations=stations,
+                road_network=network,
+                soc_step_pct=soc_step_pct,
+            )
         except NoFeasibleRouteError:
             results[algorithm] = {"outcome": "infeasible"}
             continue
-        # A replay failure propagates: it is a defect, not a reportable trip outcome.
-        verify_route_plan(
-            plan,
-            vehicle=vehicle,
-            stations=stations,
-            soc_step_pct=soc_step_pct,
-            road_network=network,
-            origin_id="origin",
-            destination_id="destination",
-        )
+        # Replay failures propagate as defects, not reportable trip outcomes.
         results[algorithm] = _plan_metrics(plan, reference_km=reference_km)
         if algorithm in OPTION_ALGORITHMS:
             fingerprints.add(_plan_fingerprint(plan))
@@ -289,14 +255,14 @@ def check_gates(trips: Sequence[Mapping[str, Any]]) -> None:
                 raise EvaluationDefectError(f"{label}: fastest is slower than {algorithm}")
 
 
-def _stats(values: Sequence[float]) -> dict[str, Any]:
+def summary_stats(values: list[float]) -> dict[str, Any]:
     if not values:
         return {"count": 0, "median": None, "p90": None, "minimum": None, "maximum": None}
     ordered = sorted(values)
     return {
         "count": len(ordered),
         "median": round(statistics.median(ordered), 3),
-        "p90": round(ordered[math.ceil(0.9 * len(ordered)) - 1], 3),
+        "p90": round(nearest_rank(ordered, 0.9), 3),
         "minimum": round(ordered[0], 3),
         "maximum": round(ordered[-1], 3),
     }
@@ -311,7 +277,7 @@ def _savings(trips: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
             saved = greedy["total_minutes"] - fastest["total_minutes"]
             minutes.append(saved)
             percent.append(100 * saved / greedy["total_minutes"])
-    return {"minutes": _stats(minutes), "percent": _stats(percent)}
+    return {"minutes": summary_stats(minutes), "percent": summary_stats(percent)}
 
 
 def _variant_summary(
@@ -328,14 +294,14 @@ def _variant_summary(
             "feasibility_rate": round(len(plans) / len(results), 4) if results else None,
             "valid_plan_rate": 1.0 if plans else None,
             "reserve_violations": sum(result["reserve_violations"] for result in plans),
-            "total_minutes": _stats([result["total_minutes"] for result in plans]),
-            "charging_minutes": _stats([result["charging_minutes"] for result in plans]),
-            "charging_stops": _stats([float(result["charging_stops"]) for result in plans]),
-            "detour_km": _stats(
+            "total_minutes": summary_stats([result["total_minutes"] for result in plans]),
+            "charging_minutes": summary_stats([result["charging_minutes"] for result in plans]),
+            "charging_stops": summary_stats([float(result["charging_stops"]) for result in plans]),
+            "detour_km": summary_stats(
                 [result["detour_km"] for result in plans if result["detour_km"] is not None]
             ),
         }
-    summary["distinct_options"] = _stats([float(trip["distinct_options"]) for trip in trips])
+    summary["distinct_options"] = summary_stats([float(trip["distinct_options"]) for trip in trips])
     return summary
 
 
@@ -363,7 +329,7 @@ def _reference_gap(trips: Sequence[Mapping[str, Any]], reference_value: float) -
             elif result["outcome"] == "plan":
                 gained += 1
         report["variants"][variant] = {
-            "gap_minutes": _stats(gaps),
+            "gap_minutes": summary_stats(gaps),
             "feasible_only_at_reference": lost,
             "feasible_only_at_variant": gained,
         }
@@ -497,11 +463,6 @@ def evaluate(
     return summary, records
 
 
-def summary_bytes(summary: Mapping[str, Any]) -> bytes:
-    text = json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False)
-    return (text + "\n").encode("utf-8")
-
-
 def trips_bytes(trips: Sequence[Mapping[str, Any]]) -> bytes:
     """Serialize one rounded trip per line, keeping the file reviewable and diffable."""
 
@@ -520,15 +481,9 @@ def trips_bytes(trips: Sequence[Mapping[str, Any]]) -> bytes:
 
 def _walk_keys(value: Any) -> set[str]:
     if isinstance(value, dict):
-        found = set(value)
-        for item in value.values():
-            found |= _walk_keys(item)
-        return found
+        return set(value).union(*map(_walk_keys, value.values()))
     if isinstance(value, list):
-        found = set()
-        for item in value:
-            found |= _walk_keys(item)
-        return found
+        return set().union(*map(_walk_keys, value))
     return set()
 
 
@@ -568,34 +523,29 @@ def measure_planner_runtime(*, manifest: Mapping[str, Any], graphs_dir: Path) ->
             graph = graphs[trip.graph]
             if graph.outcome != "graph":
                 continue
-            arguments: dict[str, Any] = {
-                "origin_id": "origin",
-                "destination_id": "destination",
-                "vehicle": trip.vehicle,
-                "road_network": StaticRoadNetwork(graph.legs),
-            }
-            if algorithm != ROAD_ONLY:
-                arguments["stations"] = dict(graph.stations)
             try:
-                _optimizer_for(algorithm, trip.soc_step_pct).optimize(**arguments)
+                plan_route(
+                    algorithm,
+                    origin_id="origin",
+                    destination_id="destination",
+                    vehicle=trip.vehicle,
+                    stations=dict(graph.stations),
+                    road_network=StaticRoadNetwork(graph.legs),
+                    soc_step_pct=trip.soc_step_pct,
+                )
             except NoFeasibleRouteError:
                 pass
 
-    results: dict[str, Any] = {}
-    for algorithm in algorithms:
-        for _ in range(protocol["warmups"]):
-            run_pass(algorithm)
-        samples: list[float] = []
-        for _ in range(protocol["repetitions"]):
-            started = time.perf_counter_ns()
-            run_pass(algorithm)
-            samples.append((time.perf_counter_ns() - started) / 1_000_000)
-        ordered = sorted(samples)
-        results[algorithm] = {
-            "median_ms": round(statistics.median(samples), 3),
-            "p95_ms": round(ordered[math.ceil(0.95 * len(ordered)) - 1], 3),
-            "samples_ms": [round(sample, 3) for sample in samples],
-        }
+    results = {
+        algorithm: timing_summary(
+            time_passes(
+                partial(run_pass, algorithm),
+                warmups=protocol["warmups"],
+                repetitions=protocol["repetitions"],
+            )
+        )
+        for algorithm in algorithms
+    }
     return {
         "clock": "time.perf_counter_ns",
         "warmups": protocol["warmups"],

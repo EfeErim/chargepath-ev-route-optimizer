@@ -10,14 +10,14 @@
             "count": 71,
             "maximum": 98.457,
             "median": 24.693,
-            "minimum": 0.0,
+            "minimum": -0.0,
             "p90": 60.885
           },
           "percent": {
             "count": 71,
             "maximum": 16.036,
             "median": 4.157,
-            "minimum": 0.0,
+            "minimum": -0.0,
             "p90": 9.523
           }
         },
@@ -27,14 +27,14 @@
               "count": 18,
               "maximum": 46.465,
               "median": 10.327,
-              "minimum": 0.0,
+              "minimum": -0.0,
               "p90": 34.308
             },
             "percent": {
               "count": 18,
               "maximum": 16.036,
               "median": 4.397,
-              "minimum": 0.0,
+              "minimum": -0.0,
               "p90": 15.629
             }
           },
@@ -109,14 +109,14 @@
               "count": 24,
               "maximum": 63.035,
               "median": 16.18,
-              "minimum": 0.0,
+              "minimum": -0.0,
               "p90": 60.885
             },
             "percent": {
               "count": 24,
               "maximum": 8.622,
               "median": 4.604,
-              "minimum": 0.0,
+              "minimum": -0.0,
               "p90": 7.169
             }
           },
@@ -125,14 +125,14 @@
               "count": 24,
               "maximum": 98.457,
               "median": 30.272,
-              "minimum": 0.0,
+              "minimum": -0.0,
               "p90": 64.254
             },
             "percent": {
               "count": 24,
               "maximum": 16.036,
               "median": 4.778,
-              "minimum": 0.0,
+              "minimum": -0.0,
               "p90": 12.635
             }
           }
@@ -256,14 +256,14 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 24,
-                "maximum": 442.4,
+                "maximum": 433.733,
                 "median": 128.733,
                 "minimum": 6.8,
                 "p90": 310.933
               },
               "charging_stops": {
                 "count": 24,
-                "maximum": 14.0,
+                "maximum": 15.0,
                 "median": 4.5,
                 "minimum": 1.0,
                 "p90": 9.0
@@ -282,7 +282,7 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 24,
-                "maximum": 1577.458,
+                "maximum": 1568.792,
                 "median": 597.221,
                 "minimum": 131.895,
                 "p90": 1170.503
@@ -448,10 +448,10 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 24,
-                "maximum": 166.733,
-                "median": 47.533,
+                "maximum": 165.233,
+                "median": 46.933,
                 "minimum": 0,
-                "p90": 126.933
+                "p90": 122.6
               },
               "charging_stops": {
                 "count": 24,
@@ -474,10 +474,10 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 24,
-                "maximum": 1296.297,
-                "median": 517.188,
+                "maximum": 1294.797,
+                "median": 516.587,
                 "minimum": 125.095,
-                "p90": 1031.693
+                "p90": 1027.36
               },
               "valid_plan_rate": 1.0
             },
@@ -640,17 +640,17 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 24,
-                "maximum": 160.314,
-                "median": 41.753,
+                "maximum": 156.981,
+                "median": 41.086,
                 "minimum": 0,
                 "p90": 124.329
               },
               "charging_stops": {
                 "count": 24,
-                "maximum": 8.0,
+                "maximum": 7.0,
                 "median": 3.0,
                 "minimum": 0.0,
-                "p90": 6.0
+                "p90": 7.0
               },
               "detour_km": {
                 "count": 24,
@@ -666,10 +666,10 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 24,
-                "maximum": 1288.516,
-                "median": 518.06,
+                "maximum": 1285.182,
+                "median": 517.393,
                 "minimum": 125.095,
-                "p90": 1035.369
+                "p90": 1031.146
               },
               "valid_plan_rate": 1.0
             },
@@ -942,7 +942,7 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 24,
-                "maximum": 456.8,
+                "maximum": 446.133,
                 "median": 141.267,
                 "minimum": 11.6,
                 "p90": 321.067
@@ -968,7 +968,7 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 24,
-                "maximum": 1591.858,
+                "maximum": 1581.192,
                 "median": 609.754,
                 "minimum": 136.695,
                 "p90": 1193.17
@@ -1134,7 +1134,7 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 24,
-                "maximum": 425.44,
+                "maximum": 418.827,
                 "median": 120.52,
                 "minimum": 4.88,
                 "p90": 300.587
@@ -1160,10 +1160,10 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 24,
-                "maximum": 1560.498,
+                "maximum": 1553.885,
                 "median": 588.741,
                 "minimum": 129.975,
-                "p90": 1163.09
+                "p90": 1162.13
               },
               "valid_plan_rate": 1.0
             },
@@ -1326,14 +1326,14 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 24,
-                "maximum": 442.4,
+                "maximum": 433.733,
                 "median": 128.733,
                 "minimum": 6.8,
                 "p90": 310.933
               },
               "charging_stops": {
                 "count": 24,
-                "maximum": 14.0,
+                "maximum": 15.0,
                 "median": 4.5,
                 "minimum": 1.0,
                 "p90": 9.0
@@ -1352,7 +1352,7 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 24,
-                "maximum": 1577.458,
+                "maximum": 1568.792,
                 "median": 597.221,
                 "minimum": 131.895,
                 "p90": 1170.503
@@ -1518,14 +1518,14 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 24,
-                "maximum": 185.533,
+                "maximum": 177.8,
                 "median": 52.9,
                 "minimum": 0,
-                "p90": 145.133
+                "p90": 131.6
               },
               "charging_stops": {
                 "count": 24,
-                "maximum": 10.0,
+                "maximum": 9.0,
                 "median": 3.5,
                 "minimum": 0.0,
                 "p90": 7.0
@@ -1544,10 +1544,10 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 24,
-                "maximum": 1315.097,
+                "maximum": 1307.363,
                 "median": 522.987,
                 "minimum": 125.095,
-                "p90": 1049.893
+                "p90": 1036.36
               },
               "valid_plan_rate": 1.0
             },
@@ -1618,7 +1618,7 @@
                 "count": 24,
                 "maximum": 9.15,
                 "median": 0.066,
-                "minimum": -2.876,
+                "minimum": -2.877,
                 "p90": 0.882
               },
               "feasibility_rate": 1.0,
@@ -1710,10 +1710,10 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 24,
-                "maximum": 161.96,
-                "median": 46.333,
+                "maximum": 161.48,
+                "median": 46.093,
                 "minimum": 0,
-                "p90": 118.08
+                "p90": 116.0
               },
               "charging_stops": {
                 "count": 24,
@@ -1736,10 +1736,10 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 24,
-                "maximum": 1291.523,
-                "median": 514.888,
+                "maximum": 1291.043,
+                "median": 514.648,
                 "minimum": 125.095,
-                "p90": 1022.84
+                "p90": 1020.76
               },
               "valid_plan_rate": 1.0
             },
@@ -1902,10 +1902,10 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 24,
-                "maximum": 166.733,
-                "median": 47.533,
+                "maximum": 165.233,
+                "median": 46.933,
                 "minimum": 0,
-                "p90": 126.933
+                "p90": 122.6
               },
               "charging_stops": {
                 "count": 24,
@@ -1928,10 +1928,10 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 24,
-                "maximum": 1296.297,
-                "median": 517.188,
+                "maximum": 1294.797,
+                "median": 516.587,
                 "minimum": 125.095,
-                "p90": 1031.693
+                "p90": 1027.36
               },
               "valid_plan_rate": 1.0
             },
@@ -2094,14 +2094,14 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 24,
-                "maximum": 167.114,
+                "maximum": 159.114,
                 "median": 47.433,
                 "minimum": 0,
                 "p90": 134.033
               },
               "charging_stops": {
                 "count": 24,
-                "maximum": 9.0,
+                "maximum": 8.0,
                 "median": 3.0,
                 "minimum": 0.0,
                 "p90": 6.0
@@ -2120,7 +2120,7 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 24,
-                "maximum": 1295.316,
+                "maximum": 1287.316,
                 "median": 523.74,
                 "minimum": 125.095,
                 "p90": 1046.109
@@ -2286,17 +2286,17 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 24,
-                "maximum": 151.197,
+                "maximum": 150.397,
                 "median": 39.43,
                 "minimum": 0,
-                "p90": 120.003
+                "p90": 117.484
               },
               "charging_stops": {
                 "count": 24,
                 "maximum": 7.0,
                 "median": 3.0,
                 "minimum": 0.0,
-                "p90": 6.0
+                "p90": 7.0
               },
               "detour_km": {
                 "count": 24,
@@ -2312,10 +2312,10 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 24,
-                "maximum": 1279.399,
+                "maximum": 1278.599,
                 "median": 515.737,
                 "minimum": 125.095,
-                "p90": 1027.028
+                "p90": 1021.561
               },
               "valid_plan_rate": 1.0
             },
@@ -2478,17 +2478,17 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 24,
-                "maximum": 160.314,
-                "median": 41.753,
+                "maximum": 156.981,
+                "median": 41.086,
                 "minimum": 0,
                 "p90": 124.329
               },
               "charging_stops": {
                 "count": 24,
-                "maximum": 8.0,
+                "maximum": 7.0,
                 "median": 3.0,
                 "minimum": 0.0,
-                "p90": 6.0
+                "p90": 7.0
               },
               "detour_km": {
                 "count": 24,
@@ -2504,10 +2504,10 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 24,
-                "maximum": 1288.516,
-                "median": 518.06,
+                "maximum": 1285.182,
+                "median": 517.393,
                 "minimum": 125.095,
-                "p90": 1035.369
+                "p90": 1031.146
               },
               "valid_plan_rate": 1.0
             },
@@ -2810,7 +2810,7 @@
             "count": 24,
             "maximum": 4.0,
             "median": 3.0,
-            "minimum": 2.0,
+            "minimum": 1.0,
             "p90": 4.0
           },
           "trips": 24
@@ -2928,8 +2928,8 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 24,
-                "maximum": 216.0,
-                "median": 48.25,
+                "maximum": 182.333,
+                "median": 47.05,
                 "minimum": 0,
                 "p90": 135.781
               },
@@ -2945,7 +2945,7 @@
                 "maximum": 0.046,
                 "median": -1.817,
                 "minimum": -14.54,
-                "p90": -0.0
+                "p90": 0.0
               },
               "feasibility_rate": 1.0,
               "infeasible": 0,
@@ -2954,8 +2954,8 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 24,
-                "maximum": 1350.818,
-                "median": 524.613,
+                "maximum": 1317.152,
+                "median": 523.413,
                 "minimum": 125.095,
                 "p90": 1055.864
               },
@@ -3120,8 +3120,8 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 24,
-                "maximum": 171.667,
-                "median": 51.983,
+                "maximum": 170.167,
+                "median": 49.567,
                 "minimum": 0,
                 "p90": 122.6
               },
@@ -3146,7 +3146,7 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 24,
-                "maximum": 1294.837,
+                "maximum": 1293.337,
                 "median": 502.76,
                 "minimum": 123.027,
                 "p90": 1027.36
@@ -3193,8 +3193,8 @@
           "distinct_options": {
             "count": 24,
             "maximum": 4.0,
-            "median": 3.5,
-            "minimum": 2.0,
+            "median": 3.0,
+            "minimum": 1.0,
             "p90": 4.0
           },
           "trips": 24
@@ -3312,10 +3312,10 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 24,
-                "maximum": 166.733,
-                "median": 47.533,
+                "maximum": 165.233,
+                "median": 46.933,
                 "minimum": 0,
-                "p90": 126.933
+                "p90": 122.6
               },
               "charging_stops": {
                 "count": 24,
@@ -3338,10 +3338,10 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 24,
-                "maximum": 1296.297,
-                "median": 517.188,
+                "maximum": 1294.797,
+                "median": 516.587,
                 "minimum": 125.095,
-                "p90": 1031.693
+                "p90": 1027.36
               },
               "valid_plan_rate": 1.0
             },
@@ -3504,17 +3504,17 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 24,
-                "maximum": 219.367,
-                "median": 48.25,
+                "maximum": 216.367,
+                "median": 47.05,
                 "minimum": 0,
-                "p90": 131.367
+                "p90": 122.767
               },
               "charging_stops": {
                 "count": 24,
                 "maximum": 9.0,
                 "median": 3.5,
                 "minimum": 0.0,
-                "p90": 8.0
+                "p90": 7.0
               },
               "detour_km": {
                 "count": 24,
@@ -3530,10 +3530,10 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 24,
-                "maximum": 1354.185,
-                "median": 524.613,
+                "maximum": 1351.185,
+                "median": 523.413,
                 "minimum": 125.095,
-                "p90": 1037.285
+                "p90": 1028.685
               },
               "valid_plan_rate": 1.0
             },
@@ -3740,10 +3740,10 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 24,
-                "maximum": 168.733,
-                "median": 51.033,
+                "maximum": 167.233,
+                "median": 50.433,
                 "minimum": 0,
-                "p90": 126.933
+                "p90": 122.6
               },
               "charging_stops": {
                 "count": 24,
@@ -3766,10 +3766,10 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 24,
-                "maximum": 1290.462,
-                "median": 508.177,
+                "maximum": 1288.962,
+                "median": 507.577,
                 "minimum": 125.095,
-                "p90": 1031.693
+                "p90": 1027.36
               },
               "valid_plan_rate": 1.0
             },
@@ -3932,10 +3932,10 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 24,
-                "maximum": 166.733,
-                "median": 47.533,
+                "maximum": 165.233,
+                "median": 46.933,
                 "minimum": 0,
-                "p90": 126.933
+                "p90": 122.6
               },
               "charging_stops": {
                 "count": 24,
@@ -3958,10 +3958,10 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 24,
-                "maximum": 1296.297,
-                "median": 517.188,
+                "maximum": 1294.797,
+                "median": 516.587,
                 "minimum": 125.095,
-                "p90": 1031.693
+                "p90": 1027.36
               },
               "valid_plan_rate": 1.0
             },
@@ -4124,10 +4124,10 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 24,
-                "maximum": 166.733,
-                "median": 47.533,
+                "maximum": 165.233,
+                "median": 46.933,
                 "minimum": 0,
-                "p90": 142.833
+                "p90": 141.167
               },
               "charging_stops": {
                 "count": 24,
@@ -4150,10 +4150,10 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 24,
-                "maximum": 1296.297,
-                "median": 515.139,
+                "maximum": 1294.797,
+                "median": 514.539,
                 "minimum": 125.095,
-                "p90": 1027.07
+                "p90": 1025.903
               },
               "valid_plan_rate": 1.0
             },
@@ -4322,10 +4322,10 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 8,
-                "maximum": 134.0,
+                "maximum": 131.3,
                 "median": 45.517,
                 "minimum": 4.4,
-                "p90": 134.0
+                "p90": 131.3
               },
               "charging_stops": {
                 "count": 8,
@@ -4348,10 +4348,10 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 8,
-                "maximum": 1262.202,
+                "maximum": 1259.502,
                 "median": 571.788,
                 "minimum": 236.968,
-                "p90": 1262.202
+                "p90": 1259.502
               },
               "valid_plan_rate": 1.0
             },
@@ -4514,10 +4514,10 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 8,
-                "maximum": 166.733,
+                "maximum": 165.233,
                 "median": 53.75,
-                "minimum": 10.4,
-                "p90": 166.733
+                "minimum": 9.2,
+                "p90": 165.233
               },
               "charging_stops": {
                 "count": 8,
@@ -4540,10 +4540,10 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 8,
-                "maximum": 1296.297,
+                "maximum": 1294.797,
                 "median": 564.333,
-                "minimum": 248.568,
-                "p90": 1296.297
+                "minimum": 246.568,
+                "p90": 1294.797
               },
               "valid_plan_rate": 1.0
             },
@@ -4706,10 +4706,10 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 8,
-                "maximum": 212.667,
+                "maximum": 211.167,
                 "median": 71.8,
-                "minimum": 15.2,
-                "p90": 212.667
+                "minimum": 14.0,
+                "p90": 211.167
               },
               "charging_stops": {
                 "count": 8,
@@ -4732,10 +4732,10 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 8,
-                "maximum": 1343.933,
+                "maximum": 1342.433,
                 "median": 582.623,
-                "minimum": 254.568,
-                "p90": 1343.933
+                "minimum": 254.168,
+                "p90": 1342.433
               },
               "valid_plan_rate": 1.0
             },
@@ -4898,10 +4898,10 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 8,
-                "maximum": 166.733,
-                "median": 62.35,
-                "minimum": 9.2,
-                "p90": 166.733
+                "maximum": 164.033,
+                "median": 59.6,
+                "minimum": 8.0,
+                "p90": 164.033
               },
               "charging_stops": {
                 "count": 8,
@@ -4924,10 +4924,10 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 8,
-                "maximum": 1294.935,
-                "median": 573.193,
-                "minimum": 244.568,
-                "p90": 1294.935
+                "maximum": 1292.235,
+                "median": 570.443,
+                "minimum": 242.568,
+                "p90": 1292.235
               },
               "valid_plan_rate": 1.0
             },
@@ -5090,10 +5090,10 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 8,
-                "maximum": 166.733,
+                "maximum": 165.233,
                 "median": 53.75,
-                "minimum": 10.4,
-                "p90": 166.733
+                "minimum": 9.2,
+                "p90": 165.233
               },
               "charging_stops": {
                 "count": 8,
@@ -5116,10 +5116,10 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 8,
-                "maximum": 1296.297,
+                "maximum": 1294.797,
                 "median": 564.333,
-                "minimum": 248.568,
-                "p90": 1296.297
+                "minimum": 246.568,
+                "p90": 1294.797
               },
               "valid_plan_rate": 1.0
             },
@@ -5282,10 +5282,10 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 8,
-                "maximum": 199.0,
+                "maximum": 197.5,
                 "median": 64.45,
-                "minimum": 14.0,
-                "p90": 199.0
+                "minimum": 12.8,
+                "p90": 197.5
               },
               "charging_stops": {
                 "count": 8,
@@ -5308,10 +5308,10 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 8,
-                "maximum": 1330.267,
+                "maximum": 1328.767,
                 "median": 575.273,
-                "minimum": 254.568,
-                "p90": 1330.267
+                "minimum": 252.168,
+                "p90": 1328.767
               },
               "valid_plan_rate": 1.0
             },
@@ -5474,10 +5474,10 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 8,
-                "maximum": 161.933,
+                "maximum": 159.233,
                 "median": 44.0,
                 "minimum": 4.4,
-                "p90": 161.933
+                "p90": 159.233
               },
               "charging_stops": {
                 "count": 8,
@@ -5500,10 +5500,10 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 8,
-                "maximum": 1291.497,
+                "maximum": 1288.797,
                 "median": 554.583,
                 "minimum": 236.968,
-                "p90": 1291.497
+                "p90": 1288.797
               },
               "valid_plan_rate": 1.0
             },
@@ -5666,10 +5666,10 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 8,
-                "maximum": 175.933,
+                "maximum": 174.433,
                 "median": 64.5,
                 "minimum": 23.2,
-                "p90": 175.933
+                "p90": 174.433
               },
               "charging_stops": {
                 "count": 8,
@@ -5692,10 +5692,10 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 8,
-                "maximum": 1305.497,
+                "maximum": 1303.997,
                 "median": 575.504,
                 "minimum": 259.068,
-                "p90": 1305.497
+                "p90": 1303.997
               },
               "valid_plan_rate": 1.0
             },
@@ -5858,10 +5858,10 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 8,
-                "maximum": 166.733,
+                "maximum": 165.233,
                 "median": 53.75,
-                "minimum": 10.4,
-                "p90": 166.733
+                "minimum": 9.2,
+                "p90": 165.233
               },
               "charging_stops": {
                 "count": 8,
@@ -5884,10 +5884,10 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 8,
-                "maximum": 1296.297,
+                "maximum": 1294.797,
                 "median": 564.333,
-                "minimum": 248.568,
-                "p90": 1296.297
+                "minimum": 246.568,
+                "p90": 1294.797
               },
               "valid_plan_rate": 1.0
             },
@@ -6050,10 +6050,10 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 8,
-                "maximum": 166.733,
+                "maximum": 165.233,
                 "median": 53.75,
-                "minimum": 10.4,
-                "p90": 166.733
+                "minimum": 9.2,
+                "p90": 165.233
               },
               "charging_stops": {
                 "count": 8,
@@ -6076,10 +6076,10 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 8,
-                "maximum": 1296.297,
+                "maximum": 1294.797,
                 "median": 564.333,
-                "minimum": 248.568,
-                "p90": 1296.297
+                "minimum": 246.568,
+                "p90": 1294.797
               },
               "valid_plan_rate": 1.0
             },
@@ -6149,7 +6149,7 @@
               "detour_km": {
                 "count": 8,
                 "maximum": 3.124,
-                "median": 0.106,
+                "median": 0.105,
                 "minimum": 0.0,
                 "p90": 3.124
               },
@@ -6242,10 +6242,10 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 8,
-                "maximum": 142.889,
+                "maximum": 141.444,
                 "median": 49.5,
                 "minimum": 7.04,
-                "p90": 142.889
+                "p90": 141.444
               },
               "charging_stops": {
                 "count": 8,
@@ -6268,10 +6268,10 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 8,
-                "maximum": 1272.452,
+                "maximum": 1271.008,
                 "median": 560.083,
-                "minimum": 247.858,
-                "p90": 1272.452
+                "minimum": 246.568,
+                "p90": 1271.008
               },
               "valid_plan_rate": 1.0
             },
@@ -6434,10 +6434,10 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 8,
-                "maximum": 446.0,
+                "maximum": 442.4,
                 "median": 121.2,
                 "minimum": 23.6,
-                "p90": 446.0
+                "p90": 442.4
               },
               "charging_stops": {
                 "count": 8,
@@ -6460,10 +6460,10 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 8,
-                "maximum": 1575.563,
+                "maximum": 1571.963,
                 "median": 631.783,
-                "minimum": 259.768,
-                "p90": 1575.563
+                "minimum": 256.168,
+                "p90": 1571.963
               },
               "valid_plan_rate": 1.0
             },
@@ -6508,7 +6508,7 @@
             "count": 8,
             "maximum": 4.0,
             "median": 3.5,
-            "minimum": 3.0,
+            "minimum": 2.0,
             "p90": 4.0
           },
           "trips": 8
@@ -6626,10 +6626,10 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 8,
-                "maximum": 166.733,
+                "maximum": 165.233,
                 "median": 53.75,
-                "minimum": 10.4,
-                "p90": 166.733
+                "minimum": 9.2,
+                "p90": 165.233
               },
               "charging_stops": {
                 "count": 8,
@@ -6652,10 +6652,10 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 8,
-                "maximum": 1296.297,
+                "maximum": 1294.797,
                 "median": 564.333,
-                "minimum": 248.568,
-                "p90": 1296.297
+                "minimum": 246.568,
+                "p90": 1294.797
               },
               "valid_plan_rate": 1.0
             },
@@ -6818,10 +6818,10 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 8,
-                "maximum": 187.067,
+                "maximum": 185.567,
                 "median": 63.133,
-                "minimum": 12.8,
-                "p90": 187.067
+                "minimum": 11.6,
+                "p90": 185.567
               },
               "charging_stops": {
                 "count": 8,
@@ -6844,10 +6844,10 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 8,
-                "maximum": 1316.63,
+                "maximum": 1315.13,
                 "median": 573.717,
-                "minimum": 252.568,
-                "p90": 1316.63
+                "minimum": 250.568,
+                "p90": 1315.13
               },
               "valid_plan_rate": 1.0
             },
@@ -7010,10 +7010,10 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 8,
-                "maximum": 181.7,
-                "median": 66.133,
-                "minimum": 9.2,
-                "p90": 181.7
+                "maximum": 180.2,
+                "median": 66.0,
+                "minimum": 8.0,
+                "p90": 180.2
               },
               "charging_stops": {
                 "count": 8,
@@ -7036,10 +7036,10 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 8,
-                "maximum": 1309.902,
-                "median": 575.928,
-                "minimum": 246.568,
-                "p90": 1309.902
+                "maximum": 1308.402,
+                "median": 575.794,
+                "minimum": 244.568,
+                "p90": 1308.402
               },
               "valid_plan_rate": 1.0
             },
@@ -7144,10 +7144,10 @@
               },
               "detour_km": {
                 "count": 8,
-                "maximum": 11.652,
-                "median": 1.123,
+                "maximum": 11.651,
+                "median": 1.122,
                 "minimum": 0.0,
-                "p90": 11.652
+                "p90": 11.651
               },
               "feasibility_rate": 1.0,
               "infeasible": 0,
@@ -7202,16 +7202,16 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 8,
-                "maximum": 197.822,
+                "maximum": 196.822,
                 "median": 73.5,
-                "minimum": 17.978,
-                "p90": 197.822
+                "minimum": 14.978,
+                "p90": 196.822
               },
               "charging_stops": {
                 "count": 8,
                 "maximum": 15.0,
                 "median": 5.0,
-                "minimum": 2.0,
+                "minimum": 1.0,
                 "p90": 15.0
               },
               "detour_km": {
@@ -7228,10 +7228,10 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 8,
-                "maximum": 1336.011,
+                "maximum": 1335.011,
                 "median": 584.839,
-                "minimum": 258.796,
-                "p90": 1336.011
+                "minimum": 254.435,
+                "p90": 1335.011
               },
               "valid_plan_rate": 1.0
             },
@@ -7394,10 +7394,10 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 8,
-                "maximum": 166.733,
+                "maximum": 165.233,
                 "median": 53.75,
-                "minimum": 10.4,
-                "p90": 166.733
+                "minimum": 9.2,
+                "p90": 165.233
               },
               "charging_stops": {
                 "count": 8,
@@ -7420,10 +7420,10 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 8,
-                "maximum": 1296.297,
+                "maximum": 1294.797,
                 "median": 564.333,
-                "minimum": 248.568,
-                "p90": 1296.297
+                "minimum": 246.568,
+                "p90": 1294.797
               },
               "valid_plan_rate": 1.0
             },
@@ -7586,10 +7586,10 @@
             "shortest_distance": {
               "charging_minutes": {
                 "count": 8,
-                "maximum": 163.867,
+                "maximum": 162.267,
                 "median": 45.889,
                 "minimum": 3.6,
-                "p90": 163.867
+                "p90": 162.267
               },
               "charging_stops": {
                 "count": 8,
@@ -7612,10 +7612,10 @@
               "reserve_violations": 0,
               "total_minutes": {
                 "count": 8,
-                "maximum": 1288.903,
+                "maximum": 1287.303,
                 "median": 571.448,
                 "minimum": 236.168,
-                "p90": 1288.903
+                "p90": 1287.303
               },
               "valid_plan_rate": 1.0
             },

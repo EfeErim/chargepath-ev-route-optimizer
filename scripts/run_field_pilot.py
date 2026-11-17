@@ -10,8 +10,8 @@ from pathlib import Path
 from statistics import mean
 
 from chargepath.energy import charging_minutes, energy_for_distance
+from chargepath.evaluation import canonical_json_bytes
 from chargepath.models import VehicleProfile
-from chargepath.real_route_benchmark import canonical_bytes
 
 SOURCE_SHA256 = "76788d07fe5bb0b0af81ef9041fd7854e05de00b9ef34f616584ce623385e6c8"
 CAPACITY_KWH = 58.0
@@ -200,7 +200,7 @@ def main() -> None:
         "charging": charge_metrics(charges),
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_bytes(canonical_bytes(result))
+    args.output.write_bytes(canonical_json_bytes(result))
 
 
 if __name__ == "__main__":

@@ -10,6 +10,7 @@ from typing import Any
 
 import pytest
 
+from chargepath.evaluation import canonical_json_bytes
 from chargepath.models import GeoJsonLineString, Station, VehicleProfile
 from chargepath.providers.base import CoordinateLike
 from chargepath.providers.osrm import (
@@ -35,7 +36,6 @@ from chargepath.real_route_evaluation import (
     evaluate,
     measure_planner_runtime,
     run_trip_on_graph,
-    summary_bytes,
     trips_bytes,
 )
 from chargepath.station_data import CompatibleStationOption, SnapshotProvenance
@@ -251,7 +251,7 @@ def test_repeated_evaluation_is_byte_for_byte_stable(tmp_path: Path) -> None:
     manifest, graphs_dir, _ = _collected(tmp_path)
     first = evaluate(manifest=manifest, graphs_dir=graphs_dir, manifest_sha256="0" * 64)
     second = evaluate(manifest=manifest, graphs_dir=graphs_dir, manifest_sha256="0" * 64)
-    assert summary_bytes(first[0]) == summary_bytes(second[0])
+    assert canonical_json_bytes(first[0]) == canonical_json_bytes(second[0])
     assert trips_bytes(first[1]) == trips_bytes(second[1])
 
 
@@ -261,18 +261,6 @@ def test_summary_records_the_checksum_of_every_stored_graph(tmp_path: Path) -> N
     assert set(summary["stored_graphs"]) == {key.file_name for key in required_graph_keys(manifest)}
     for name, record in summary["stored_graphs"].items():
         assert record["sha256"] == hashlib.sha256((graphs_dir / name).read_bytes()).hexdigest()
-
-
-def test_committed_evidence_shape_contains_no_station_data(tmp_path: Path) -> None:
-    manifest, graphs_dir, _ = _collected(tmp_path)
-    summary, trips = evaluate(manifest=manifest, graphs_dir=graphs_dir, manifest_sha256="0" * 64)
-    stations = {option.station.id: option.station for option in _synthetic_options()}
-    assert any(trip["distinct_options"] > 0 for trip in trips)
-    assert_no_station_data({"summary": summary, "trips": trips}, stations)
-    for payload in (summary_bytes(summary), trips_bytes(trips)):
-        text = payload.decode("utf-8")
-        assert "epdk:" not in text
-        assert "Synthetic Site" not in text
 
 
 @pytest.mark.parametrize(

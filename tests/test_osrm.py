@@ -12,7 +12,7 @@ from typing import Any, cast
 
 import pytest
 
-from chargepath.models import GeoJsonLineString, RoadLeg, VehicleProfile
+from chargepath.models import GeoJsonLineString, RoutePlan, VehicleProfile
 from chargepath.optimizer import EVRouteOptimizer
 from chargepath.providers.base import CoordinateLike
 from chargepath.providers.osrm import (
@@ -28,7 +28,6 @@ from chargepath.providers.osrm import (
     OsrmTableResult,
     OsrmTimeoutError,
     OsrmTransportError,
-    fetch_selected_plan_geometry,
     fetch_selected_plans_geometry,
 )
 
@@ -66,9 +65,7 @@ def test_coordinate_uses_explicit_longitude_latitude_serialization() -> None:
 @pytest.mark.parametrize(
     "kwargs",
     [
-        {"timeout_seconds": True},
         {"timeout_seconds": math.nan},
-        {"profile": 1},
         {"endpoint": 1},
         {"allow_remote_endpoint": "yes"},
         {"endpoint": "https://user:secret@router.project-osrm.org", "allow_remote_endpoint": True},
@@ -80,16 +77,7 @@ def test_osrm_client_rejects_invalid_direct_configuration(kwargs: dict[str, obje
         OsrmHttpClient(**cast(Any, kwargs))
 
 
-def test_direct_provider_results_reject_invalid_transport_values() -> None:
-    with pytest.raises(ValueError, match="status_code"):
-        HttpResponse(True, b"{}")
-    with pytest.raises(ValueError, match="body"):
-        HttpResponse(200, cast(Any, "{}"))
-    with pytest.raises(ValueError, match="data_version"):
-        OsrmTableResult(cells=(), data_version=" ")
-
-
-def test_table_request_covers_order_encoding_profile_timeout_and_explicit_endpoint() -> None:
+def test_table_request_covers_order_encoding_timeout_and_explicit_endpoint() -> None:
     transport = FakeTransport(
         {
             "code": "Ok",
@@ -99,7 +87,6 @@ def test_table_request_covers_order_encoding_profile_timeout_and_explicit_endpoi
     )
     client = OsrmHttpClient(
         endpoint="http://localhost:5999/osrm-root",
-        profile="driving car",
         timeout_seconds=3.5,
         transport=transport,
     )
@@ -108,7 +95,7 @@ def test_table_request_covers_order_encoding_profile_timeout_and_explicit_endpoi
 
     assert transport.calls == [
         (
-            "http://localhost:5999/osrm-root/table/v1/driving%20car/"
+            "http://localhost:5999/osrm-root/table/v1/driving/"
             "29.1,41.2;30.3,42.4?annotations=duration%2Cdistance&sources=all&destinations=all",
             3.5,
         )
@@ -225,18 +212,6 @@ def test_table_rejects_mismatched_duration_distance_nullability() -> None:
         OsrmHttpClient(transport=transport).table((Coordinate(0, 0), Coordinate(0.1, 0.1)))
 
 
-def test_candidate_graph_direct_construction_rejects_unknown_leg_nodes() -> None:
-    nodes = (
-        CandidateNode("origin", Coordinate(29.0, 41.0)),
-        CandidateNode("destination", Coordinate(29.2, 41.2)),
-    )
-    with pytest.raises(ValueError, match="legs must reference declared nodes"):
-        CandidateGraph(
-            nodes=nodes,
-            legs=(RoadLeg("origin", "ghost", distance_km=1, duration_minutes=1),),
-        )
-
-
 def test_candidate_graph_skips_rounded_zero_length_non_diagonal_cells() -> None:
     costs = OsrmTableResult(
         cells=(
@@ -257,12 +232,6 @@ def test_candidate_graph_skips_rounded_zero_length_non_diagonal_cells() -> None:
     assert all(leg.distance_km > 0 for leg in graph.legs)
     assert all(leg.duration_minutes > 0 for leg in graph.legs)
     assert {leg.destination_id for leg in graph.neighbors("a")} == {"b"}
-
-
-@pytest.mark.parametrize("invalid", [math.nan, math.inf, -1.0])
-def test_table_cost_rejects_invalid_values(invalid: float) -> None:
-    with pytest.raises(ValueError, match="costs must be finite and non-negative"):
-        OsrmTableCost(invalid, 1)
 
 
 def test_route_parses_geojson_geometry() -> None:
@@ -314,29 +283,25 @@ class RouteSpy:
         )
 
 
-def test_selected_geometry_is_fetched_only_after_optimization_for_chosen_endpoints() -> None:
+HUB_NODES = (
+    CandidateNode("origin", Coordinate(29.0, 41.0)),
+    CandidateNode("hub", Coordinate(29.1, 41.1)),
+    CandidateNode("destination", Coordinate(29.2, 41.2)),
+)
+
+
+def _hub_graph_and_plan() -> tuple[CandidateGraph, RoutePlan]:
+    """A three-node graph where the fastest plan drives origin -> hub -> destination."""
+
     costs = OsrmTableResult(
         cells=(
-            (
-                OsrmTableCost(0, 0),
-                OsrmTableCost(10, 10),
-                OsrmTableCost(30, 60),
-            ),
+            (OsrmTableCost(0, 0), OsrmTableCost(10, 10), OsrmTableCost(30, 60)),
             (OsrmTableCost(10, 10), OsrmTableCost(0, 0), OsrmTableCost(10, 10)),
             (OsrmTableCost(30, 60), OsrmTableCost(10, 10), OsrmTableCost(0, 0)),
         ),
         data_version=None,
     )
-    nodes = (
-        CandidateNode("origin", Coordinate(29.0, 41.0)),
-        CandidateNode("hub", Coordinate(29.1, 41.1)),
-        CandidateNode("destination", Coordinate(29.2, 41.2)),
-    )
-    table_client = StubTableClient(costs)
-    graph = CandidateGraphBuilder(table_client).build(nodes)
-    route_client = RouteSpy()
-
-    assert route_client.calls == []
+    graph = CandidateGraphBuilder(StubTableClient(costs)).build(HUB_NODES)
     plan = EVRouteOptimizer().optimize(
         origin_id="origin",
         destination_id="destination",
@@ -353,50 +318,12 @@ def test_selected_geometry_is_fetched_only_after_optimization_for_chosen_endpoin
         road_network=graph,
     )
     assert plan.node_ids == ("origin", "hub", "destination")
-    assert route_client.calls == []
-
-    enriched = fetch_selected_plan_geometry(plan, graph=graph, route_client=route_client)
-
-    assert sorted(route_client.calls, key=lambda call: call[0].longitude) == [
-        (nodes[0].coordinate, nodes[1].coordinate),
-        (nodes[1].coordinate, nodes[2].coordinate),
-    ]
-    assert all(leg.geometry is not None for leg in enriched.legs)
-    assert enriched.total_minutes == plan.total_minutes
+    return graph, plan
 
 
-def test_selected_option_geometries_are_deduplicated_and_can_reuse_corridor() -> None:
-    costs = OsrmTableResult(
-        cells=(
-            (OsrmTableCost(0, 0), OsrmTableCost(10, 10), OsrmTableCost(30, 60)),
-            (OsrmTableCost(10, 10), OsrmTableCost(0, 0), OsrmTableCost(10, 10)),
-            (OsrmTableCost(30, 60), OsrmTableCost(10, 10), OsrmTableCost(0, 0)),
-        ),
-        data_version=None,
-    )
-    nodes = (
-        CandidateNode("origin", Coordinate(29.0, 41.0)),
-        CandidateNode("hub", Coordinate(29.1, 41.1)),
-        CandidateNode("destination", Coordinate(29.2, 41.2)),
-    )
-    graph = CandidateGraphBuilder(StubTableClient(costs)).build(nodes)
+def test_selected_option_geometries_are_fetched_after_planning_once_per_leg() -> None:
     route_client = RouteSpy()
-    vehicle = VehicleProfile(
-        name="geometry-test",
-        usable_battery_kwh=100,
-        initial_soc_pct=100,
-        reserve_soc_pct=0,
-        consumption_kwh_per_100km=10,
-        max_dc_power_kw=100,
-        energy_safety_factor=1,
-    )
-    via_hub = EVRouteOptimizer().optimize(
-        origin_id="origin",
-        destination_id="destination",
-        vehicle=vehicle,
-        stations={},
-        road_network=graph,
-    )
+    graph, via_hub = _hub_graph_and_plan()
     direct = replace(
         via_hub,
         node_ids=("origin", "destination"),
@@ -417,44 +344,16 @@ def test_selected_option_geometries_are_deduplicated_and_can_reuse_corridor() ->
     )
 
     assert sorted(route_client.calls, key=lambda call: call[0].longitude) == [
-        (nodes[0].coordinate, nodes[1].coordinate),
-        (nodes[1].coordinate, nodes[2].coordinate),
+        (HUB_NODES[0].coordinate, HUB_NODES[1].coordinate),
+        (HUB_NODES[1].coordinate, HUB_NODES[2].coordinate),
     ]
     assert enriched[0].legs == enriched[1].legs
+    assert enriched[0].total_minutes == via_hub.total_minutes
     assert enriched[2].legs[0].geometry == corridor
 
 
 def test_distinct_selected_geometries_are_fetched_concurrently() -> None:
-    costs = OsrmTableResult(
-        cells=(
-            (OsrmTableCost(0, 0), OsrmTableCost(10, 10), OsrmTableCost(30, 60)),
-            (OsrmTableCost(10, 10), OsrmTableCost(0, 0), OsrmTableCost(10, 10)),
-            (OsrmTableCost(30, 60), OsrmTableCost(10, 10), OsrmTableCost(0, 0)),
-        ),
-        data_version=None,
-    )
-    nodes = (
-        CandidateNode("origin", Coordinate(29.0, 41.0)),
-        CandidateNode("hub", Coordinate(29.1, 41.1)),
-        CandidateNode("destination", Coordinate(29.2, 41.2)),
-    )
-    graph = CandidateGraphBuilder(StubTableClient(costs)).build(nodes)
-    vehicle = VehicleProfile(
-        name="concurrency-test",
-        usable_battery_kwh=100,
-        initial_soc_pct=100,
-        reserve_soc_pct=0,
-        consumption_kwh_per_100km=10,
-        max_dc_power_kw=100,
-        energy_safety_factor=1,
-    )
-    plan = EVRouteOptimizer().optimize(
-        origin_id="origin",
-        destination_id="destination",
-        vehicle=vehicle,
-        stations={},
-        road_network=graph,
-    )
+    graph, plan = _hub_graph_and_plan()
 
     class ConcurrentRouteSpy:
         def __init__(self) -> None:

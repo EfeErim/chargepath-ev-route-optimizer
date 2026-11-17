@@ -51,9 +51,6 @@ def verify_route_plan(
     vehicle: VehicleProfile,
     stations: dict[str, Station],
     soc_step_pct: int = 5,
-    taper_start_pct: float = 80.0,
-    taper_factor: float = 0.45,
-    session_setup_minutes: float = 2.0,
     consumption_model: ConsumptionModel = DEFAULT_CONSUMPTION,
     road_network: RoadNetwork | None = None,
     origin_id: str | None = None,
@@ -71,11 +68,6 @@ def verify_route_plan(
     """
 
     validation.soc_step(soc_step_pct)
-    validation.charge_model(
-        taper_start_pct=taper_start_pct,
-        taper_factor=taper_factor,
-        session_setup_minutes=session_setup_minutes,
-    )
     bucket_kwh = vehicle.usable_battery_kwh * soc_step_pct / 100
     energy_bucket = math.floor(vehicle.initial_soc_pct / soc_step_pct)
     reserve_bucket = math.ceil(vehicle.reserve_soc_pct / soc_step_pct)
@@ -113,13 +105,7 @@ def verify_route_plan(
                     field="charging energy",
                 )
                 expected_minutes = charging_minutes(
-                    vehicle,
-                    station.max_power_kw,
-                    arrival_soc,
-                    departure_bucket * soc_step_pct,
-                    taper_start_pct=taper_start_pct,
-                    taper_factor=taper_factor,
-                    setup_minutes=session_setup_minutes,
+                    vehicle, station.max_power_kw, arrival_soc, departure_bucket * soc_step_pct
                 )
                 _close(stop.charging_minutes, expected_minutes, field="charging minutes")
                 energy_bucket = departure_bucket

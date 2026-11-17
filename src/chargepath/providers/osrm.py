@@ -18,7 +18,7 @@ from chargepath.providers.base import CoordinateLike
 from chargepath.providers.static import StaticRoadNetwork
 
 DEFAULT_OSRM_ENDPOINT = "http://127.0.0.1:5000"
-DEFAULT_OSRM_PROFILE = "driving"
+OSRM_PROFILE = "driving"
 DEFAULT_OSRM_TIMEOUT_SECONDS = 10.0
 OSRM_DECIMAL_ROUNDING_TOLERANCE = 0.1
 # OSRM returned distances down to -0.5 m between near-coincident points on a real Turkey graph.
@@ -54,19 +54,9 @@ class Coordinate:
     latitude: float
 
     def __post_init__(self) -> None:
-        if (
-            isinstance(self.longitude, bool)
-            or not isinstance(self.longitude, (int, float))
-            or not math.isfinite(self.longitude)
-            or not -180 <= self.longitude <= 180
-        ):
+        if not math.isfinite(self.longitude) or not -180 <= self.longitude <= 180:
             raise ValueError("longitude must be finite and between -180 and 180")
-        if (
-            isinstance(self.latitude, bool)
-            or not isinstance(self.latitude, (int, float))
-            or not math.isfinite(self.latitude)
-            or not -90 <= self.latitude <= 90
-        ):
+        if not math.isfinite(self.latitude) or not -90 <= self.latitude <= 90:
             raise ValueError("latitude must be finite and between -90 and 90")
 
     def serialize(self) -> str:
@@ -79,45 +69,17 @@ class CandidateNode:
     id: str
     coordinate: Coordinate
 
-    def __post_init__(self) -> None:
-        if not isinstance(self.id, str) or not self.id.strip():
-            raise ValueError("candidate node id must not be empty")
-        if not isinstance(self.coordinate, Coordinate):
-            raise ValueError("candidate node coordinate must be a Coordinate")
-
 
 @dataclass(frozen=True, slots=True)
 class OsrmTableCost:
     distance_km: float
     duration_minutes: float
 
-    def __post_init__(self) -> None:
-        for value in (self.distance_km, self.duration_minutes):
-            if (
-                isinstance(value, bool)
-                or not isinstance(value, (int, float))
-                or not math.isfinite(value)
-                or value < 0
-            ):
-                raise ValueError("OSRM table costs must be finite and non-negative")
-
 
 @dataclass(frozen=True, slots=True)
 class OsrmTableResult:
     cells: tuple[tuple[OsrmTableCost | None, ...], ...]
     data_version: str | None
-
-    def __post_init__(self) -> None:
-        if not isinstance(self.cells, tuple) or any(
-            not isinstance(row, tuple)
-            or any(cell is not None and not isinstance(cell, OsrmTableCost) for cell in row)
-            for row in self.cells
-        ):
-            raise ValueError("OSRM table cells must be tuples of costs or nulls")
-        if self.data_version is not None and (
-            not isinstance(self.data_version, str) or not self.data_version.strip()
-        ):
-            raise ValueError("OSRM data_version must be non-empty text when supplied")
 
 
 @dataclass(frozen=True, slots=True)
@@ -129,25 +91,6 @@ class CandidateGraph:
     _network: StaticRoadNetwork = field(init=False, repr=False, compare=False)
 
     def __post_init__(self) -> None:
-        if not isinstance(self.nodes, tuple) or any(
-            not isinstance(node, CandidateNode) for node in self.nodes
-        ):
-            raise ValueError("candidate graph nodes must be CandidateNode values")
-        if not isinstance(self.legs, tuple) or any(
-            not isinstance(leg, RoadLeg) for leg in self.legs
-        ):
-            raise ValueError("candidate graph legs must be RoadLeg values")
-        ids = tuple(node.id for node in self.nodes)
-        if len(ids) < 2:
-            raise ValueError("candidate graph requires at least two nodes")
-        if len(set(ids)) != len(ids):
-            raise ValueError("candidate node ids must be unique")
-        declared_ids = set(ids)
-        if any(
-            leg.origin_id not in declared_ids or leg.destination_id not in declared_ids
-            for leg in self.legs
-        ):
-            raise ValueError("candidate graph legs must reference declared nodes")
         object.__setattr__(self, "_network", StaticRoadNetwork(self.legs))
 
     def neighbors(self, node_id: str) -> tuple[RoadLeg, ...]:
@@ -164,16 +107,6 @@ class CandidateGraph:
 class HttpResponse:
     status_code: int
     body: bytes
-
-    def __post_init__(self) -> None:
-        if (
-            isinstance(self.status_code, bool)
-            or not isinstance(self.status_code, int)
-            or not 100 <= self.status_code <= 599
-        ):
-            raise ValueError("HTTP response status_code must be a valid status code")
-        if not isinstance(self.body, bytes):
-            raise ValueError("HTTP response body must be bytes")
 
 
 class RoadTableClient(Protocol):
@@ -234,14 +167,13 @@ class UrllibHttpTransport:
         return HttpResponse(status_code=status, body=body)
 
 
-class OsrmHttpClient(RoadTableClient, RoadRouteClient):
+class OsrmHttpClient:
     """OSRM Table and Route services behind separate client protocols."""
 
     def __init__(
         self,
         *,
         endpoint: str = DEFAULT_OSRM_ENDPOINT,
-        profile: str = DEFAULT_OSRM_PROFILE,
         timeout_seconds: float = DEFAULT_OSRM_TIMEOUT_SECONDS,
         allow_remote_endpoint: bool = False,
         transport: HttpTransport | None = None,
@@ -249,16 +181,8 @@ class OsrmHttpClient(RoadTableClient, RoadRouteClient):
         if not isinstance(allow_remote_endpoint, bool):
             raise ValueError("allow_remote_endpoint must be boolean")
         self._endpoint = _validate_endpoint(endpoint, allow_remote=allow_remote_endpoint)
-        if not isinstance(profile, str) or not profile.strip():
-            raise ValueError("OSRM profile must not be empty")
-        if (
-            isinstance(timeout_seconds, bool)
-            or not isinstance(timeout_seconds, (int, float))
-            or not math.isfinite(timeout_seconds)
-            or timeout_seconds <= 0
-        ):
+        if not math.isfinite(timeout_seconds) or timeout_seconds <= 0:
             raise ValueError("OSRM timeout_seconds must be positive and finite")
-        self._profile = profile.strip()
         self._timeout_seconds = timeout_seconds
         self._transport = transport or UrllibHttpTransport()
 
@@ -353,17 +277,12 @@ class OsrmHttpClient(RoadTableClient, RoadRouteClient):
         coordinate_path = ";".join(
             Coordinate(item.longitude, item.latitude).serialize() for item in coordinates
         )
-        path = (
-            f"{self._endpoint}/{service}/v1/{quote(self._profile, safe='')}/"
-            f"{quote(coordinate_path, safe=',;')}"
-        )
+        path = f"{self._endpoint}/{service}/v1/{OSRM_PROFILE}/{quote(coordinate_path, safe=',;')}"
         return f"{path}?{urlencode(query)}"
 
     def _request_payload(self, url: str) -> dict[str, object]:
         try:
             response = self._transport.get(url, timeout_seconds=self._timeout_seconds)
-        except OsrmProviderError:
-            raise
         except TimeoutError as error:
             raise OsrmTimeoutError(
                 f"OSRM request timed out after {self._timeout_seconds:g}s"
@@ -428,23 +347,6 @@ class CandidateGraphBuilder:
         return CandidateGraph(nodes=ordered_nodes, legs=tuple(legs))
 
 
-def fetch_selected_plan_geometry(
-    plan: RoutePlan,
-    *,
-    graph: CandidateGraph,
-    route_client: RoadRouteClient,
-) -> RoutePlan:
-    """Fetch geometry only for the already optimized plan's selected legs."""
-    geometric_legs: list[RoadLeg] = []
-    for leg in plan.legs:
-        geometry = route_client.route_geometry(
-            graph.coordinate_for(leg.origin_id),
-            graph.coordinate_for(leg.destination_id),
-        )
-        geometric_legs.append(replace(leg, geometry=geometry))
-    return replace(plan, legs=tuple(geometric_legs))
-
-
 def fetch_selected_plans_geometry(
     plans: Sequence[RoutePlan],
     *,
@@ -454,14 +356,15 @@ def fetch_selected_plans_geometry(
 ) -> tuple[RoutePlan, ...]:
     """Fetch each distinct selected directed leg once using bounded concurrency."""
     geometry_by_edge = dict(known_geometries or {})
-    missing_edges: list[tuple[str, str]] = []
-    missing_edge_set: set[tuple[str, str]] = set()
-    for plan in plans:
-        for leg in plan.legs:
-            edge = (leg.origin_id, leg.destination_id)
-            if edge not in geometry_by_edge and edge not in missing_edge_set:
-                missing_edges.append(edge)
-                missing_edge_set.add(edge)
+    # A dict keeps first-seen order, so the fetch order is deterministic.
+    missing_edges = list(
+        dict.fromkeys(
+            (leg.origin_id, leg.destination_id)
+            for plan in plans
+            for leg in plan.legs
+            if (leg.origin_id, leg.destination_id) not in geometry_by_edge
+        )
+    )
 
     def fetch(edge: tuple[str, str]) -> GeoJsonLineString:
         origin_id, destination_id = edge

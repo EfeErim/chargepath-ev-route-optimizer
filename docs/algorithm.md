@@ -8,9 +8,8 @@ Let `G = (V, E)` be a directed graph whose nodes are the origin, destination, an
 - driving time `t(e)`; and
 - optional geometry supplied by the road provider.
 
-The candidate graph is not the raw OpenStreetMap road graph. Each edge represents the route computed
-by the configured OSRM graph and profile between two relevant locations; it is not claimed as
-real-world ground truth.
+The candidate graph is not the raw OpenStreetMap road graph. Each edge is the route OSRM computed
+between two of these locations.
 
 ## Vehicle state
 
@@ -44,7 +43,7 @@ Required buckets are rounded upward:
 required_buckets = ceil(energy_kwh / bucket_kwh)
 ```
 
-The upward rounding is intentional. A drive transition is legal only when the remaining bucket count is at least the reserve bucket count.
+A drive transition is legal only when the remaining bucket count is at least the reserve bucket count.
 
 ### Pluggable consumption models
 
@@ -88,7 +87,8 @@ Effective charging power is limited by both station and vehicle:
 effective_kw = min(station_power_kw, vehicle_max_dc_kw)
 ```
 
-Above the taper threshold, effective power is multiplied by a conservative taper factor. The model is an auditable approximation, not a physical battery simulator.
+Above the taper threshold (80% SOC), effective power is multiplied by a taper factor of 0.45. Each
+session adds 2 setup minutes. The model is an approximation, not a battery simulator.
 
 A vehicle may instead carry a `charging_curve`: `(soc_pct, power_kw)` breakpoints from 0 to 100%
 SOC, strictly increasing in SOC with positive power. Accepted power is then
@@ -117,11 +117,7 @@ fewest_charging_stops: (charging_sessions, total_minutes, distance_km, -arrival_
 Secondary fields are explicit deterministic tie-break objectives, not hidden weighted sums. The last
 field prefers the plan that arrives with more battery when every other field ties. Minutes and
 kilometres are compared after rounding to nine decimal places, so sums that differ only by
-floating-point noise count as ties and the declared tie-breaks decide, not the last bits of the
-arithmetic. The
-default remains `fastest`, preserving the foundation solver's modeled objective.
-
-Future objective terms may include station reliability, waiting time, price, or uncertainty only when evidence exists.
+floating-point noise count as ties and the declared tie-breaks decide. The default is `fastest`.
 
 ## Search
 
@@ -143,7 +139,7 @@ The first popped destination state is optimal within:
 - the baseline energy model; and
 - the piecewise charging approximation.
 
-It is not claimed to be globally optimal in a continuous, dynamic, real-world road and charging system.
+It is not optimal for a continuous, time-dependent, real-world road and charging system.
 
 ## Greedy fixed-target competitor
 
@@ -218,12 +214,10 @@ catches search and reconstruction errors but not errors in those functions. The 
 
 ## Expected complexity
 
-With `|V|` candidate nodes, `K` energy buckets, `|E|` road legs, and charge actions to higher buckets,
-one exact search remains intentionally small and readable. The option planner currently runs three
-exact preferences plus one greedy traversal. It shares only the deterministic per-leg energy-bucket
-calculation across those runs; search state, objectives, predecessor maps, and independent replay stay
-separate. On a 52-node complete synthetic graph this reduced the measured composed planner mean from
-941 ms to 606 ms without changing any returned option.
+With `|V|` candidate nodes and `K` energy buckets the state graph has `|V| × K` states; each has its
+outgoing road legs plus up to `K` charge actions. The option planner runs three exact preferences and
+one greedy traversal. They share only the per-leg energy-bucket cache; search state, predecessor maps
+and replay stay separate.
 
 ## Correctness invariants
 

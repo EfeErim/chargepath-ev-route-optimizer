@@ -104,8 +104,8 @@ scenario.
 | Lookahead heuristic | 72 | 22 | 0 | 2.6 min (0.5%) | 12.0 min (1.5%) | 26.5 min (2.7%) | 54.6 min |
 
 Exact fastest charged for a median 53.0 minutes. The lookahead heuristic closes about nine tenths of
-the median fixed-80 gap and solved the scenario fixed-80 could not. The pre-registered reading rule
-applies: the median saving is below 5 minutes, so on this benchmark exact search adds little over a
+the median fixed-80 gap and solved the scenario fixed-80 could not. The median saving is below
+5 minutes, so on this benchmark exact search adds little over a
 good heuristic in the typical case. Its value is the tail, up to 26.5 minutes here, and the
 guarantee that no plan on the same graph and SOC grid is faster. All 215 returned plans replayed
 against their road graphs with zero reserve violations.
@@ -126,9 +126,10 @@ Speed choice improved none of the 72 scenarios; no plan slowed a single leg. Eve
 under the same model. This is the expected result under this model, not a search failure.
 Minimizing `d / v + d × (a + b v²) / P` per kilometre gives an optimal speed of `v³ = P / (2b)`.
 With the pilot's quadratic term and the vehicle sets' rates, that is 179–193 km/h at a 50 kW
-charger and still about 137 km/h at a 50 kW charger in the taper (22.5 kW), above OSRM's leg speeds. Slowing down can still matter when it avoids a stop entirely or
-when the next charger is weak, which these scenarios did not require. The result depends on one
-vehicle's fit, which ignores temperature, wind, and grade.
+charger and still about 137 km/h at a 50 kW charger in the taper (22.5 kW), above OSRM's leg
+speeds. Slowing down can still matter when it avoids a stop entirely or when the next charger is
+weak, which these scenarios did not require. The result depends on one vehicle's fit, which ignores
+temperature, wind, and grade.
 
 ```powershell
 python scripts/run_speed_choice.py --output docs/benchmarks/real-routes/speed_choice_v1.json
@@ -244,7 +245,7 @@ charging model.
 
 ## Synthetic benchmark
 
-The synthetic benchmark was evaluated on 2026-08-09 with Python 3.11.9 using the offline, project-authored
+The synthetic benchmark was evaluated on 2026-11-17 with Python 3.11.9 using the offline, project-authored
 `chargepath-m3-synthetic-v1` suite. The fixture contains eight hand-audited cases covering every
 declared topology and boundary class. These results validate software behavior under the stated
 model; they do not establish real-world SOC accuracy or charger availability.
@@ -258,11 +259,11 @@ python scripts/run_synthetic_benchmark.py --warmups 3 --repetitions 20
 Evidence identity:
 
 - fixture SHA-256: `b805fe43dc89d3129e1126d1d5529b9bf5058ab0b4e8a86362caeccd472b980d`;
-- manifest SHA-256: `8744707588e3afbd45d676678fd1b42c1da56c783ce72fed3266887c4457f9e7`;
+- manifest SHA-256: `9d2e0335c800dc406b17aa34ef0328dad8dc6c1c755eb4f9af89c4f432f8b64e`;
 - correctness artifact: `docs/benchmarks/synthetic/correctness_v1.json`, SHA-256
-  `db55067b92a5904624dcf9fe90c5861561cc092b0b7754673ee101ef849572b6`;
-- runtime artifact: `docs/benchmarks/synthetic/runtime_2026-08-09.json`, SHA-256
-  `6b9f0cee0cccaf74e373c432573932c708608a18b69eaccc098aa9f3b1a9e882`.
+  `fafade67489d414766afa85c3a97ca329af4b6bf74b002d0380f4177b94529c0`;
+- runtime artifact: `docs/benchmarks/synthetic/runtime_2026-11-17.json`, SHA-256
+  `a69c82a0f4ab3841c7de2ddc9b49cfed013d713fc5503874f0e32dc15d3659b6`.
 
 ### Correctness
 
@@ -282,8 +283,7 @@ feasible cases that required no charging, which is expected because it never ins
 ### Charging-case comparison
 
 On all three feasible cases that required charging, exact fastest-time used partial charging and was
-4.8 modeled minutes faster than greedy fixed-80. This supports the narrow synthetic-suite hypothesis;
-it is not a general performance claim. The road-only baseline was infeasible on these cases, so no
+4.8 modeled minutes faster than greedy fixed-80; this holds for these cases only. The road-only baseline was infeasible on these cases, so no
 trip-time comparison against it is reported.
 
 | Case | Exact fastest | Greedy fixed-80 | Difference | Exact charge time | Greedy charge time |
@@ -323,12 +323,12 @@ and nearest-rank p95 are reported; individual samples remain in the runtime arti
 
 | Algorithm | Median | p95 |
 |---|---:|---:|
-| Shortest driving time, no charging | 0.0619 ms | 0.0642 ms |
-| Exact fastest time | 2.9196 ms | 2.9344 ms |
-| Exact shortest distance | 3.0779 ms | 3.1058 ms |
-| Exact fewest sessions | 3.0874 ms | 3.1381 ms |
-| Greedy fixed-80 | 0.1823 ms | 0.2114 ms |
-| Composed competitive option planner | 9.1702 ms | 9.2808 ms |
+| Shortest driving time, no charging | 0.1258 ms | 0.1310 ms |
+| Exact fastest time | 6.5783 ms | 6.6132 ms |
+| Exact shortest distance | 6.9013 ms | 7.9514 ms |
+| Exact fewest sessions | 6.7566 ms | 6.8279 ms |
+| Greedy fixed-80 | 0.3511 ms | 0.3537 ms |
+| Composed competitive option planner | 20.1590 ms | 20.4197 ms |
 
 Runtime values describe this tiny synthetic suite on one machine. They are regression evidence, not
 production latency or scaling evidence.

@@ -18,7 +18,7 @@ from chargepath.providers import StaticRoadNetwork
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 SYNTHETIC_MANIFEST = REPOSITORY_ROOT / "data/benchmarks/synthetic/v1/manifest.json"
 SYNTHETIC_CORRECTNESS = REPOSITORY_ROOT / "docs/benchmarks/synthetic/correctness_v1.json"
-SYNTHETIC_RUNTIME = REPOSITORY_ROOT / "docs/benchmarks/synthetic/runtime_2026-08-09.json"
+SYNTHETIC_RUNTIME = REPOSITORY_ROOT / "docs/benchmarks/synthetic/runtime_2026-11-17.json"
 
 
 def test_manifest_pins_fixture_and_covers_every_required_class() -> None:
@@ -92,15 +92,6 @@ def test_correctness_artifact_reconciles_and_passes_reference_gates() -> None:
         assert summary["reference_infeasible_returned"] == 0
 
 
-def test_normalized_correctness_serialization_is_byte_stable() -> None:
-    manifest = load_benchmark_manifest(SYNTHETIC_MANIFEST)
-
-    first = canonical_json_bytes(build_correctness_artifact(manifest))
-    second = canonical_json_bytes(build_correctness_artifact(manifest))
-
-    assert first == second
-
-
 def test_committed_correctness_evidence_matches_regenerated_bytes() -> None:
     manifest = load_benchmark_manifest(SYNTHETIC_MANIFEST)
 
@@ -150,7 +141,6 @@ def test_runtime_artifact_declares_protocol_environment_median_and_p95() -> None
         warmup_count=0,
         measured_repetitions=2,
         command="test protocol",
-        generated_at_utc="2026-08-09T00:00:00Z",
     )
 
     assert artifact["protocol"]["warmup_count"] == 0

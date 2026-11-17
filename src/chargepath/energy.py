@@ -10,6 +10,9 @@ from typing import Protocol
 from chargepath.models import RoadLeg, VehicleProfile
 from chargepath.validation import require_finite as _require_finite
 
+# Fixed time per charging session for plugging in and starting the charger.
+SESSION_SETUP_MINUTES = 2.0
+
 
 def energy_for_distance(
     distance_km: float,
@@ -149,7 +152,7 @@ def charging_minutes(
     *,
     taper_start_pct: float = 80.0,
     taper_factor: float = 0.45,
-    setup_minutes: float = 2.0,
+    setup_minutes: float = SESSION_SETUP_MINUTES,
 ) -> float:
     """Estimate charging minutes plus a session overhead.
 

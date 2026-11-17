@@ -13,7 +13,6 @@ from typing import Any, cast
 
 import pytest
 
-import chargepath.demo as demo_module
 import chargepath.demo.responses as demo_responses
 import chargepath.demo.services as demo_services
 import chargepath.verification as verification_module
@@ -124,13 +123,7 @@ def test_request_validation_is_exact_and_bounded() -> None:
         PlanRequest.from_payload(payload)
 
 
-def test_direct_demo_models_reject_boolean_numeric_configuration() -> None:
-    with pytest.raises(ValueError, match="point.longitude"):
-        demo_module.PointInput("origin", True, 41)
-    with pytest.raises(ValueError, match="vehicle.usable_battery_kwh"):
-        demo_module.VehicleInputs(True, 60, 20, 150, 10, 1.1)
-    with pytest.raises(ValueError, match="port"):
-        DemoServerConfig(service=_service(), port=True)
+def test_demo_rejects_credentials_in_tile_url() -> None:
     with pytest.raises(ValueError, match="tile URL"):
         FixturePlanningService(
             load_synthetic_scenario(SYNTHETIC_FIXTURE),

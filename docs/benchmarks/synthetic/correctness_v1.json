@@ -1094,7 +1094,7 @@
     "reserve_violations": 0
   },
   "fixture_sha256": "b805fe43dc89d3129e1126d1d5529b9bf5058ab0b4e8a86362caeccd472b980d",
-  "manifest_sha256": "8744707588e3afbd45d676678fd1b42c1da56c783ce72fed3266887c4457f9e7",
+  "manifest_sha256": "9d2e0335c800dc406b17aa34ef0328dad8dc6c1c755eb4f9af89c4f432f8b64e",
   "pruning_audits": [
     {
       "case_id": "detour_choice",
@@ -1134,14 +1134,17 @@
       "same_plan": true,
       "scope": "small synthetic candidate graph; no general preservation claim",
       "selection_config": {
-        "algorithm": "equirectangular-segment-v1",
+        "algorithm": "equirectangular-segment-farthest-progress-v3",
         "candidate_cap": 5,
         "corridor_width_km": 25.0,
+        "coverage_policy": "prefix-monotonic-largest-progress-gap-then-quality",
         "final_tie_break": "stable_station_id_asc",
+        "progress_gap_tolerance_fraction": 0.02,
         "ranking_keys": [
+          "route_progress_coverage_gap_desc_with_tolerance",
           "corridor_distance_km_asc",
-          "route_progress_fraction_asc",
           "max_power_kw_desc",
+          "route_progress_fraction_asc",
           "stable_station_id_asc"
         ]
       },

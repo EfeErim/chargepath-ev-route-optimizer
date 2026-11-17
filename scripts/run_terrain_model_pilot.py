@@ -1,6 +1,6 @@
 """Evaluate the planner's experimental terrain model on held-out BMW i3 winter drives.
 
-Pre-registered before the first run (2026-11-08):
+Evaluation rules:
 
 - data, screening, and the trip-level holdout split are those of ``run_grade_pilot.py``;
 - the model is ``chargepath.terrain.GradeAwareConsumption`` with fixed, uncalibrated constants:
@@ -27,7 +27,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import run_grade_pilot as pilot  # noqa: E402
 
-from chargepath.real_route_benchmark import canonical_bytes  # noqa: E402
+from chargepath.evaluation import canonical_json_bytes  # noqa: E402
 from chargepath.terrain import GradeAwareConsumption, LegElevation  # noqa: E402
 
 MASS_KG = 1_400.0
@@ -156,7 +156,7 @@ def main() -> None:
         "eligible_as_default": all(checks.values()),
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_bytes(canonical_bytes(result))
+    args.output.write_bytes(canonical_json_bytes(result))
     print(f"Eligible as planner default: {result['eligible_as_default']} {checks}")
 
 

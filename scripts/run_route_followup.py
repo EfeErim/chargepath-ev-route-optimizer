@@ -5,19 +5,18 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import math
 import time
 from dataclasses import replace
 from pathlib import Path
 from statistics import median
 
 from chargepath.alternatives import GreedyFixedTargetOptimizer
+from chargepath.evaluation import canonical_json_bytes, nearest_rank
 from chargepath.models import NoFeasibleRouteError, RoutePlan, Station
 from chargepath.optimizer import EVRouteOptimizer
 from chargepath.providers.static import StaticRoadNetwork
-from chargepath.real_route_benchmark import canonical_bytes
-from chargepath.real_route_collection import StoredGraph, load_verified_graph
-from chargepath.real_route_evaluation import Trip, assert_no_station_data, enumerate_trips
+from chargepath.real_route_collection import load_verified_graph
+from chargepath.real_route_evaluation import Trip, assert_no_station_data, verified_e1_graphs
 from chargepath.verification import verify_route_plan
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -74,19 +73,10 @@ def run() -> None:
     manifest = json.loads(manifest_bytes)
     reference = json.loads((ROOT / "docs/benchmarks/real-routes/summary_v1.json").read_bytes())
 
-    def checked_graph(file_name: str) -> StoredGraph:
-        return load_verified_graph(
-            V1_GRAPHS / file_name,
-            expected_sha256=reference["stored_graphs"][file_name]["sha256"],
-        )
-
     rows = []
     timings = []
     all_stations: dict[str, Station] = {}
-    for trip in enumerate_trips(manifest):
-        if trip.experiment != "E1":
-            continue
-        graph = checked_graph(trip.graph.file_name)
+    for trip, graph in verified_e1_graphs(manifest, graphs_dir=V1_GRAPHS, summary=reference):
         stations = dict(graph.stations)
         all_stations.update(stations)
         network = StaticRoadNetwork(graph.legs)
@@ -121,7 +111,11 @@ def run() -> None:
         low = replace(trip, vehicle=replace(trip.vehicle, initial_soc_pct=30.0))
         low_plan = exact(low, stations, network)
         row["low_soc_min"] = None if low_plan is None else low_plan.total_minutes
-        sparse = checked_graph(replace(trip.graph, candidate_cap=12).file_name)
+        sparse_name = replace(trip.graph, candidate_cap=12).file_name
+        sparse = load_verified_graph(
+            V1_GRAPHS / sparse_name,
+            expected_sha256=reference["stored_graphs"][sparse_name]["sha256"],
+        )
         sparse_plan = exact(trip, dict(sparse.stations), StaticRoadNetwork(sparse.legs))
         row["sparse_candidates_min"] = None if sparse_plan is None else sparse_plan.total_minutes
         # Keep road legs through the unavailable site and remove its charging action.
@@ -143,8 +137,8 @@ def run() -> None:
     }
     assert_no_station_data(evidence, all_stations)
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_bytes(canonical_bytes(evidence))
-    p95 = sorted(timings)[math.ceil(0.95 * len(timings)) - 1]
+    args.output.write_bytes(canonical_json_bytes(evidence))
+    p95 = nearest_rank(timings, 0.95)
     print(f"Scenarios: {len(rows)}. Exact + replay median/p95: {median(timings):.1f}/{p95:.1f} ms")
 
 

@@ -43,22 +43,9 @@ $Bin = "D:\osrm-data\bin\binding_napi_v8"
 & $Bin\osrm-routed.exe --algorithm CH --ip 127.0.0.1 --port 5000 --max-table-size 100 D:\osrm-data\extract\turkey-latest.osrm
 ```
 
-Pass `--ip 127.0.0.1` explicitly: `osrm-routed` binds `0.0.0.0` by default.
-
-Measured on the 652,637,317-byte Turkey extract, with 8 threads, below-normal priority, and other
-desktop applications open:
-
-| Step | Elapsed | Peak private memory | Peak working set | Lowest free system RAM |
-|---|---|---|---|---|
-| `osrm-extract` | 10.6 min | 11.56 GB | 7.34 GB | 0.08 GB |
-| `osrm-contract` | 31.3 min | 3.33 GB | 2.63 GB | 3.07 GB |
-| `osrm-routed` (serving) | not applicable | 2.57 GB | 2.56 GB | 3.18 GB |
-
-Memory values are periodic samples (5 s for extract, 15 s for contract, 10 s for routed), because OSRM
-reports `RAM: peak bytes used: <not implemented on Windows>`; true peaks can be somewhat higher. Page-file
-use peaked at a sampled 3.44 GB during extract. `osrm-extract` left almost no free RAM on this 15.8 GB
-machine, so close other applications first. Generated `.osrm*` files take 3.74 GB; with the extract, the
-total is 4.39 GB.
+Pass `--ip 127.0.0.1` explicitly: `osrm-routed` binds `0.0.0.0` by default. On the Turkey extract,
+`osrm-extract` can use nearly all free memory of a desktop machine, so close other applications
+first.
 
 ## Self-hosted Docker example
 
@@ -94,20 +81,15 @@ limits together, for example `osrm-routed --max-table-size 202 ...` with
 `python -m chargepath.demo --adaptive-candidate-cap-limit 200 ...`. If a widened request is still
 refused with `TooBig`, ChargePath reports the infeasible result from the last search it completed.
 
-The profile and processed OSM snapshot determine travel times and routes. OSRM output is not live
-traffic, and a self-hosted instance has only the freshness and operational guarantees supplied by
-its operator.
+The profile and processed OSM snapshot determine travel times and routes; OSRM output is not live
+traffic.
 
 ## Adapter configuration
 
 ```python
 from chargepath.providers import OsrmHttpClient
 
-client = OsrmHttpClient(
-    endpoint="http://127.0.0.1:5000",
-    profile="driving",
-    timeout_seconds=10,
-)
+client = OsrmHttpClient(endpoint="http://127.0.0.1:5000", timeout_seconds=10)
 ```
 
 For a deliberately selected remote endpoint, pass its full base URL and

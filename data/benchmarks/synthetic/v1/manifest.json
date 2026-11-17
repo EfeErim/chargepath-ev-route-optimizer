@@ -33,7 +33,10 @@
       "expected_feasible": true,
       "expected_feasibility_source": {
         "kind": "hand_audited_witness",
-        "node_ids": ["origin", "destination"],
+        "node_ids": [
+          "origin",
+          "destination"
+        ],
         "reason": "100 km consumes 35 percentage points on the 5 percent grid and leaves 45 percent SOC, above the 10 percent reserve."
       }
     },
@@ -44,7 +47,11 @@
       "expected_feasible": true,
       "expected_feasibility_source": {
         "kind": "hand_audited_witness",
-        "node_ids": ["origin", "hub", "destination"],
+        "node_ids": [
+          "origin",
+          "hub",
+          "destination"
+        ],
         "reason": "Each 140 km leg consumes ten 5 percent buckets; charging at the compatible hub restores enough energy for the second leg and reserve."
       }
     },
@@ -55,7 +62,12 @@
       "expected_feasible": true,
       "expected_feasibility_source": {
         "kind": "hand_audited_witness",
-        "node_ids": ["origin", "first", "second", "destination"],
+        "node_ids": [
+          "origin",
+          "first",
+          "second",
+          "destination"
+        ],
         "reason": "Three 140 km legs are feasible by recharging at both compatible intermediate stations."
       }
     },
@@ -66,7 +78,11 @@
       "expected_feasible": true,
       "expected_feasibility_source": {
         "kind": "hand_audited_witness",
-        "node_ids": ["origin", "fast_near", "destination"],
+        "node_ids": [
+          "origin",
+          "fast_near",
+          "destination"
+        ],
         "reason": "The fast-near corridor has two individually feasible 140 km legs with a compatible charger between them."
       }
     },
@@ -87,7 +103,10 @@
       "expected_feasible": true,
       "expected_feasibility_source": {
         "kind": "hand_audited_witness",
-        "node_ids": ["origin", "destination"],
+        "node_ids": [
+          "origin",
+          "destination"
+        ],
         "reason": "150 km consumes exactly ten 5 percent buckets from 60 percent and arrives at the 10 percent reserve."
       }
     },
@@ -117,7 +136,11 @@
       "id": "soc_grid_discretization_boundary",
       "case_id": "discretization_rejected",
       "factor": "soc_step_pct",
-      "values": [10, 5, 2],
+      "values": [
+        10,
+        5,
+        2
+      ],
       "fixed_input_fixture_sha256": "b805fe43dc89d3129e1126d1d5529b9bf5058ab0b4e8a86362caeccd472b980d"
     }
   ],
@@ -127,16 +150,26 @@
       "case_id": "detour_choice",
       "route_geometry": {
         "type": "LineString",
-        "coordinates": [[31.0, 39.0], [33.0, 39.0]]
+        "coordinates": [
+          [
+            31.0,
+            39.0
+          ],
+          [
+            33.0,
+            39.0
+          ]
+        ]
       },
       "selection_config": {
-        "algorithm": "equirectangular-segment-v1",
+        "algorithm": "equirectangular-segment-farthest-progress-v3",
         "corridor_width_km": 25,
         "candidate_cap": 5,
         "ranking_keys": [
+          "route_progress_coverage_gap_desc_with_tolerance",
           "corridor_distance_km_asc",
-          "route_progress_fraction_asc",
           "max_power_kw_desc",
+          "route_progress_fraction_asc",
           "stable_station_id_asc"
         ]
       }

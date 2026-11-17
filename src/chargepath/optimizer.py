@@ -89,22 +89,11 @@ class EVRouteOptimizer:
         *,
         preference: RoutePreference | str = RoutePreference.FASTEST,
         soc_step_pct: int = 5,
-        taper_start_pct: float = 80.0,
-        taper_factor: float = 0.45,
-        session_setup_minutes: float = 2.0,
         consumption_model: ConsumptionModel = DEFAULT_CONSUMPTION,
     ) -> None:
         validation.soc_step(soc_step_pct)
-        validation.charge_model(
-            taper_start_pct=taper_start_pct,
-            taper_factor=taper_factor,
-            session_setup_minutes=session_setup_minutes,
-        )
         self.preference = RoutePreference(preference)
         self.soc_step_pct = soc_step_pct
-        self.taper_start_pct = taper_start_pct
-        self.taper_factor = taper_factor
-        self.session_setup_minutes = session_setup_minutes
         self.consumption_model = consumption_model
 
     def optimize(
@@ -220,15 +209,7 @@ class EVRouteOptimizer:
             for target_bucket in range(energy_bucket + 1, maximum_bucket + 1):
                 from_soc = energy_bucket * self.soc_step_pct
                 to_soc = target_bucket * self.soc_step_pct
-                duration = charging_minutes(
-                    vehicle,
-                    station.max_power_kw,
-                    from_soc,
-                    to_soc,
-                    taper_start_pct=self.taper_start_pct,
-                    taper_factor=self.taper_factor,
-                    setup_minutes=self.session_setup_minutes,
-                )
+                duration = charging_minutes(vehicle, station.max_power_kw, from_soc, to_soc)
                 next_state = (node_id, target_bucket)
                 self._relax(
                     current=current,

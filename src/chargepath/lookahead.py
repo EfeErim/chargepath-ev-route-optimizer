@@ -3,7 +3,7 @@
 At each node the heuristic picks the next node and how much to charge here by minimizing the time it
 spends now plus an optimistic estimate of what is left: the remaining shortest driving time and the
 energy still missing on arrival, charged at the next station's power. It commits to that choice and
-never backtracks, so it can fail where the exact search succeeds. See ``PROJECT_PLAN.md`` (M9).
+never backtracks, so it can fail where the exact search succeeds.
 """
 
 from __future__ import annotations
@@ -14,6 +14,7 @@ from chargepath import validation
 from chargepath.baselines import ShortestDrivingTimeBaseline
 from chargepath.energy import (
     DEFAULT_CONSUMPTION,
+    SESSION_SETUP_MINUTES,
     ConsumptionModel,
     LegBuckets,
     buckets_for_leg,
@@ -41,21 +42,10 @@ class LookaheadGreedyOptimizer:
         self,
         *,
         soc_step_pct: int = 5,
-        taper_start_pct: float = 80.0,
-        taper_factor: float = 0.45,
-        session_setup_minutes: float = 2.0,
         consumption_model: ConsumptionModel = DEFAULT_CONSUMPTION,
     ) -> None:
         validation.soc_step(soc_step_pct)
-        validation.charge_model(
-            taper_start_pct=taper_start_pct,
-            taper_factor=taper_factor,
-            session_setup_minutes=session_setup_minutes,
-        )
         self.soc_step_pct = soc_step_pct
-        self.taper_start_pct = taper_start_pct
-        self.taper_factor = taper_factor
-        self.session_setup_minutes = session_setup_minutes
         self.consumption_model = consumption_model
 
     def optimize(
@@ -116,20 +106,14 @@ class LookaheadGreedyOptimizer:
 
         def charge_minutes(station: Station, from_bucket: int, to_bucket: int) -> float:
             return charging_minutes(
-                vehicle,
-                station.max_power_kw,
-                from_bucket * step,
-                to_bucket * step,
-                taper_start_pct=self.taper_start_pct,
-                taper_factor=self.taper_factor,
-                setup_minutes=self.session_setup_minutes,
+                vehicle, station.max_power_kw, from_bucket * step, to_bucket * step
             )
 
         def later_charging_estimate(station: Station, missing_buckets: int) -> float:
             if missing_buckets <= 0:
                 return 0.0
             power_kw = min(station.max_power_kw, vehicle.max_dc_power_kw)
-            return self.session_setup_minutes + 60 * missing_buckets * bucket_kwh / power_kw
+            return SESSION_SETUP_MINUTES + 60 * missing_buckets * bucket_kwh / power_kw
 
         def usable(station: Station | None) -> bool:
             return station is not None and station.connector_type in vehicle.supported_dc_connectors
