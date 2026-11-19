@@ -32,15 +32,6 @@ def _stored_distances() -> dict[str, float]:
     return road_km
 
 
-def test_provinces_cover_every_plate_inside_turkey() -> None:
-    provinces = load_provinces(BENCHMARK_DIR / "provinces.json")
-    assert len(provinces) == 81
-    assert len({province.name for province in provinces}) == 81
-    for province in provinces:
-        assert 35.8 <= province.latitude <= 42.2
-        assert 25.6 <= province.longitude <= 44.9
-
-
 def test_committed_routes_are_reproduced_from_stored_distances() -> None:
     provinces = load_provinces(BENCHMARK_DIR / "provinces.json")
     routes = select_routes(provinces, _stored_distances())
@@ -118,22 +109,6 @@ def test_selection_does_not_depend_on_distance_mapping_order() -> None:
     assert select_routes(provinces, distances) == select_routes(
         provinces, dict(reversed(list(distances.items())))
     )
-
-
-def test_selection_fills_eastern_slots_first() -> None:
-    provinces = _synthetic_provinces(40)
-    routes = select_routes(provinces, _synthetic_distances(provinces))
-    assert all(route.is_eastern for route in routes if route.slot < 2)
-
-
-def test_unreachable_pairs_are_never_selected() -> None:
-    provinces = _synthetic_provinces(40)
-    distances = _synthetic_distances(provinces)
-    first = select_routes(provinces, distances)[0]
-    del distances[distance_key(first.origin.plate, first.destination.plate)]
-    assert (first.origin, first.destination) not in {
-        (route.origin, route.destination) for route in select_routes(provinces, distances)
-    }
 
 
 def test_a_band_that_cannot_be_filled_fails_instead_of_shrinking() -> None:

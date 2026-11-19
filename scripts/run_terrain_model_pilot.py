@@ -27,7 +27,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import run_grade_pilot as pilot  # noqa: E402
 
-from chargepath.evaluation import canonical_json_bytes  # noqa: E402
+from chargepath.evidence import canonical_json_bytes  # noqa: E402
 from chargepath.terrain import GradeAwareConsumption, LegElevation  # noqa: E402
 
 MASS_KG = 1_400.0

@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import statistics
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -20,7 +19,7 @@ from chargepath.corridor import (
     CandidateSelectionConfig,
     select_corridor_candidates,
 )
-from chargepath.evaluation import nearest_rank, time_passes
+from chargepath.evidence import time_passes, timing_summary
 from chargepath.models import GeoJsonLineString, RoadLeg, Station
 from chargepath.providers.osrm import (
     CandidateGraphBuilder,
@@ -275,11 +274,3 @@ def measure_osrm_runtime(
             time_passes(run_pass, warmups=protocol["warmups"], repetitions=protocol["repetitions"])
         )
     return results
-
-
-def timing_summary(samples: list[float]) -> dict[str, Any]:
-    return {
-        "median_ms": round(statistics.median(samples), 3),
-        "p95_ms": round(nearest_rank(samples, 0.95), 3),
-        "samples_ms": [round(sample, 3) for sample in samples],
-    }

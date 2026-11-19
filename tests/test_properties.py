@@ -246,8 +246,9 @@ def exact_replay(case: Case, plan: RoutePlan) -> None:
     stops = list(plan.charging_stops)
     for index, leg in enumerate(plan.legs):
         node = plan.node_ids[index]
-        if stops and stops[0].station_id == node:
+        if stops and stops[0].node_index == index:
             stop = stops.pop(0)
+            assert stop.station_id == node
             assert node in model.station_power
             assert stop.arrival_soc_pct == bucket * model.step
             target = round(stop.departure_soc_pct / model.step)

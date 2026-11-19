@@ -121,6 +121,8 @@ def test_lookahead_baseline_matches_the_readme() -> None:
     assert round(statistics.median(savings), 1) == 2.6
     assert round(statistics.median(percent), 1) == 0.5
     assert round(max(savings), 1) == 26.5
+    # Exact fastest and the lookahead heuristic planned all 72 scenarios, fixed-80 planned 71.
+    assert artifact["replayed_plans"] == 72 + 72 + 71 == 215
     assert artifact["reserve_violations_on_returned_plans"] == 0
     assert "median **2.6 minutes (0.5%) faster**, tied in 22 of 72 scenarios" in README
     assert "at most 26.5 minutes faster" in README

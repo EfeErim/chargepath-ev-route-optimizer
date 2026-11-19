@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   checks:
-    timeout-minutes: 10
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -23,32 +23,17 @@ jobs:
           python-version: ${{ matrix.python }}
           cache: pip
           cache-dependency-path: pyproject.toml
-      - name: Install project
-        run: python -m pip install --editable ".[dev]"
-      - name: Run project gate
+      - run: python -m pip install --editable ".[dev,browser]"
+      - run: ./scripts/check.ps1
         shell: pwsh
-        run: ./scripts/check.ps1
-
-  browser:
-    # Real Chromium, real Pyodide from the CDN, and the real planner; needs network.
-    timeout-minutes: 15
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
-        with:
-          python-version: "3.11"
-          cache: pip
-          cache-dependency-path: pyproject.toml
-      - name: Install project and browser test tools
-        run: python -m pip install --editable ".[dev,browser]"
-      - name: Install Chromium
-        run: python -m playwright install --with-deps chromium
-      - name: Run browser smoke test
-        run: python -m pytest -q browser_tests
+      # Real Chromium and real Pyodide from the CDN; needs network, so it is not in check.ps1.
+      - if: matrix.python == '3.11'
+        run: |
+          python -m playwright install --with-deps chromium
+          python -m pytest -q browser_tests
 
   deploy:
-    needs: [checks, browser]
+    needs: checks
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     timeout-minutes: 10

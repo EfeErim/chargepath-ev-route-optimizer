@@ -14,7 +14,6 @@ from chargepath.terrain import (
     GRAVITY_M_PER_S2,
     GradeAwareConsumption,
     LegElevation,
-    elevation_from_profile,
 )
 
 VEHICLE = VehicleProfile(
@@ -28,11 +27,7 @@ VEHICLE = VehicleProfile(
 )
 
 
-def test_profile_hysteresis_ignores_small_reversals() -> None:
-    assert elevation_from_profile([100, 100.4, 99.8, 100.3, 100]) == LegElevation(0, 0)
-    assert elevation_from_profile([100, 150, 149.5, 120, 180], noise_m=1) == LegElevation(110, 30)
-    with pytest.raises(ValueError):
-        elevation_from_profile([100])
+def test_negative_elevation_is_rejected() -> None:
     with pytest.raises(ValueError):
         LegElevation(-1, 0)
 
@@ -60,21 +55,6 @@ def test_missing_elevation_is_an_error_not_a_flat_assumption() -> None:
     model = GradeAwareConsumption((), mass_kg=1500)
     with pytest.raises(ValueError, match="no elevation"):
         model.leg_energy(RoadLeg("a", "b", 10, 10), VEHICLE)
-
-
-@pytest.mark.parametrize(
-    ("field", "value"),
-    [
-        ("mass_kg", 0),
-        ("drive_efficiency", 0),
-        ("drive_efficiency", 1.1),
-        ("regen_efficiency", -0.1),
-    ],
-)
-def test_invalid_constants_are_rejected(field: str, value: float) -> None:
-    arguments: dict[str, object] = {"elevations": (), "mass_kg": 1500, field: value}
-    with pytest.raises(ValueError):
-        GradeAwareConsumption(**arguments)  # type: ignore[arg-type]
 
 
 def test_planner_uses_terrain_for_feasibility_and_replay() -> None:

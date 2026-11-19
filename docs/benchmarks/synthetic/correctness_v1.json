@@ -1094,7 +1094,7 @@
     "reserve_violations": 0
   },
   "fixture_sha256": "b805fe43dc89d3129e1126d1d5529b9bf5058ab0b4e8a86362caeccd472b980d",
-  "manifest_sha256": "9d2e0335c800dc406b17aa34ef0328dad8dc6c1c755eb4f9af89c4f432f8b64e",
+  "manifest_sha256": "4399392a5ee9c3f8d03588e76c57ec3b2ffaa807b5ad7bbc6b9c2961f880460a",
   "pruning_audits": [
     {
       "case_id": "detour_choice",

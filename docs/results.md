@@ -1,18 +1,20 @@
 # Results
 
+All numbers below are modeled minutes or kWh and come from the committed files linked in each
+section.
+
 ## Real-route benchmark
 
-The 2026-11-05 run used 24 routes across four distance bands, three declared vehicle parameter
-sets, and a single frozen road graph and station snapshot. Routes were selected before running the
-planner, using only province metadata and road distances. Road distances derive from OpenStreetMap
-data, © OpenStreetMap contributors, ODbL. Results are modeled minutes on that graph and a static
-EPDK snapshot. SOC, arrival time, and charger availability require separate field evidence.
+The 2026-11-05 run used 24 routes in four distance bands, three vehicle parameter sets, one frozen
+road graph and one static EPDK snapshot. Routes were chosen from province metadata and road
+distances before the planner ran. Road distances derive from OpenStreetMap data, © OpenStreetMap
+contributors, ODbL.
 
-The [frozen manifest](../data/benchmarks/real-routes/v1/manifest.json) defines E1–E6. The
-[normalized summary](benchmarks/real-routes/summary_v1.json), [scenario outcomes](benchmarks/real-routes/trips_v1.jsonl),
-and [machine timings](benchmarks/real-routes/runtime_2026-11-05.json) are the sources for these tables.
+The [manifest](../data/benchmarks/real-routes/v1/manifest.json) defines experiments E1–E6. The
+[summary](benchmarks/real-routes/summary_v1.json), [scenario outcomes](benchmarks/real-routes/trips_v1.jsonl)
+and [timings](benchmarks/real-routes/runtime_2026-11-05.json) are the sources.
 
-| Strategy | Plan outcomes | Infeasible | Provider failures |
+| Strategy | Plans | Infeasible | Provider failures |
 |---|---:|---:|---:|
 | Exact fastest | 624 | 0 | 0 |
 | Exact shortest distance | 624 | 0 | 0 |
@@ -20,116 +22,88 @@ and [machine timings](benchmarks/real-routes/runtime_2026-11-05.json) are the so
 | Greedy fixed-80 | 616 | 8 | 0 |
 | Road-only shortest driving time | 37 | 587 | 0 |
 
-The 624 cases include multiple configurations of the same 24 routes. All 2,525 returned plan
-outcomes passed independent replay with zero reserve violations. Shared inputs were computed and
-replayed once. Exact fastest was at least as fast as every other returned plan on the same graph and
-SOC grid. Road-only infeasibility means insufficient modeled battery for that path at the declared
-starting SOC. The shortest-distance objective compares the distances of the legs supplied by OSRM.
+The 624 cases repeat the 24 routes under different settings. All 2,525 returned plans passed
+replay with zero reserve violations, and exact fastest was never slower than another returned plan
+on the same graph and SOC grid. Road-only infeasibility means the battery cannot cover that path
+from the declared start SOC.
 
-| Experiment | Observed result |
+| Experiment | Result |
 |---|---|
-| E1 · Strategy comparison | On 71 paired plans, median savings versus fixed-80 greedy were 24.7 min (4.2%), p90 60.9 min (9.5%), and maximum 98.5 min (16.0%). Six ties and one greedy failure out of 72 scenarios. |
-| E2 · SOC grid | Versus 2%, the 5% grid added a median 3.3, 1.0, and 0.8 min for the 40, 60, and 80 kWh sets. The 10% grid added 8.0, 2.5, and 2.6 min. Exact feasibility stayed the same. The 5% and 2% grids are non-nested, and the minimum 5% gap was −0.5 min. |
-| E3 · Candidate cap | Versus cap 200, median gaps for caps 12, 24, 50, and 98 were 2.7, 0.9, 0, and 0 min. Maxima were 92.0, 18.9, 5.8, and 1.3 min. Cap 200 is a finite reference. Greedy missed four plans at cap 12. |
-| E4 · Corridor width | With cap 50, widths 10 and 25 km both had a median gap of 0 versus 50 km. Gaps ranged from −5.1 to 2.7 min. A wider corridor can change which stations survive the cap. |
-| E5 · Vehicle inputs | On eight routes, exact search stayed feasible at every tested value. Median total times at the 50, 150, and 250 kW vehicle limits were 617.9, 551.0, and 542.5 min. |
-| E6 · Runtime | Each figure is the wall time of one whole pass over 72 scenarios, not of one search. Median/p95 per pass were 21.3/27.5 s for exact fastest (about 0.3 s per scenario), 3.9/4.8 s for greedy, and 0.32/0.56 s for road-only. OSRM was timed separately over 24 requests per pass, with medians of 0.65 s for Route and 1.15 s for Table. These are machine-specific batch timings. |
+| E1 · Strategy comparison | On 71 paired scenarios exact fastest saved a median 24.7 min (4.2%) over fixed-80, p90 60.9 min (9.5%), maximum 98.5 min (16.0%). 6 ties; fixed-80 failed 1 of 72. |
+| E2 · SOC grid | Against a 2% grid, the 5% grid added a median 3.3, 1.0 and 0.8 min for the 40, 60 and 80 kWh sets; 10% added 8.0, 2.5 and 2.6 min. Feasibility did not change. The grids are not nested, so the smallest 5% gap was −0.5 min. |
+| E3 · Candidate cap | Against cap 200, caps 12, 24, 50 and 98 had median gaps of 2.7, 0.9, 0 and 0 min and maxima of 92.0, 18.9, 5.8 and 1.3 min. Greedy missed four plans at cap 12. |
+| E4 · Corridor width | At cap 50, widths 10 and 25 km had a median gap of 0 against 50 km, ranging from −5.1 to 2.7 min, because width changes which stations survive the cap. |
+| E5 · Vehicle inputs | On eight routes exact search stayed feasible at every tested value. Median total times at 50, 150 and 250 kW vehicle limits were 617.9, 551.0 and 542.5 min. |
+| E6 · Runtime | Measured on 2026-11-05, before the dominance check added after 0.3.0, which can only shorten searches. Wall time of one pass over 72 scenarios, median/p95: 21.3/27.5 s for exact fastest (about 0.3 s per scenario), 3.9/4.8 s for greedy, 0.32/0.56 s for road-only. OSRM medians over 24 requests per pass: 0.65 s Route, 1.15 s Table. |
 
-Driving was a median 87.5% of the greedy trip time, and that share is fixed by the road legs, so the
-percentage saving understates the effect on the part a charging planner controls. Median charging
-time, including the 2-minute session overhead, was 70.7 minutes for greedy and 53.0 for exact
-fastest. In the 66 paired scenarios where greedy charged, exact fastest cut charging time by a
-median 28.7% (range 0–100%). The total saving also includes path changes, so it is not only charging
-time.
+Driving is a median 87.5% of the greedy trip and is fixed by the road legs, so the percentage saving
+understates the effect on the part a charging planner controls. Median charging time, including
+the 2-minute session overhead, was 70.7 min for greedy and 53.0 for exact fastest; in the 66 paired
+scenarios where greedy charged, the cut was a median 28.7% (range 0–100%). Median E1 savings by
+distance band were 10.3, 19.8, 28.7 and 40.0 min, shortest band first.
 
-Median E1 savings by distance band were 10.3, 19.8, 28.7, and 40.0 minutes, from the shortest to the
-longest band. The paired comparison measures the effect of replacing one specified heuristic and
-combines changes in stop selection and charging amounts.
+### Where the saving comes from
 
-The exact v1 output requires its original frozen inputs. The repository distributes derived results
-and provenance metadata. See the [rerun procedure](reproducing.md#real-route-rerun-procedure).
+The [follow-up](benchmarks/real-routes/followup_v1.json) keeps every greedy leg and optimizes only
+how much to charge at greedy's stops (a stop may be skipped), then compares with joint
+optimization. Each loaded graph is checked against the benchmark checksum.
 
-### Follow-up · Fixed-path charging and stress cases
-
-The [follow-up artifact](benchmarks/real-routes/followup_v1.json) uses the E1 scenarios and verifies each
-loaded graph against the recorded benchmark checksum. The intermediate strategy keeps every greedy road
-leg in order and optimizes how much to charge at the visits where greedy charged. The solver may
-skip a charging session there. Every returned plan is replayed, and for paired cases the script
-checks the modeled time ordering from greedy through fixed-path to joint optimization.
-
-| Comparison on the 71 paired scenarios | Median saving | Maximum saving |
+| On the 71 paired scenarios | Median saving | Maximum saving |
 |---|---:|---:|
 | Fixed-80 to optimized charging on the same path | 9.6 min | 47.2 min |
-| Fixed-path optimization to joint optimization | 10.5 min | 92.5 min |
+| Same path to joint optimization | 10.5 min | 92.5 min |
 | Fixed-80 to joint optimization | 24.7 min | 98.5 min |
 
-The two gains add per scenario. Their separate medians need not add to the median joint gain.
-The second row measures the value of freeing the path and charging-site choices together.
+The two gains add per scenario, not as medians.
 
-| Stress case | Feasible | Median added time among feasible plans | Maximum added time |
+| Stress case | Feasible | Median added time | Maximum added time |
 |---|---:|---:|---:|
-| Initial SOC lowered from 80% to 30% | 72/72 | 16.3 min | 29.4 min |
-| Candidate cap lowered from 50 to 12 | 68/72 | 3.5 min | 91.1 min |
+| Initial SOC 80% → 30% | 72/72 | 16.3 min | 29.4 min |
+| Candidate cap 50 → 12 | 68/72 | 3.5 min | 91.1 min |
 | First selected charger disabled before planning | 65/66 | 1.0 min | 5.2 min |
 
-The outage scenario keeps road legs and removes charging at the first selected site. The six
-plans without charging are outside its denominator. This tests replanning with advance notice
-and retains the original candidate set. It does not simulate discovering the outage on arrival.
-A single pass across 72 nominal inputs measured median/p95 of 165/268 ms per exact search with
-replay on the recording machine, excluding graph loading, OSRM, and browser work. Unlike E6, this
-is per search; E6 also counts per-scenario setup inside each pass. Both runs predate the
-dominance check added after 0.3.0, which leaves objective values unchanged and can only shorten
-searches.
+The outage case removes charging at the first selected site, keeps the candidate set and excludes
+the six plans without charging. It models advance notice, not finding the charger down on arrival.
+The artifact also records how many plans were replayed (419) and the replay's reserve-violation
+count (0).
 
 ```powershell
-python scripts/run_route_followup.py --output data/processed/real-routes/v1/followup-rerun.json
+python scripts/run_route_followup.py --output docs/benchmarks/real-routes/followup_v1.json
 ```
 
-### Follow-up · Stronger heuristic baseline
+### Stronger heuristic baseline
 
-Fixed-80 is a deliberately simple rule, so E1 says little about what exact search adds over a
-careful heuristic. The [baseline artifact](benchmarks/real-routes/lookahead_baseline_v1.json) compares
-exact fastest with `LookaheadGreedyOptimizer` on the same 72 E1 scenarios and checksum-verified
-graphs. The heuristic, the comparison, and a reading rule were recorded in the project plan before
-the heuristic was run on any real-route graph. At each node it considers every progressing direct
-leg to the destination or an unused compatible station and every charge level here, and scores each
-pair by charging time here, leg time, remaining shortest driving time, and an optimistic estimate of
-later charging at the next station's power. It commits and never backtracks. Fixed-80 was rerun
-alongside, and both it and exact fastest reproduced the committed follow-up totals scenario by
-scenario.
+Fixed-80 is a deliberately simple rule. The [baseline artifact](benchmarks/real-routes/lookahead_baseline_v1.json)
+compares exact fastest with the [lookahead heuristic](algorithm.md#heuristics-and-baselines) on the
+same 72 scenarios. Fixed-80 and exact fastest were rerun alongside and matched the committed
+follow-up totals scenario by scenario.
 
-| Exact fastest versus | Paired | Ties | Heuristic failures | Median saving | p90 saving | Maximum saving | Median heuristic charging |
+| Exact fastest versus | Paired | Ties | Heuristic failures | Median saving | p90 | Maximum | Median heuristic charging |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| Fixed-80 greedy | 71 | 6 | 1 | 24.7 min (4.2%) | 60.9 min (9.5%) | 98.5 min (16.0%) | 70.7 min |
-| Lookahead heuristic | 72 | 22 | 0 | 2.6 min (0.5%) | 12.0 min (1.5%) | 26.5 min (2.7%) | 54.6 min |
+| Fixed-80 | 71 | 6 | 1 | 24.7 min (4.2%) | 60.9 min (9.5%) | 98.5 min (16.0%) | 70.7 min |
+| Lookahead | 72 | 22 | 0 | 2.6 min (0.5%) | 12.0 min (1.5%) | 26.5 min (2.7%) | 54.6 min |
 
-Exact fastest charged for a median 53.0 minutes. The lookahead heuristic closes about nine tenths of
-the median fixed-80 gap and solved the scenario fixed-80 could not. The median saving is below
-5 minutes, so on this benchmark exact search adds little over a
-good heuristic in the typical case. Its value is the tail, up to 26.5 minutes here, and the
-guarantee that no plan on the same graph and SOC grid is faster. All 215 returned plans replayed
-against their road graphs with zero reserve violations.
+Exact fastest charged a median 53.0 min. The heuristic closes about nine tenths of the median
+fixed-80 gap and solved the scenario fixed-80 could not, so in the typical case exact search adds
+little here; its value is the tail and the optimality guarantee on the graph and grid. All 215
+returned plans replayed against their graphs with zero reserve violations.
 
 ```powershell
 python scripts/run_baseline_comparison.py --output docs/benchmarks/real-routes/lookahead_baseline_v1.json
 ```
 
-### Follow-up · Speed choice
+### Speed choice
 
-The [speed-choice artifact](benchmarks/real-routes/speed_choice_v1.json) reruns the 72 E1 scenarios
-on the checksum-verified graphs with the opt-in `SpeedAwareConsumption` model. It scales each
-vehicle's constant rate by `1 − q + q × (v / v_ref)²`, with `q = 0.149` and `v_ref = 86.8 km/h` from
-the ID.3 pilot's squared-speed fit. Both runs use that model. The second may also drive any leg at 90%
-or 80% of its OSRM speed, and exact search picks the fastest combination.
+The [speed-choice artifact](benchmarks/real-routes/speed_choice_v1.json) reruns the 72 scenarios with
+the opt-in `SpeedAwareConsumption`, which scales the constant rate by `1 − q + q × (v / v_ref)²`
+with `q = 0.149` and `v_ref = 86.8 km/h` from the ID.3 pilot. The second run may also drive any leg
+at 90% or 80% of its OSRM speed.
 
-Speed choice improved none of the 72 scenarios; no plan slowed a single leg. Every plan replayed
-under the same model. This is the expected result under this model, not a search failure.
-Minimizing `d / v + d × (a + b v²) / P` per kilometre gives an optimal speed of `v³ = P / (2b)`.
-With the pilot's quadratic term and the vehicle sets' rates, that is 179–193 km/h at a 50 kW
-charger and still about 137 km/h at a 50 kW charger in the taper (22.5 kW), above OSRM's leg
-speeds. Slowing down can still matter when it avoids a stop entirely or when the next charger is
-weak, which these scenarios did not require. The result depends on one vehicle's fit, which ignores
-temperature, wind, and grade.
+No scenario improved and no plan slowed a leg. Minimizing `d / v + d × (a + b v²) / P` per kilometre
+gives `v³ = P / (2b)`: 179–193 km/h at a 50 kW charger for these vehicle sets, and still about
+137 km/h at 22.5 kW in the taper, above OSRM's leg speeds. Slowing down can still help when it
+avoids a stop or the next charger is weak, which these scenarios did not need. The fit is from one
+car and ignores temperature, wind and grade.
 
 ```powershell
 python scripts/run_speed_choice.py --output docs/benchmarks/real-routes/speed_choice_v1.json
@@ -137,198 +111,111 @@ python scripts/run_speed_choice.py --output docs/benchmarks/real-routes/speed_ch
 
 ## Field pilot · Volkswagen ID.3
 
-The pilot uses one Volkswagen ID.3 Pro Performance from the [TUM usage dataset](https://github.com/TUMFTM/electric-vehicle-uds-dataset)
-by Schreiber et al. ([eTransportation paper](https://doi.org/10.1016/j.etran.2025.100518)).
-The [aggregate artifact](benchmarks/field-pilot/tum_id1_v1.json) records a chronological split.
-There are 240 calibration and 121 held-out driving windows, and 16 calibration and nine held-out
-likely DC charging windows. These are separately screened windows from the same vehicle.
+One ID.3 Pro Performance from the [TUM usage dataset](https://github.com/TUMFTM/electric-vehicle-uds-dataset)
+(Schreiber et al., [paper](https://doi.org/10.1016/j.etran.2025.100518)). The
+[artifact](benchmarks/field-pilot/tum_id1_v1.json) splits chronologically: 240 calibration and 121
+held-out driving windows, 16 and 9 likely DC charging windows.
 
-| Driving model | Energy proxy MAE | Arrival SOC MAE | Arrival SOC overestimated |
+| Driving model | Energy MAE | Arrival SOC MAE | SOC overestimated |
 |---|---:|---:|---:|
 | 18 kWh/100 km, raw | 1.27 kWh | 2.19 pp | 83/121 |
 | 18 kWh/100 km, 10% margin | 1.05 kWh | 1.80 pp | 69/121 |
 | Fitted constant rate | 1.09 kWh | 1.88 pp | 72/121 |
 | Fitted speed model | 0.87 kWh | 1.49 pp | 70/121 |
 
-The largest SOC overestimate fell from 11.46 pp with the nominal margin to 7.18 pp with the
-speed model. The speed model still overestimated SOC in 70 held-out windows.
+The largest SOC overestimate fell from 11.46 pp with the nominal margin to 7.18 pp with the speed
+model.
 
-| Charging model | Duration MAE | Mean signed error | Duration underestimated |
+| Charging model | Duration MAE | Mean signed error | Underestimated |
 |---|---:|---:|---:|
-| Generic taper with 100 kW assumed cap | 8.62 min | −8.61 min | 8/9 |
-| Fitted effective cap and taper | 2.72 min | −2.25 min | 5/9 |
+| Generic taper, 100 kW cap | 8.62 min | −8.61 min | 8/9 |
+| Fitted 75 kW cap, taper at 65% | 2.72 min | −2.25 min | 5/9 |
 
-Observed kWh is a proxy computed from the measured SOC change and nominal 58 kWh usable capacity.
-Distance comes from integrated recorded speed. The speed model therefore has access to actual
-driving speed during evaluation. Route elevation and charger-type labels are absent. Charging
-windows are screened from stationary SOC rises, and the inferred DC classification may be wrong.
-The fitted effective cap of 75 kW and taper at 65% can reflect the sampled chargers and battery
-conditions. Timing excludes setup and queueing. The results motivate testing on additional vehicles,
-planned rather than recorded speeds, elevation, and labeled DC sessions before changing planner
-defaults. See [pilot procedure](reproducing.md#field-pilot-procedure).
+Energy is a proxy from SOC change and the nominal 58 kWh capacity, and distance comes from recorded
+speed, so the speed model sees the actual speed. There is no elevation or charger-type label, DC
+windows are inferred, and timing excludes setup and queueing. Screening is in
+[reproducing](reproducing.md#field-pilots).
 
 ### BMW i3 · Speed and elevation
 
-The [BMW pilot artifact](benchmarks/field-pilot/bmw_grade_v1.json) uses the winter portion of
-Steinstraeter et al.'s [Battery and Heating Data in Real Driving Cycles](https://ieee-dataport.org/open-access/battery-and-heating-data-real-driving-cycles).
-It compares predictions with net battery energy integrated from recorded voltage and current.
-Of 38 winter trips, 35 passed screening. Eleven complete trips were held out from fitting.
-The held-out trips also provided 195 approximately one-kilometer sections. Three sections
-exceeded the declared hillier threshold of 12 m of vertical change per km.
+Winter trips from Steinstraeter et al., [Battery and Heating Data in Real Driving Cycles](https://ieee-dataport.org/open-access/battery-and-heating-data-real-driving-cycles),
+compared with net battery energy from voltage and current
+([artifact](benchmarks/field-pilot/bmw_grade_v1.json)). 35 of 38 trips passed screening; 11 were
+held out, giving 195 sections of about 1 km, of which 3 exceed 12 m of vertical change per km.
 
-| Model | Whole-trip MAE, 11 trips | Section MAE, 195 sections | Hillier MAE, 3 sections |
+The [terrain-model artifact](benchmarks/field-pilot/bmw_terrain_model_v1.json) tests the planner's
+opt-in `GradeAwareConsumption` on the same split. It sees only distance, ascent and descent, with
+1,400 kg, drive efficiency 0.85 and regen efficiency 0.65 set before the run; only the flat rate is
+fitted. Its rule: become the default only if hillier-section error falls without raising whole-trip
+or all-section error.
+
+| Model | Whole-trip MAE (11) | Section MAE (195) | Hillier MAE (3) |
 |---|---:|---:|---:|
 | Fitted constant | 0.282 kWh | 0.0715 kWh | 0.225 kWh |
 | Speed | 0.281 kWh | 0.0710 kWh | 0.234 kWh |
 | Speed and net grade | 0.338 kWh | 0.0722 kWh | 0.225 kWh |
-| Speed, net grade, and total vertical change | 0.319 kWh | 0.0702 kWh | 0.148 kWh |
+| Speed, net grade and total vertical change | 0.319 kWh | 0.0702 kWh | 0.148 kWh |
+| Planner terrain model | 0.367 kWh | 0.0719 kWh | 0.194 kWh |
 
-The full terrain model lowered error on the three hillier sections, but raised whole-trip error
-versus the constant model. It underestimated energy on 86/195 sections versus 78/195 for the
-constant model. The comparison holds out trips from one car and uses observed speed and elevation.
-The hillier sample is too small to generalize the observed improvement to other routes.
+The terrain model lowered hillier-section error but raised whole-trip error, so it failed and stays
+opt-in. Three hillier sections from one car in winter are too few to generalize either way. A second
+run on 2026-11-08 reproduced the terrain artifact byte for byte.
 
-### BMW i3 · Planner terrain model
+## Property checks
 
-The [terrain-model artifact](benchmarks/field-pilot/bmw_terrain_model_v1.json) tests the planner's
-opt-in `GradeAwareConsumption` model (`src/chargepath/terrain.py`) on the same data, screening, and
-held-out trips as the pilot above. Unlike the pilot's regression models, it sees only what a planner
-could know before driving: distance, ascent, and descent. Its physical constants were declared
-before the first run and not fitted: 1,400 kg, drive efficiency 0.85, and regen efficiency 0.65.
-Only the flat rate is fitted on calibration data. The decision rule was also fixed in advance: the
-model may become a planner default only if it lowers hillier-section error without raising
-whole-trip or all-section error.
+`tests/test_properties.py` generates trips of two to six nodes with forward, backward and cyclic
+legs, mixed charger powers, 5–25% SOC grids and decimal vehicle inputs. A reference solver written
+from [the algorithm notes](algorithm.md) recomputes every bucket and charge time in exact rational
+arithmetic. The checks:
 
-| Model | Whole-trip MAE, 11 trips | Section MAE, 195 sections | Hillier MAE, 3 sections |
-|---|---:|---:|---:|
-| Fitted constant | 0.282 kWh | 0.0715 kWh | 0.225 kWh |
-| Terrain model | 0.367 kWh | 0.0719 kWh | 0.194 kWh |
+- **differential:** feasibility and the lexicographic optimum of all three objectives match the
+  reference, and every plan passes both the library replay and an exact replay;
+- **dominance:** exact fastest is never slower than any other strategy that returns a plan;
+- **metamorphic:** more start SOC, a lower reserve, an extra charger, doubled power or an extra
+  direct leg never makes a trip infeasible or slower; relabeling nodes changes no objective;
+  repeated runs give identical plans.
 
-The terrain model lowered error on the three hillier sections but raised whole-trip error, so it
-failed the rule and stays experimental. The constant model remains the planner default. As in the
-pilot above, three hillier sections from one car in winter are too few to generalize either way.
-
-```powershell
-python scripts/run_terrain_model_pilot.py data/raw/field-pilot/bmw-i3/drives.zip --output data/processed/field-pilot/bmw-terrain-model.json
-```
-
-A second run on 2026-11-08 reproduced the artifact byte for byte (SHA-256
-`aef6dd92256aa3ec51b017f0ebf505fc32bdc725213ff46d612b905aa6d73129`).
-
-## Differential and property checks
-
-`tests/test_properties.py` generates small trips with Hypothesis: two to six nodes, forward,
-backward, and cyclic legs, mixed charger powers, 5–25% SOC grids, and decimal vehicle inputs. A
-reference solver written from [the algorithm description](algorithm.md) recomputes every energy
-bucket and charge duration with exact rational arithmetic and shares no code with
-`chargepath.energy`. The checks are:
-
-- **differential:** feasibility and the lexicographic optimum of all three exact objectives match the
-  reference, and every returned plan passes both the library replay and an exact-arithmetic replay;
-- **dominance:** exact fastest is never slower than shortest distance, fewest sessions, greedy
-  fixed-80, or the road-only baseline when those return a plan;
-- **metamorphic:** a higher starting SOC, a lower reserve, an extra charger, doubled charger and
-  vehicle power, or an extra direct leg never makes a feasible trip infeasible or slower; relabeling
-  nodes leaves every objective unchanged; repeated runs return identical plans.
-
-The gate runs a fixed derandomized sample of 150 cases per property. A deeper randomized run on
-2026-11-08 used 4,000 cases per property (20,000 in total), about half of them feasible and about 8%
-with two or more charging stops. It found no disagreement, including between floating-point and exact
-bucket rounding:
+The gate runs a fixed sample of 150 cases per property. A randomized run on 2026-11-08 with 4,000
+per property (20,000 in total) found no disagreement:
 
 ```powershell
 $env:CHARGEPATH_PROPERTY_EXAMPLES = "4000"; python -m pytest -q tests/test_properties.py
 ```
 
-These checks cover the modeled problem only. They say nothing about the accuracy of the energy or
-charging model.
-
 ## Synthetic benchmark
 
-The synthetic benchmark was evaluated on 2026-11-17 with Python 3.11.9 using the offline, project-authored
-`chargepath-m3-synthetic-v1` suite. The fixture contains eight hand-audited cases covering every
-declared topology and boundary class. These results validate software behavior under the stated
-model; they do not establish real-world SOC accuracy or charger availability.
+Eight hand-audited cases (`chargepath-m3-synthetic-v1`) covering every declared topology and
+boundary class, run on 2026-11-17 with Python 3.11.9. The
+[correctness artifact](benchmarks/synthetic/correctness_v1.json) is regenerated byte for byte by
+`tests/test_evaluation.py`; the [runtime artifact](benchmarks/synthetic/runtime_2026-11-17.json)
+holds every sample.
 
-Reproduction command:
+All 22 returned plans out of 40 outcomes passed replay. Each exact objective solved all 5 feasible
+cases and rejected all 3 infeasible ones; greedy fixed-80 solved all 5; the road-only baseline
+solved only the 2 that need no charging.
+
+| Case | Exact fastest | Greedy fixed-80 | Exact charging | Greedy charging |
+|---|---:|---:|---:|---:|
+| One stop | 174.0 min | 178.8 min | 14.0 min | 18.8 min |
+| Multi-stop | 268.0 min | 272.8 min | 28.0 min | 32.8 min |
+| Detour choice | 134.0 min | 138.8 min | 14.0 min | 18.8 min |
+
+In the detour case exact fastest takes the 280 km fast corridor (134.0 min) and shortest distance
+the 270 km slow one (175.8 min). A 140 km boundary case is infeasible at 10% and 5% SOC steps and
+feasible at 2%, arriving at the 12% reserve. On the small detour graph the corridor selector kept
+`fast_near`, dropped `slow_far`, and pruned and unpruned searches returned the same plan.
+
+| Algorithm (20 eight-case passes, 3 warm-ups) | Median | p95 |
+|---|---:|---:|
+| Shortest driving time, no charging | 0.1163 ms | 0.1173 ms |
+| Exact fastest time | 6.5737 ms | 6.8235 ms |
+| Exact shortest distance | 6.7200 ms | 6.8204 ms |
+| Exact fewest sessions | 6.7192 ms | 6.7995 ms |
+| Greedy fixed-80 | 0.3266 ms | 0.3309 ms |
+| Composed option planner | 20.0380 ms | 20.2672 ms |
+
+These timings are from one Windows machine with 12 logical CPUs and are regression evidence only.
 
 ```powershell
 python scripts/run_synthetic_benchmark.py --warmups 3 --repetitions 20
 ```
-
-Evidence identity:
-
-- fixture SHA-256: `b805fe43dc89d3129e1126d1d5529b9bf5058ab0b4e8a86362caeccd472b980d`;
-- manifest SHA-256: `9d2e0335c800dc406b17aa34ef0328dad8dc6c1c755eb4f9af89c4f432f8b64e`;
-- correctness artifact: `docs/benchmarks/synthetic/correctness_v1.json`, SHA-256
-  `fafade67489d414766afa85c3a97ca329af4b6bf74b002d0380f4177b94529c0`;
-- runtime artifact: `docs/benchmarks/synthetic/runtime_2026-11-17.json`, SHA-256
-  `a69c82a0f4ab3841c7de2ddc9b49cfed013d713fc5503874f0e32dc15d3659b6`.
-
-### Correctness
-
-The suite produced 40 algorithm/case outcomes. All 22 returned plans passed independent replay; no
-reserve violation or false-feasible result was observed. Each exact objective matched all five
-feasible and all three infeasible reference labels. The road-only baseline returned only the two
-feasible cases that required no charging, which is expected because it never inserts charge actions.
-
-| Algorithm | Feasible references solved | Returned plans verified | False feasible |
-|---|---:|---:|---:|
-| Shortest driving time, no charging | 2 / 5 | 2 / 2 | 0 |
-| Exact fastest time | 5 / 5 | 5 / 5 | 0 |
-| Exact shortest distance | 5 / 5 | 5 / 5 | 0 |
-| Exact fewest sessions | 5 / 5 | 5 / 5 | 0 |
-| Greedy fixed-80 | 5 / 5 | 5 / 5 | 0 |
-
-### Charging-case comparison
-
-On all three feasible cases that required charging, exact fastest-time used partial charging and was
-4.8 modeled minutes faster than greedy fixed-80; this holds for these cases only. The road-only baseline was infeasible on these cases, so no
-trip-time comparison against it is reported.
-
-| Case | Exact fastest | Greedy fixed-80 | Difference | Exact charge time | Greedy charge time |
-|---|---:|---:|---:|---:|---:|
-| One stop | 174.0 min | 178.8 min | 4.8 min | 14.0 min | 18.8 min |
-| Multi-stop | 268.0 min | 272.8 min | 4.8 min | 28.0 min | 32.8 min |
-| Detour choice | 134.0 min | 138.8 min | 4.8 min | 14.0 min | 18.8 min |
-
-The detour case also demonstrates objective separation: exact fastest selected the 280 km fast
-corridor at 134.0 minutes, while exact shortest-distance selected the 270 km slow corridor at 175.8
-minutes. Different strategies still deduplicate when their complete actionable plans are identical.
-
-### SOC-grid sensitivity
-
-The fixed 140 km boundary case changes only `soc_step_pct`. It is rejected at 10% and 5% resolution
-but feasible at 2%, arriving at the 12% reserve. This confirms the documented risk that conservative
-discretization can reject a narrowly feasible route.
-
-| SOC step | Feasible | Total minutes | Arrival SOC |
-|---:|---|---:|---:|
-| 10% | No | — | — |
-| 5% | No | — | — |
-| 2% | Yes | 84.0 | 12% |
-
-### Candidate-pruning audit
-
-On the declared small detour graph, the corridor selector retained `fast_near` and excluded
-`slow_far`. Pruned and unpruned fastest-time searches returned the same verified 134.0-minute plan,
-so the observed pruning gap was 0.0 minutes. This one audit does not prove that pruning preserves the
-best plan on other graphs or configurations.
-
-### Runtime protocol
-
-Runtime was measured with `time.perf_counter_ns`, three warm-ups, and 20 complete eight-case suite
-passes per algorithm. The machine ran CPython 3.11.9 on Windows, AMD64, with 12 logical CPUs. Median
-and nearest-rank p95 are reported; individual samples remain in the runtime artifact.
-
-| Algorithm | Median | p95 |
-|---|---:|---:|
-| Shortest driving time, no charging | 0.1258 ms | 0.1310 ms |
-| Exact fastest time | 6.5783 ms | 6.6132 ms |
-| Exact shortest distance | 6.9013 ms | 7.9514 ms |
-| Exact fewest sessions | 6.7566 ms | 6.8279 ms |
-| Greedy fixed-80 | 0.3511 ms | 0.3537 ms |
-| Composed competitive option planner | 20.1590 ms | 20.4197 ms |
-
-Runtime values describe this tiny synthetic suite on one machine. They are regression evidence, not
-production latency or scaling evidence.

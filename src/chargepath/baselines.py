@@ -10,7 +10,7 @@ from chargepath import validation
 from chargepath.energy import (
     DEFAULT_CONSUMPTION,
     ConsumptionModel,
-    drive_bucket,
+    SocGrid,
     leg_buckets,
 )
 from chargepath.models import NoFeasibleRouteError, RoadLeg, RoutePlan, VehicleProfile
@@ -41,11 +41,9 @@ class ShortestDrivingTimeBaseline:
         """Return the road-only path when it preserves reserve on every leg."""
 
         validation.trip_endpoints(origin_id, destination_id)
-        initial_bucket = math.floor(vehicle.initial_soc_pct / self.soc_step_pct)
+        grid = SocGrid.for_vehicle(vehicle, self.soc_step_pct)
         if origin_id == destination_id:
-            return RoutePlan.stationary(
-                origin_id, arrival_soc_pct=float(initial_bucket * self.soc_step_pct)
-            )
+            return RoutePlan.stationary(origin_id, arrival_soc_pct=grid.soc_pct(grid.initial))
 
         legs = self.shortest_path(origin_id, destination_id, road_network)
         if legs is None:
@@ -54,16 +52,11 @@ class ShortestDrivingTimeBaseline:
                 f"to {destination_id!r}"
             )
 
-        reserve_bucket = math.ceil(vehicle.reserve_soc_pct / self.soc_step_pct)
-        bucket_kwh = vehicle.usable_battery_kwh * self.soc_step_pct / 100
-        maximum_bucket = 100 // self.soc_step_pct
-        energy_bucket = initial_bucket
+        energy_bucket = grid.initial
         for leg in legs:
-            remaining = drive_bucket(
+            remaining = grid.after_leg(
                 energy_bucket,
-                leg_buckets(self.consumption_model.leg_energy(leg, vehicle), bucket_kwh),
-                reserve_bucket=reserve_bucket,
-                maximum_bucket=maximum_bucket,
+                leg_buckets(self.consumption_model.leg_energy(leg, vehicle), grid.bucket_kwh),
             )
             if remaining is None:
                 raise NoFeasibleRouteError(
@@ -79,7 +72,7 @@ class ShortestDrivingTimeBaseline:
             total_distance_km=sum(leg.distance_km for leg in legs),
             driving_minutes=driving_minutes,
             charging_minutes=0.0,
-            arrival_soc_pct=float(energy_bucket * self.soc_step_pct),
+            arrival_soc_pct=grid.soc_pct(energy_bucket),
             total_minutes=driving_minutes,
         )
 
@@ -106,8 +99,6 @@ class ShortestDrivingTimeBaseline:
             if node_id == destination_id:
                 return legs
             for leg in road_network.neighbors(node_id):
-                if leg.origin_id != node_id:
-                    raise ValueError("road-network neighbor leg must start at the requested node")
                 next_duration = duration + leg.duration_minutes
                 next_nodes = (*node_path, leg.destination_id)
                 next_best = (next_duration, next_nodes)

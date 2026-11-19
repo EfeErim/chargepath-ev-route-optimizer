@@ -12,9 +12,9 @@ from chargepath.energy import (
     DEFAULT_CONSUMPTION,
     ConsumptionModel,
     LegBucketCache,
+    SocGrid,
     buckets_for_leg,
     charging_minutes,
-    drive_bucket,
     leg_bucket_lookup,
 )
 from chargepath.models import (
@@ -92,7 +92,7 @@ class GreedyFixedTargetOptimizer:
         stations: dict[str, Station],
         road_network: RoadNetwork,
     ) -> RoutePlan:
-        return self._optimize_with_cache(
+        return self.optimize_with_cache(
             origin_id=origin_id,
             destination_id=destination_id,
             vehicle=vehicle,
@@ -101,7 +101,7 @@ class GreedyFixedTargetOptimizer:
             required_buckets_cache={},
         )
 
-    def _optimize_with_cache(
+    def optimize_with_cache(
         self,
         *,
         origin_id: str,
@@ -113,35 +113,29 @@ class GreedyFixedTargetOptimizer:
     ) -> RoutePlan:
         validation.trip_endpoints(origin_id, destination_id)
 
-        energy_bucket = math.floor(vehicle.initial_soc_pct / self.soc_step_pct)
+        grid = SocGrid.for_vehicle(vehicle, self.soc_step_pct)
+        energy_bucket = grid.initial
         if origin_id == destination_id:
-            return RoutePlan.stationary(
-                origin_id, arrival_soc_pct=float(energy_bucket * self.soc_step_pct)
-            )
+            return RoutePlan.stationary(origin_id, arrival_soc_pct=grid.soc_pct(energy_bucket))
 
-        reserve_bucket = math.ceil(vehicle.reserve_soc_pct / self.soc_step_pct)
-        bucket_kwh = vehicle.usable_battery_kwh * self.soc_step_pct / 100
         target_bucket = math.ceil(GREEDY_TARGET_SOC_PCT / self.soc_step_pct)
-        maximum_bucket = 100 // self.soc_step_pct
         leg_lookup = leg_bucket_lookup(
             required_buckets_cache,
             vehicle=vehicle,
             model=self.consumption_model,
-            bucket_kwh=bucket_kwh,
+            bucket_kwh=grid.bucket_kwh,
         )
 
         def after_leg(bucket: int, leg: RoadLeg) -> int | None:
-            return drive_bucket(
+            return grid.after_leg(
                 bucket,
                 buckets_for_leg(
                     leg_lookup,
                     leg,
                     vehicle=vehicle,
                     model=self.consumption_model,
-                    bucket_kwh=bucket_kwh,
+                    bucket_kwh=grid.bucket_kwh,
                 ),
-                reserve_bucket=reserve_bucket,
-                maximum_bucket=maximum_bucket,
             )
 
         node_ids = [origin_id]
@@ -175,7 +169,6 @@ class GreedyFixedTargetOptimizer:
             current_station = stations.get(current_node)
             if (
                 current_station is not None
-                and current_station.id == current_node
                 and current_station.connector_type in vehicle.supported_dc_connectors
                 and current_node not in used_stations
                 and energy_bucket < target_bucket
@@ -183,9 +176,10 @@ class GreedyFixedTargetOptimizer:
                 stops.append(
                     self._charge_to_target(
                         station=current_station,
+                        node_index=len(node_ids) - 1,
                         energy_bucket=energy_bucket,
                         target_bucket=target_bucket,
-                        bucket_kwh=bucket_kwh,
+                        bucket_kwh=grid.bucket_kwh,
                         vehicle=vehicle,
                     )
                 )
@@ -193,15 +187,14 @@ class GreedyFixedTargetOptimizer:
                 used_stations.add(current_node)
                 continue
 
+            # Detours go only to stations not yet on the route. Returning to a visited node would
+            # let the heuristic shuttle between two nodes, draining the battery on every pass.
+            visited = set(node_ids)
             candidates: list[tuple[float, float, str, RoadLeg, int]] = []
             for leg in road_network.neighbors(current_node):
-                if leg.origin_id != current_node:
-                    raise ValueError("road-network neighbor leg must start at the requested node")
                 station = stations.get(leg.destination_id)
-                if station is None or station.id in used_stations:
+                if station is None or station.id in visited:
                     continue
-                if station.id != leg.destination_id:
-                    raise ValueError("station mapping key must match station.id")
                 if station.connector_type not in vehicle.supported_dc_connectors:
                     continue
                 arrival_bucket = after_leg(energy_bucket, leg)
@@ -242,13 +235,14 @@ class GreedyFixedTargetOptimizer:
             node_ids=tuple(node_ids),
             legs=tuple(legs),
             charging_stops=tuple(stops),
-            arrival_soc_pct=float(energy_bucket * self.soc_step_pct),
+            arrival_soc_pct=grid.soc_pct(energy_bucket),
         )
 
     def _charge_to_target(
         self,
         *,
         station: Station,
+        node_index: int,
         energy_bucket: int,
         target_bucket: int,
         bucket_kwh: float,
@@ -259,6 +253,7 @@ class GreedyFixedTargetOptimizer:
         minutes = charging_minutes(vehicle, station.max_power_kw, arrival_soc, departure_soc)
         return ChargingStop(
             station_id=station.id,
+            node_index=node_index,
             arrival_soc_pct=float(arrival_soc),
             departure_soc_pct=float(departure_soc),
             energy_added_kwh=(target_bucket - energy_bucket) * bucket_kwh,
@@ -303,7 +298,7 @@ class CompetitiveRoutePlanner:
                 consumption_model=self.consumption_model,
             )
             try:
-                plan = optimizer._optimize_with_cache(
+                plan = optimizer.optimize_with_cache(
                     origin_id=origin_id,
                     destination_id=destination_id,
                     vehicle=vehicle,
@@ -320,7 +315,7 @@ class CompetitiveRoutePlanner:
             soc_step_pct=self.soc_step_pct, consumption_model=self.consumption_model
         )
         try:
-            greedy_plan = greedy._optimize_with_cache(
+            greedy_plan = greedy.optimize_with_cache(
                 origin_id=origin_id,
                 destination_id=destination_id,
                 vehicle=vehicle,

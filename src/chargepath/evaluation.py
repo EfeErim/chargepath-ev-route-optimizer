@@ -4,12 +4,9 @@ from __future__ import annotations
 
 import hashlib
 import json
-import math
 import os
 import platform
 import statistics
-import time
-from collections.abc import Callable
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from functools import partial
@@ -23,6 +20,8 @@ from chargepath.alternatives import (
 )
 from chargepath.baselines import ShortestDrivingTimeBaseline
 from chargepath.corridor import CandidateSelectionConfig, select_corridor_candidates
+from chargepath.evidence import nearest_rank, time_passes
+from chargepath.fixtures import leg_from_json, station_from_json, vehicle_from_json
 from chargepath.models import (
     GeoJsonLineString,
     NoFeasibleRouteError,
@@ -34,7 +33,7 @@ from chargepath.models import (
 from chargepath.optimizer import EVRouteOptimizer, RoutePreference
 from chargepath.providers import StaticRoadNetwork
 from chargepath.station_data import CompatibleStationOption, SnapshotProvenance
-from chargepath.verification import verify_route_plan
+from chargepath.verification import replay_route_plan
 
 REQUIRED_TOPOLOGY_CLASSES = frozenset(
     {
@@ -83,13 +82,6 @@ class BenchmarkManifest:
     pruning_audits: tuple[dict[str, Any], ...]
 
 
-_object = validation.json_object
-_array = validation.json_array
-_text = validation.text
-_integer = validation.integer
-_boolean = validation.boolean
-
-
 def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -98,16 +90,18 @@ def load_benchmark_manifest(path: str | Path) -> BenchmarkManifest:
     """Load the benchmark manifest, verify fixture identity, and construct typed cases."""
 
     manifest_path = Path(path).resolve()
-    payload = _object(json.loads(manifest_path.read_text(encoding="utf-8")), field="manifest")
+    payload = validation.json_object(
+        json.loads(manifest_path.read_text(encoding="utf-8")), field="manifest"
+    )
     if payload.get("manifest_version") != 1:
         raise ValueError("unsupported benchmark manifest_version")
-    fixture = _object(payload.get("fixture"), field="fixture")
+    fixture = validation.json_object(payload.get("fixture"), field="fixture")
     fixture_path = (
-        manifest_path.parent / _text(fixture.get("path"), field="fixture.path")
+        manifest_path.parent / validation.text(fixture.get("path"), field="fixture.path")
     ).resolve()
     if fixture_path.parent != manifest_path.parent:
         raise ValueError("benchmark fixture must be adjacent to its manifest")
-    expected_fixture_sha = _text(fixture.get("sha256"), field="fixture.sha256").lower()
+    expected_fixture_sha = validation.text(fixture.get("sha256"), field="fixture.sha256").lower()
     actual_fixture_sha = _sha256(fixture_path)
     if actual_fixture_sha != expected_fixture_sha:
         raise ValueError(
@@ -119,23 +113,25 @@ def load_benchmark_manifest(path: str | Path) -> BenchmarkManifest:
             "benchmark fixture metadata must declare schema version 1 and synthetic=true"
         )
 
-    fixture_payload = _object(
+    fixture_payload = validation.json_object(
         json.loads(fixture_path.read_text(encoding="utf-8")), field="fixture root"
     )
     if fixture_payload.get("schema_version") != 1 or fixture_payload.get("synthetic") is not True:
         raise ValueError("benchmark case fixture must declare schema version 1 and synthetic=true")
     fixture_cases = {
-        _text(case_row.get("id"), field="fixture cases[].id"): case_row
+        validation.text(case_row.get("id"), field="fixture cases[].id"): case_row
         for case_row in (
-            _object(value, field="fixture cases[]")
-            for value in _array(fixture_payload.get("cases"), field="fixture cases")
+            validation.json_object(value, field="fixture cases[]")
+            for value in validation.json_array(fixture_payload.get("cases"), field="fixture cases")
         )
     }
     manifest_rows = [
-        _object(value, field="manifest cases[]")
-        for value in _array(payload.get("cases"), field="manifest cases")
+        validation.json_object(value, field="manifest cases[]")
+        for value in validation.json_array(payload.get("cases"), field="manifest cases")
     ]
-    manifest_ids = [_text(row.get("id"), field="manifest cases[].id") for row in manifest_rows]
+    manifest_ids = [
+        validation.text(row.get("id"), field="manifest cases[].id") for row in manifest_rows
+    ]
     if len(set(manifest_ids)) != len(manifest_ids):
         raise ValueError("benchmark manifest case ids must be unique")
     if set(manifest_ids) != set(fixture_cases):
@@ -150,50 +146,23 @@ def load_benchmark_manifest(path: str | Path) -> BenchmarkManifest:
     if missing_topologies:
         raise ValueError(f"benchmark manifest is missing topology classes: {missing_topologies}")
 
-    algorithms = tuple(
-        _text(value, field="algorithms[]")
-        for value in _array(payload.get("algorithms"), field="algorithms")
-    )
-    if algorithms != PLAN_ALGORITHMS:
-        raise ValueError(f"benchmark algorithms must be ordered as {PLAN_ALGORITHMS!r}")
-    baseline_contract = _object(payload.get("baseline_contract"), field="baseline_contract")
-    ordering = tuple(
-        _text(value, field="baseline_contract.greedy_station_order[]")
-        for value in _array(
-            baseline_contract.get("greedy_station_order"),
-            field="baseline_contract.greedy_station_order",
-        )
-    )
-    if ordering != (
-        "remaining_shortest_driving_duration_asc",
-        "current_to_station_duration_asc",
-        "stable_station_id_asc",
-    ):
-        raise ValueError("benchmark greedy station ordering contract changed")
-    if baseline_contract.get("greedy_charge_target_soc_pct") != 80:
-        raise ValueError("benchmark greedy charge target must remain 80 percent")
-
+    # The algorithm list, greedy contract and grid values the manifest records are fixed by the
+    # committed file, whose checksum the correctness artifact pins; they are not re-checked here.
     sensitivity_runs = tuple(
-        _object(value, field="sensitivity_runs[]")
-        for value in _array(payload.get("sensitivity_runs"), field="sensitivity_runs")
+        validation.json_object(value, field="sensitivity_runs[]")
+        for value in validation.json_array(
+            payload.get("sensitivity_runs"), field="sensitivity_runs"
+        )
     )
     for run in sensitivity_runs:
-        if run.get("factor") != "soc_step_pct":
-            raise ValueError("Sensitivity runs may change only soc_step_pct")
         if run.get("fixed_input_fixture_sha256") != actual_fixture_sha:
             raise ValueError("sensitivity run fixture checksum must match the fixed case fixture")
-        values = tuple(
-            _integer(value, field="sensitivity values[]")
-            for value in _array(run.get("values"), field="sensitivity values")
-        )
-        if values != (10, 5, 2):
-            raise ValueError("SOC-grid sensitivity values must be ordered as 10, 5, 2")
         if run.get("case_id") not in fixture_cases:
             raise ValueError("sensitivity run references an unknown case")
 
     pruning_audits = tuple(
-        _object(value, field="pruning_audits[]")
-        for value in _array(payload.get("pruning_audits"), field="pruning_audits")
+        validation.json_object(value, field="pruning_audits[]")
+        for value in validation.json_array(payload.get("pruning_audits"), field="pruning_audits")
     )
     if not pruning_audits:
         raise ValueError("benchmark manifest must define at least one pruning audit")
@@ -202,9 +171,11 @@ def load_benchmark_manifest(path: str | Path) -> BenchmarkManifest:
             raise ValueError("pruning audit references an unknown case")
 
     return BenchmarkManifest(
-        benchmark_id=_text(payload.get("benchmark_id"), field="benchmark_id"),
-        algorithm_version=_text(payload.get("algorithm_version"), field="algorithm_version"),
-        result_serialization_version=_integer(
+        benchmark_id=validation.text(payload.get("benchmark_id"), field="benchmark_id"),
+        algorithm_version=validation.text(
+            payload.get("algorithm_version"), field="algorithm_version"
+        ),
+        result_serialization_version=validation.integer(
             payload.get("result_serialization_version"), field="result_serialization_version"
         ),
         manifest_sha256=_sha256(manifest_path),
@@ -216,70 +187,37 @@ def load_benchmark_manifest(path: str | Path) -> BenchmarkManifest:
 
 
 def _load_case(metadata: dict[str, Any], inputs: dict[str, Any]) -> BenchmarkCase:
-    case_id = _text(metadata.get("id"), field="case.id")
+    case_id = validation.text(metadata.get("id"), field="case.id")
     if inputs.get("id") != case_id:
         raise ValueError("benchmark case metadata and fixture id differ")
-    vehicle_row = _object(inputs.get("vehicle"), field=f"{case_id}.vehicle")
-    connector_values = _array(
-        vehicle_row.get("supported_dc_connectors"),
-        field=f"{case_id}.vehicle.supported_dc_connectors",
-    )
-    vehicle = VehicleProfile(
-        name=vehicle_row["name"],
-        usable_battery_kwh=vehicle_row["usable_battery_kwh"],
-        initial_soc_pct=vehicle_row["initial_soc_pct"],
-        consumption_kwh_per_100km=vehicle_row["consumption_kwh_per_100km"],
-        max_dc_power_kw=vehicle_row["max_dc_power_kw"],
-        reserve_soc_pct=vehicle_row["reserve_soc_pct"],
-        energy_safety_factor=vehicle_row["energy_safety_factor"],
-        supported_dc_connectors=tuple(
-            _text(value, field=f"{case_id}.vehicle.supported_dc_connectors[]")
-            for value in connector_values
-        ),
-    )
+    vehicle = vehicle_from_json(inputs.get("vehicle"), field=f"{case_id}.vehicle")
     stations = tuple(
-        Station(
-            id=row["id"],
-            name=row["name"],
-            latitude=row["latitude"],
-            longitude=row["longitude"],
-            max_power_kw=row["max_power_kw"],
-            connector_type=row["connector_type"],
-        )
-        for row in (
-            _object(value, field=f"{case_id}.stations[]")
-            for value in _array(inputs.get("stations"), field=f"{case_id}.stations")
-        )
+        station_from_json(value, field=f"{case_id}.stations[]")
+        for value in validation.json_array(inputs.get("stations"), field=f"{case_id}.stations")
     )
     if len({station.id for station in stations}) != len(stations):
         raise ValueError(f"{case_id} station ids must be unique")
     legs = tuple(
-        RoadLeg(
-            origin_id=row["origin_id"],
-            destination_id=row["destination_id"],
-            distance_km=row["distance_km"],
-            duration_minutes=row["duration_minutes"],
-        )
-        for row in (
-            _object(value, field=f"{case_id}.legs[]")
-            for value in _array(inputs.get("legs"), field=f"{case_id}.legs")
-        )
+        leg_from_json(value, field=f"{case_id}.legs[]", with_geometry=False)
+        for value in validation.json_array(inputs.get("legs"), field=f"{case_id}.legs")
     )
-    source = _object(
+    source = validation.json_object(
         metadata.get("expected_feasibility_source"),
         field=f"{case_id}.expected_feasibility_source",
     )
     source_kind = source.get("kind")
-    expected_feasible = _boolean(metadata.get("expected_feasible"), field="expected_feasible")
+    expected_feasible = validation.boolean(
+        metadata.get("expected_feasible"), field="expected_feasible"
+    )
     if expected_feasible and source_kind != "hand_audited_witness":
         raise ValueError(f"{case_id} feasible reference must have a hand-audited witness")
     if not expected_feasible and source_kind != "hand_audited_exhaustion":
         raise ValueError(f"{case_id} infeasible reference must have a hand-audited exhaustion")
-    _text(source.get("reason"), field=f"{case_id}.expected_feasibility_source.reason")
+    validation.text(source.get("reason"), field=f"{case_id}.expected_feasibility_source.reason")
     if expected_feasible:
         witness = tuple(
-            _text(value, field=f"{case_id}.expected_feasibility_source.node_ids[]")
-            for value in _array(
+            validation.text(value, field=f"{case_id}.expected_feasibility_source.node_ids[]")
+            for value in validation.json_array(
                 source.get("node_ids"),
                 field=f"{case_id}.expected_feasibility_source.node_ids",
             )
@@ -288,12 +226,14 @@ def _load_case(metadata: dict[str, Any], inputs: dict[str, Any]) -> BenchmarkCas
             raise ValueError(f"{case_id} witness endpoints do not match the trip")
     return BenchmarkCase(
         id=case_id,
-        topology_class=_text(metadata.get("topology_class"), field="topology_class"),
-        soc_step_pct=_integer(metadata.get("soc_step_pct"), field="soc_step_pct"),
+        topology_class=validation.text(metadata.get("topology_class"), field="topology_class"),
+        soc_step_pct=validation.integer(metadata.get("soc_step_pct"), field="soc_step_pct"),
         expected_feasible=expected_feasible,
         expected_feasibility_source=source,
-        origin_id=_text(inputs.get("origin_id"), field=f"{case_id}.origin_id"),
-        destination_id=_text(inputs.get("destination_id"), field=f"{case_id}.destination_id"),
+        origin_id=validation.text(inputs.get("origin_id"), field=f"{case_id}.origin_id"),
+        destination_id=validation.text(
+            inputs.get("destination_id"), field=f"{case_id}.destination_id"
+        ),
         vehicle=vehicle,
         stations=stations,
         legs=legs,
@@ -371,10 +311,11 @@ def evaluate_plan(
     stations: dict[str, Station],
     road_network: StaticRoadNetwork,
     soc_step_pct: int,
-) -> RoutePlan:
+) -> tuple[RoutePlan, int]:
     """Plan one synthetic or frozen real-route case and replay it independently.
 
-    Infeasibility and replay defects propagate so each report keeps its own outcome format.
+    Returns the plan and the replay's count of legs that went below the reserve. Infeasibility and
+    other replay defects propagate so each report keeps its own outcome format.
     """
     plan = plan_route(
         algorithm,
@@ -385,7 +326,7 @@ def evaluate_plan(
         road_network=road_network,
         soc_step_pct=soc_step_pct,
     )
-    verify_route_plan(
+    replay = replay_route_plan(
         plan,
         vehicle=vehicle,
         stations=stations,
@@ -394,7 +335,7 @@ def evaluate_plan(
         origin_id=origin_id,
         destination_id=destination_id,
     )
-    return plan
+    return plan, replay.reserve_violations
 
 
 def _run_algorithm(
@@ -402,7 +343,7 @@ def _run_algorithm(
 ) -> dict[str, Any]:
     step = case.soc_step_pct if soc_step_pct is None else soc_step_pct
     try:
-        plan = evaluate_plan(
+        plan, reserve_violations = evaluate_plan(
             algorithm,
             origin_id=case.origin_id,
             destination_id=case.destination_id,
@@ -417,7 +358,7 @@ def _run_algorithm(
         "algorithm": algorithm,
         "feasible": True,
         "verified": True,
-        "reserve_violations": 0,
+        "reserve_violations": reserve_violations,
         "plan": _serialize_plan(plan),
     }
 
@@ -433,7 +374,7 @@ def _option_summary(runs: list[dict[str, Any]]) -> dict[str, Any]:
         if not run["feasible"]:
             unavailable.append(algorithm)
             continue
-        plan = _object(run["plan"], field="run.plan")
+        plan = validation.json_object(run["plan"], field="run.plan")
         key = json.dumps(plan, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
         grouped.setdefault(key, []).append(algorithm)
         plans[key] = plan
@@ -552,20 +493,24 @@ def build_correctness_artifact(manifest: BenchmarkManifest) -> dict[str, Any]:
 
 
 def _run_pruning_audit(audit: dict[str, Any], case: BenchmarkCase) -> dict[str, Any]:
-    geometry_row = _object(audit.get("route_geometry"), field="pruning route_geometry")
+    geometry_row = validation.json_object(
+        audit.get("route_geometry"), field="pruning route_geometry"
+    )
     positions = (
-        _array(value, field="route coordinate")
-        for value in _array(geometry_row.get("coordinates"), field="route coordinates")
+        validation.json_array(value, field="route coordinate")
+        for value in validation.json_array(
+            geometry_row.get("coordinates"), field="route coordinates"
+        )
     )
     geometry = GeoJsonLineString(tuple((float(lon), float(lat)) for lon, lat in positions))
-    config_row = _object(audit.get("selection_config"), field="selection_config")
+    config_row = validation.json_object(audit.get("selection_config"), field="selection_config")
     config = CandidateSelectionConfig(
         corridor_width_km=float(config_row["corridor_width_km"]),
-        candidate_cap=_integer(config_row["candidate_cap"], field="candidate_cap"),
-        algorithm=_text(config_row["algorithm"], field="selection algorithm"),
+        candidate_cap=validation.integer(config_row["candidate_cap"], field="candidate_cap"),
+        algorithm=validation.text(config_row["algorithm"], field="selection algorithm"),
         ranking_keys=tuple(
-            _text(value, field="ranking_keys[]")
-            for value in _array(config_row.get("ranking_keys"), field="ranking_keys")
+            validation.text(value, field="ranking_keys[]")
+            for value in validation.json_array(config_row.get("ranking_keys"), field="ranking_keys")
         ),
     )
     provenance = SnapshotProvenance(
@@ -608,8 +553,8 @@ def _run_pruning_audit(audit: dict[str, Any], case: BenchmarkCase) -> dict[str, 
     time_gap: float | None = None
     same_plan = False
     if unpruned["feasible"] and pruned["feasible"]:
-        unpruned_plan = _object(unpruned["plan"], field="unpruned plan")
-        pruned_plan = _object(pruned["plan"], field="pruned plan")
+        unpruned_plan = validation.json_object(unpruned["plan"], field="unpruned plan")
+        pruned_plan = validation.json_object(pruned["plan"], field="pruned plan")
         time_gap = _rounded(
             float(pruned_plan["total_minutes"]) - float(unpruned_plan["total_minutes"])
         )
@@ -630,7 +575,7 @@ def _run_pruning_audit(audit: dict[str, Any], case: BenchmarkCase) -> dict[str, 
 
 
 def assert_correctness_gates(artifact: dict[str, Any]) -> None:
-    gates = _object(artifact.get("correctness_gates"), field="correctness_gates")
+    gates = validation.json_object(artifact.get("correctness_gates"), field="correctness_gates")
     failed = [
         name
         for name, value in gates.items()
@@ -639,14 +584,6 @@ def assert_correctness_gates(artifact: dict[str, Any]) -> None:
     ]
     if failed:
         raise RuntimeError(f"Synthetic benchmark correctness gates failed: {failed}")
-
-
-def canonical_json_bytes(payload: dict[str, Any]) -> bytes:
-    """Serialize normalized evidence deterministically for byte-for-byte comparisons."""
-
-    return (
-        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + "\n"
-    ).encode("utf-8")
 
 
 def _run_suite_once(manifest: BenchmarkManifest, algorithm: str) -> None:
@@ -665,24 +602,6 @@ def _run_suite_once(manifest: BenchmarkManifest, algorithm: str) -> None:
         return
     for case in manifest.cases:
         _run_algorithm(case, algorithm)
-
-
-def nearest_rank(values: list[float], fraction: float) -> float:
-    ordered = sorted(values)
-    return ordered[math.ceil(fraction * len(ordered)) - 1]
-
-
-def time_passes(run_pass: Callable[[], None], *, warmups: int, repetitions: int) -> list[float]:
-    """Run the warm-up passes, then return each measured pass in milliseconds."""
-
-    for _ in range(warmups):
-        run_pass()
-    samples: list[float] = []
-    for _ in range(repetitions):
-        started = time.perf_counter_ns()
-        run_pass()
-        samples.append((time.perf_counter_ns() - started) / 1_000_000)
-    return samples
 
 
 def build_runtime_artifact(

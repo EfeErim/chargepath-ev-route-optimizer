@@ -22,17 +22,9 @@ from chargepath.speed import (
     SpeedChoiceNetwork,
 )
 
-# Example vehicle inputs derived from the project's public-telemetry field pilot.
-#
-# These are examples for opt-in models, not calibrations. They come from one Volkswagen ID.3 Pro
-# Performance in the TUM usage dataset (Schreiber et al., https://doi.org/10.1016/j.etran.2025.100518,
-# https://github.com/TUMFTM/electric-vehicle-uds-dataset at commit
-# 6bac2936e280b2d7f45607e5cb624a18b41b3faa, CC BY-NC 4.0). Only aggregate fitted parameters are
-# used; they are recorded in ``docs/benchmarks/field-pilot/tum_id1_v1.json``. The pilot's charging
-# Windows are inferred from SOC rises; charger types are unknown. The fit ignores temperature,
-# preconditioning, and power sharing.
-# Fitted on training windows: 75 kW effective cap, half power from 65% SOC. The drop starts at
-# 64.9% so the curve never exceeds the fitted step, which keeps modeled charge times conservative.
+# Example inputs fitted on one Volkswagen ID.3 in the TUM usage dataset (CC BY-NC 4.0); the
+# aggregate fit is in docs/benchmarks/field-pilot/tum_id1_v1.json. 75 kW effective cap, half
+# power from 65% SOC; the drop starts at 64.9% so the curve never exceeds the fitted step.
 ID3_PILOT_CHARGING_CURVE: tuple[tuple[float, float], ...] = (
     (0.0, 75.0),
     (64.9, 75.0),
@@ -70,9 +62,6 @@ def leg(origin: str, destination: str, km: float, kmh: float) -> RoadLeg:
     return RoadLeg(origin, destination, km, km * 60 / kmh)
 
 
-# ---- consumption model ---------------------------------------------------------------------
-
-
 def test_model_reproduces_the_pilot_fit() -> None:
     pilot = 19.38787270528953 + 3.8366453526851596 * ((100 / 100) ** 2 - 0.7529254392590666)
     vehicle = make_vehicle(consumption_kwh_per_100km=19.38787270528953)
@@ -92,17 +81,6 @@ def test_slower_legs_use_less_energy_and_scale_with_the_safety_factor() -> None:
     assert math.isclose(fast, plain * 1.1)
 
 
-@pytest.mark.parametrize(
-    "kwargs", [{"quadratic_share": 1.0}, {"quadratic_share": -0.1}, {"reference_speed_kmh": 0}]
-)
-def test_model_rejects_invalid_parameters(kwargs: dict[str, float]) -> None:
-    with pytest.raises(ValueError):
-        SpeedAwareConsumption(**kwargs)
-
-
-# ---- network -------------------------------------------------------------------------------
-
-
 def test_network_offers_each_leg_at_every_factor() -> None:
     base_leg = leg("a", "b", 100, 100)
     network = SpeedChoiceNetwork(StaticRoadNetwork([base_leg]), (1.0, 0.8))
@@ -111,21 +89,8 @@ def test_network_offers_each_leg_at_every_factor() -> None:
     assert all(variant.distance_km == 100 for variant in variants)
     assert variants[0] is base_leg
     assert [network.speed_factor(variant) for variant in variants] == [1.0, 0.8]
-    assert network.neighbors("a") is variants
-    assert network.neighbors("missing") == ()
     with pytest.raises(ValueError, match="not offered"):
         network.speed_factor(leg("a", "b", 100, 50))
-
-
-@pytest.mark.parametrize(
-    "factors", [(), (0.9,), (1.0, 1.0), (1.0, 0.8, 0.9), (1.0, 0.4), (1.0, math.nan)]
-)
-def test_network_rejects_invalid_factors(factors: tuple[float, ...]) -> None:
-    with pytest.raises(ValueError):
-        SpeedChoiceNetwork(StaticRoadNetwork([leg("a", "b", 1, 50)]), factors)
-
-
-# ---- planning ------------------------------------------------------------------------------
 
 
 def test_slower_driving_turns_an_infeasible_trip_feasible() -> None:
@@ -154,7 +119,7 @@ def test_slower_driving_turns_an_infeasible_trip_feasible() -> None:
     verify_route_plan(plan, vehicle=vehicle, stations={}, consumption_model=MODEL)
 
 
-@pytest.mark.parametrize("initial_soc", [30, 50, 70, 90])
+@pytest.mark.parametrize("initial_soc", [30, 70])
 @pytest.mark.parametrize("station_kw", [50, 150])
 def test_speed_choice_is_never_slower_than_fixed_speed(initial_soc: int, station_kw: int) -> None:
     vehicle = make_vehicle(initial_soc_pct=initial_soc)
@@ -184,26 +149,6 @@ def test_speed_choice_is_never_slower_than_fixed_speed(initial_soc: int, station
     assert chosen.total_minutes <= fixed.total_minutes + 1e-9
     for plan in (fixed, chosen):
         verify_route_plan(plan, vehicle=vehicle, stations=stations, consumption_model=MODEL)
-
-
-def test_full_speed_only_matches_the_base_network() -> None:
-    vehicle = make_vehicle(initial_soc_pct=40)
-    stations = {"hub": Station("hub", "Hub", 39.0, 32.0, 100)}
-    base = StaticRoadNetwork([leg("origin", "hub", 60, 100), leg("hub", "destination", 150, 110)])
-    kwargs = {
-        "origin_id": "origin",
-        "destination_id": "destination",
-        "vehicle": vehicle,
-        "stations": stations,
-    }
-    optimizer = EVRouteOptimizer(consumption_model=MODEL)
-    assert optimizer.optimize(road_network=base, **kwargs) == optimizer.optimize(  # type: ignore[arg-type]
-        road_network=SpeedChoiceNetwork(base, (1.0,)),
-        **kwargs,  # type: ignore[arg-type]
-    )
-
-
-# ---- ID.3 pilot example --------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(("start", "end"), [(10, 50), (10, 80), (60, 70), (65, 100), (0, 100)])

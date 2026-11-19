@@ -14,7 +14,7 @@ from itertools import pairwise
 from pathlib import Path
 from statistics import mean, variance
 
-from chargepath.evaluation import canonical_json_bytes
+from chargepath.evidence import canonical_json_bytes
 
 SOURCE_SHA256 = "fb59fa697344794321319c7e9d73968d563ee78500f2b173d445f78ff3cc40f5"
 COLUMNS = (

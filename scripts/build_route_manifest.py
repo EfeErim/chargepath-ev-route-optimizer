@@ -7,7 +7,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from chargepath.evaluation import canonical_json_bytes
+from chargepath.evidence import canonical_json_bytes
 from chargepath.providers.osrm import Coordinate, OsrmHttpClient
 from chargepath.real_route_benchmark import (
     build_manifest,

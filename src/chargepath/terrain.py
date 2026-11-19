@@ -18,7 +18,6 @@ the project ships no elevation data. The model is not calibrated and is not the 
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 from dataclasses import dataclass, field
 
 from chargepath.energy import LegEnergy, energy_for_distance
@@ -38,29 +37,6 @@ class LegElevation:
         for value in (self.ascent_m, self.descent_m):
             if not is_finite_number(value) or value < 0:
                 raise ValueError("ascent_m and descent_m must be finite and non-negative")
-
-
-def elevation_from_profile(elevations_m: Sequence[float], *, noise_m: float = 1.0) -> LegElevation:
-    """Sum climbs and descents along a sampled profile, ignoring reversals smaller than ``noise_m``.
-
-    The hysteresis keeps sensor or terrain-model noise from being counted as repeated small climbs.
-    """
-
-    if not is_finite_number(noise_m) or noise_m < 0:
-        raise ValueError("noise_m must be finite and non-negative")
-    if len(elevations_m) < 2 or not all(is_finite_number(value) for value in elevations_m):
-        raise ValueError("an elevation profile needs at least two finite samples")
-    ascent = descent = 0.0
-    anchor = float(elevations_m[0])
-    for value in elevations_m[1:]:
-        change = float(value) - anchor
-        if abs(change) >= noise_m:
-            if change > 0:
-                ascent += change
-            else:
-                descent -= change
-            anchor = float(value)
-    return LegElevation(ascent_m=ascent, descent_m=descent)
 
 
 @dataclass(frozen=True, slots=True)

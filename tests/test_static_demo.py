@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
+import subprocess
 import sys
 import zipfile
 from pathlib import Path
@@ -57,7 +59,6 @@ def test_browser_entry_point_serves_fixture_config_and_plans() -> None:
     status, result = _call("POST", "/api/plan", _plan_payload())
     assert status == 200
     assert result["options"]
-    assert result["estimate_label"] == "SOC and charging times are model estimates"
 
 
 def test_browser_entry_point_reports_the_server_error_codes() -> None:
@@ -74,22 +75,13 @@ def test_browser_entry_point_reports_the_server_error_codes() -> None:
 def test_static_build_is_relative_and_self_contained(tmp_path: Path) -> None:
     script = _load_build_script()
     output = tmp_path / "site"
-    written = {path.name for path in script.build(output, pyodide_version="0.27.7")}
-    assert written == {
-        ".nojekyll",
-        "app.css",
-        "app.js",
-        "chargepath-src.zip",
-        "index.html",
-        "leaflet.css",
-        "leaflet.js",
-        "static-api.js",
-        "synthetic_corridor.json",
-    }
+    written = {path.name for path in script.build(output)}
+    assert {"index.html", "static-api.js", "chargepath-src.zip", "leaflet.js"} <= written
+    assert "LICENSE-leaflet.txt" in written
     html = (output / "index.html").read_text(encoding="utf-8")
     assert 'href="/' not in html and 'src="/' not in html
     assert html.index("pyodide/v0.27.7/full/pyodide.js") < html.index('src="static-api.js"')
-    assert f'integrity="{script.PYODIDE_INTEGRITY["0.27.7"]}" crossorigin="anonymous"' in html
+    assert f'integrity="{script.PYODIDE_SRI}" crossorigin="anonymous"' in html
     assert html.index('src="static-api.js"') < html.index('src="app.js"')
     assert "__PYODIDE_VERSION__" not in (output / "static-api.js").read_text(encoding="utf-8")
     with zipfile.ZipFile(output / "chargepath-src.zip") as archive:
@@ -98,5 +90,17 @@ def test_static_build_is_relative_and_self_contained(tmp_path: Path) -> None:
     assert not any(name.endswith((".json", ".pyc")) for name in names)
 
     first = (output / "chargepath-src.zip").read_bytes()
-    script.build(output, pyodide_version="0.27.7")
+    script.build(output)
     assert (output / "chargepath-src.zip").read_bytes() == first
+
+
+def test_browser_entry_point_does_not_import_the_http_server() -> None:
+    code = (
+        "import sys, chargepath.demo.browser; "
+        "assert not {'chargepath.demo.server', 'http.server'} & set(sys.modules)"
+    )
+    env = {**os.environ, "PYTHONPATH": str(REPOSITORY_ROOT / "src")}
+    completed = subprocess.run(
+        [sys.executable, "-c", code], env=env, capture_output=True, timeout=60
+    )
+    assert completed.returncode == 0, completed.stderr

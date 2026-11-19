@@ -7,6 +7,8 @@ module has no HTTP dependency, so the same services run in the browser build.
 
 from __future__ import annotations
 
+import json
+import logging
 import math
 from collections.abc import Mapping
 from dataclasses import replace
@@ -30,7 +32,7 @@ from chargepath.demo.responses import (
     config_payload,
     plan_payload,
 )
-from chargepath.demo.schema import PlanRequest, PointInput, VehicleInputs
+from chargepath.demo.schema import MAX_REQUEST_BYTES, PlanRequest, PointInput, VehicleInputs
 from chargepath.fixtures import SyntheticScenario
 from chargepath.models import GeoJsonLineString, NoFeasibleRouteError, Station, VehicleProfile
 from chargepath.providers.base import RoadNetwork
@@ -58,6 +60,8 @@ OSRM_DEFAULT_MAX_TABLE_LOCATIONS = 100
 DEFAULT_ADAPTIVE_CANDIDATE_CAP_LIMIT = OSRM_DEFAULT_MAX_TABLE_LOCATIONS - 2
 FIXTURE_DATA_LABEL = "Synthetic fixture — freshness not applicable"
 
+_LOGGER = logging.getLogger(__name__)
+
 
 class PlanningService(Protocol):
     """Implemented by the fixture and integration services; the server and browser use either."""
@@ -65,6 +69,28 @@ class PlanningService(Protocol):
     def public_config(self) -> ConfigPayload: ...
 
     def plan(self, request: PlanRequest) -> PlanPayload: ...
+
+
+def api_response(
+    service: PlanningService, method: str, path: str, body: bytes
+) -> tuple[int, Mapping[str, object]]:
+    """Answer one API request with a status code and a JSON-ready payload.
+
+    The loopback server and the in-browser build both route through this, so they share paths,
+    size limits and error messages. HTTP framing (headers, static files) stays in the server.
+    """
+
+    if method == "GET" and path == "/api/config":
+        return 200, service.public_config()
+    if method != "POST" or path != "/api/plan":
+        return 404, {"error": "Not found"}
+    if not 0 < len(body) <= MAX_REQUEST_BYTES:
+        return 413, {"error": f"Request body must be between 1 and {MAX_REQUEST_BYTES} bytes"}
+    try:
+        payload = json.loads(body)
+    except ValueError as error:
+        return 400, {"error": str(error) or "Invalid request"}
+    return plan_response(service, payload)
 
 
 def plan_response(
@@ -86,6 +112,8 @@ def plan_response(
     except OsrmProviderError as error:
         return 502, {"error": str(error)}
     except (KeyError, ValueError):
+        # The response stays generic; the traceback goes to the operator's log only.
+        _LOGGER.exception("planning failed")
         return 500, {"error": "Internal planning error"}
 
 

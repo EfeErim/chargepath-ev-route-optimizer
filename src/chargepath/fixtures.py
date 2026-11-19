@@ -24,12 +24,6 @@ class SyntheticScenario:
         return {station.id: station for station in self.stations}
 
 
-_object = validation.json_object
-_array = validation.json_array
-_text = validation.text
-_exact_keys = validation.exact_fields
-
-
 def _number(value: Any, *, field: str) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise ValueError(f"{field} must be a number")
@@ -40,14 +34,16 @@ def _number(value: Any, *, field: str) -> float:
 
 
 def _geojson_line_string(value: Any, *, field: str) -> GeoJsonLineString:
-    geometry = _object(value, field=field)
-    _exact_keys(geometry, field=field, expected={"type", "coordinates"})
+    geometry = validation.json_object(value, field=field)
+    validation.exact_fields(geometry, field=field, expected={"type", "coordinates"})
     if geometry.get("type") != "LineString":
         raise ValueError(f"{field}.type must be LineString")
-    coordinate_rows = _array(geometry.get("coordinates"), field=f"{field}.coordinates")
+    coordinate_rows = validation.json_array(
+        geometry.get("coordinates"), field=f"{field}.coordinates"
+    )
     coordinates: list[tuple[float, float]] = []
     for index, coordinate_value in enumerate(coordinate_rows):
-        coordinate = _array(coordinate_value, field=f"{field}.coordinates[{index}]")
+        coordinate = validation.json_array(coordinate_value, field=f"{field}.coordinates[{index}]")
         if len(coordinate) != 2:
             raise ValueError(f"{field}.coordinates[{index}] must contain longitude and latitude")
         coordinates.append(
@@ -59,19 +55,87 @@ def _geojson_line_string(value: Any, *, field: str) -> GeoJsonLineString:
     return GeoJsonLineString(tuple(coordinates))
 
 
+VEHICLE_FIELDS = frozenset(
+    {
+        "name",
+        "usable_battery_kwh",
+        "initial_soc_pct",
+        "consumption_kwh_per_100km",
+        "max_dc_power_kw",
+        "reserve_soc_pct",
+        "energy_safety_factor",
+        "supported_dc_connectors",
+    }
+)
+STATION_FIELDS = frozenset(
+    {"id", "name", "latitude", "longitude", "max_power_kw", "connector_type"}
+)
+
+
+def vehicle_from_json(value: Any, *, field: str) -> VehicleProfile:
+    row = validation.exact_object(value, field=field, expected=set(VEHICLE_FIELDS))
+    connectors = validation.json_array(
+        row["supported_dc_connectors"], field=f"{field}.supported_dc_connectors"
+    )
+    return VehicleProfile(
+        name=row["name"],
+        usable_battery_kwh=row["usable_battery_kwh"],
+        initial_soc_pct=row["initial_soc_pct"],
+        consumption_kwh_per_100km=row["consumption_kwh_per_100km"],
+        max_dc_power_kw=row["max_dc_power_kw"],
+        reserve_soc_pct=row["reserve_soc_pct"],
+        energy_safety_factor=row["energy_safety_factor"],
+        supported_dc_connectors=tuple(
+            validation.text(item, field=f"{field}.supported_dc_connectors[]") for item in connectors
+        ),
+    )
+
+
+def station_from_json(value: Any, *, field: str) -> Station:
+    row = validation.exact_object(value, field=field, expected=set(STATION_FIELDS))
+    return Station(
+        id=row["id"],
+        name=row["name"],
+        latitude=row["latitude"],
+        longitude=row["longitude"],
+        max_power_kw=row["max_power_kw"],
+        connector_type=row["connector_type"],
+    )
+
+
+def leg_from_json(value: Any, *, field: str, with_geometry: bool) -> RoadLeg:
+    expected = {"origin_id", "destination_id", "distance_km", "duration_minutes"}
+    row = validation.exact_object(
+        value, field=field, expected=expected | {"geometry"} if with_geometry else expected
+    )
+    return RoadLeg(
+        origin_id=row["origin_id"],
+        destination_id=row["destination_id"],
+        distance_km=row["distance_km"],
+        duration_minutes=row["duration_minutes"],
+        geometry=(
+            _geojson_line_string(row["geometry"], field=f"{field}.geometry")
+            if with_geometry
+            else None
+        ),
+    )
+
+
 def load_synthetic_scenario(path: str | Path) -> SyntheticScenario:
     """Load a repository fixture and reject unlabeled or structurally invalid data."""
 
     fixture_path = Path(path)
     try:
-        payload = _object(json.loads(fixture_path.read_text(encoding="utf-8")), field="root")
-        _exact_keys(
+        payload = validation.json_object(
+            json.loads(fixture_path.read_text(encoding="utf-8")), field="root"
+        )
+        validation.exact_fields(
             payload,
             field="root",
             expected={"metadata", "trip", "vehicle", "stations", "legs"},
         )
-        metadata = _object(payload["metadata"], field="metadata")
-        _exact_keys(
+        metadata = validation.json_object(payload["metadata"], field="metadata")
+        validation.exact_fields(
             metadata,
             field="metadata",
             expected={"name", "schema_version", "synthetic", "purpose"},
@@ -81,98 +145,22 @@ def load_synthetic_scenario(path: str | Path) -> SyntheticScenario:
         if metadata.get("schema_version") != 2:
             raise ValueError("unsupported synthetic fixture schema_version")
 
-        trip = _object(payload["trip"], field="trip")
-        _exact_keys(trip, field="trip", expected={"origin_id", "destination_id"})
-        vehicle_data = _object(payload["vehicle"], field="vehicle")
-        _exact_keys(
-            vehicle_data,
-            field="vehicle",
-            expected={
-                "name",
-                "usable_battery_kwh",
-                "initial_soc_pct",
-                "consumption_kwh_per_100km",
-                "max_dc_power_kw",
-                "reserve_soc_pct",
-                "energy_safety_factor",
-                "supported_dc_connectors",
-            },
-        )
-        supported_connectors = _array(
-            vehicle_data["supported_dc_connectors"],
-            field="vehicle.supported_dc_connectors",
-        )
-        station_rows = _array(payload["stations"], field="stations")
-        leg_rows = _array(payload["legs"], field="legs")
-
-        vehicle = VehicleProfile(
-            name=vehicle_data["name"],
-            usable_battery_kwh=vehicle_data["usable_battery_kwh"],
-            initial_soc_pct=vehicle_data["initial_soc_pct"],
-            consumption_kwh_per_100km=vehicle_data["consumption_kwh_per_100km"],
-            max_dc_power_kw=vehicle_data["max_dc_power_kw"],
-            reserve_soc_pct=vehicle_data["reserve_soc_pct"],
-            energy_safety_factor=vehicle_data["energy_safety_factor"],
-            supported_dc_connectors=tuple(supported_connectors),
-        )
-        station_objects = tuple(
-            _object(item, field=f"stations[{index}]") for index, item in enumerate(station_rows)
-        )
-        for index, row in enumerate(station_objects):
-            _exact_keys(
-                row,
-                field=f"stations[{index}]",
-                expected={
-                    "id",
-                    "name",
-                    "latitude",
-                    "longitude",
-                    "max_power_kw",
-                    "connector_type",
-                },
-            )
-        stations = tuple(
-            Station(
-                id=row["id"],
-                name=row["name"],
-                latitude=row["latitude"],
-                longitude=row["longitude"],
-                max_power_kw=row["max_power_kw"],
-                connector_type=row["connector_type"],
-            )
-            for row in station_objects
-        )
-        leg_objects = tuple(
-            _object(item, field=f"legs[{index}]") for index, item in enumerate(leg_rows)
-        )
-        for index, row in enumerate(leg_objects):
-            _exact_keys(
-                row,
-                field=f"legs[{index}]",
-                expected={
-                    "origin_id",
-                    "destination_id",
-                    "distance_km",
-                    "duration_minutes",
-                    "geometry",
-                },
-            )
-        legs = tuple(
-            RoadLeg(
-                origin_id=row["origin_id"],
-                destination_id=row["destination_id"],
-                distance_km=row["distance_km"],
-                duration_minutes=row["duration_minutes"],
-                geometry=_geojson_line_string(row["geometry"], field=f"legs[{index}].geometry"),
-            )
-            for index, row in enumerate(leg_objects)
-        )
+        trip = validation.json_object(payload["trip"], field="trip")
+        validation.exact_fields(trip, field="trip", expected={"origin_id", "destination_id"})
         scenario = SyntheticScenario(
-            origin_id=_text(trip["origin_id"], field="trip.origin_id"),
-            destination_id=_text(trip["destination_id"], field="trip.destination_id"),
-            vehicle=vehicle,
-            stations=stations,
-            legs=legs,
+            origin_id=validation.text(trip["origin_id"], field="trip.origin_id"),
+            destination_id=validation.text(trip["destination_id"], field="trip.destination_id"),
+            vehicle=vehicle_from_json(payload["vehicle"], field="vehicle"),
+            stations=tuple(
+                station_from_json(row, field=f"stations[{index}]")
+                for index, row in enumerate(
+                    validation.json_array(payload["stations"], field="stations")
+                )
+            ),
+            legs=tuple(
+                leg_from_json(row, field=f"legs[{index}]", with_geometry=True)
+                for index, row in enumerate(validation.json_array(payload["legs"], field="legs"))
+            ),
         )
     except (KeyError, TypeError, json.JSONDecodeError) as exc:
         raise ValueError(f"invalid synthetic fixture {fixture_path}: {exc}") from exc

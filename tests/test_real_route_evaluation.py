@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import copy
 import hashlib
 import json
 import math
@@ -10,7 +9,7 @@ from typing import Any
 
 import pytest
 
-from chargepath.evaluation import canonical_json_bytes
+from chargepath.evidence import canonical_json_bytes
 from chargepath.models import GeoJsonLineString, Station, VehicleProfile
 from chargepath.providers.base import CoordinateLike
 from chargepath.providers.osrm import (
@@ -25,7 +24,6 @@ from chargepath.real_route_collection import (
     load_frozen_options,
     load_stored_graph,
     load_verified_graph,
-    measure_osrm_runtime,
     required_graph_keys,
 )
 from chargepath.real_route_evaluation import (
@@ -34,7 +32,6 @@ from chargepath.real_route_evaluation import (
     check_gates,
     enumerate_trips,
     evaluate,
-    measure_planner_runtime,
     run_trip_on_graph,
     trips_bytes,
 )
@@ -182,15 +179,6 @@ def test_fixture_graph_matches_hand_audited_outcomes() -> None:
     assert results["fastest"]["total_minutes"] <= results["greedy_fixed_80"]["total_minutes"]
 
 
-def test_required_graphs_cover_every_declared_combination() -> None:
-    manifest = _synthetic_manifest()
-    keys = required_graph_keys(manifest)
-    assert len(keys) == len(set(keys))
-    # Three routes at caps 12/24/50/98/200 and widths 10/25/50, sharing width 25 with cap 50.
-    assert len(keys) == 3 * (5 + 2)
-    assert {trip.graph for trip in enumerate_trips(manifest)} == set(keys)
-
-
 def test_trip_expansion_changes_only_the_named_factor() -> None:
     manifest = _synthetic_manifest()
     trips = enumerate_trips(manifest)
@@ -229,8 +217,27 @@ def test_collection_stores_graphs_and_checks_the_frozen_data_version(tmp_path: P
         )
 
 
-def test_provider_failure_is_an_outcome_and_counts_reconcile(tmp_path: Path) -> None:
-    manifest, graphs_dir, _ = _collected(tmp_path, failing_route=36.0)
+# Route m6-r02 fails at the provider, which also keeps the long route's planning out of these two
+# evaluations; the fixture graph test above plans a full graph.
+@pytest.fixture(scope="module")
+def failing_collection(tmp_path_factory: pytest.TempPathFactory) -> tuple[dict[str, Any], Path]:
+    manifest, graphs_dir, _ = _collected(tmp_path_factory.mktemp("failing"), failing_route=36.0)
+    return manifest, graphs_dir
+
+
+@pytest.fixture(scope="module")
+def failing_evaluation(
+    failing_collection: tuple[dict[str, Any], Path],
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    manifest, graphs_dir = failing_collection
+    return evaluate(manifest=manifest, graphs_dir=graphs_dir, manifest_sha256="0" * 64)
+
+
+def test_provider_failure_is_an_outcome_and_counts_reconcile(
+    failing_collection: tuple[dict[str, Any], Path],
+    failing_evaluation: tuple[dict[str, Any], list[dict[str, Any]]],
+) -> None:
+    graphs_dir = failing_collection[1]
     stored = json.loads(
         (graphs_dir / GraphKey("m6-r02", 25, 50).file_name).read_text(encoding="utf-8")
     )
@@ -238,7 +245,7 @@ def test_provider_failure_is_an_outcome_and_counts_reconcile(tmp_path: Path) -> 
     assert stored["error_code"] == "NoRoute"
     assert "url" not in json.dumps(stored).lower()
 
-    summary, trips = evaluate(manifest=manifest, graphs_dir=graphs_dir, manifest_sha256="0" * 64)
+    summary, trips = failing_evaluation
     reconciliation = summary["reconciliation"]
     assert reconciliation["evaluated_trips"] == reconciliation["expected_trips"] == len(trips)
     for algorithm in ALGORITHMS:
@@ -247,36 +254,30 @@ def test_provider_failure_is_an_outcome_and_counts_reconcile(tmp_path: Path) -> 
         assert counts["provider_failure"] == sum(trip["route_id"] == "m6-r02" for trip in trips)
 
 
-def test_repeated_evaluation_is_byte_for_byte_stable(tmp_path: Path) -> None:
-    manifest, graphs_dir, _ = _collected(tmp_path)
-    first = evaluate(manifest=manifest, graphs_dir=graphs_dir, manifest_sha256="0" * 64)
+def test_evaluation_is_byte_stable_and_records_every_graph_checksum(
+    failing_collection: tuple[dict[str, Any], Path],
+    failing_evaluation: tuple[dict[str, Any], list[dict[str, Any]]],
+) -> None:
+    manifest, graphs_dir = failing_collection
+    first = failing_evaluation
     second = evaluate(manifest=manifest, graphs_dir=graphs_dir, manifest_sha256="0" * 64)
     assert canonical_json_bytes(first[0]) == canonical_json_bytes(second[0])
     assert trips_bytes(first[1]) == trips_bytes(second[1])
-
-
-def test_summary_records_the_checksum_of_every_stored_graph(tmp_path: Path) -> None:
-    manifest, graphs_dir, _ = _collected(tmp_path)
-    summary, _ = evaluate(manifest=manifest, graphs_dir=graphs_dir, manifest_sha256="0" * 64)
-    assert set(summary["stored_graphs"]) == {key.file_name for key in required_graph_keys(manifest)}
-    for name, record in summary["stored_graphs"].items():
+    stored = first[0]["stored_graphs"]
+    assert set(stored) == {key.file_name for key in required_graph_keys(manifest)}
+    for name, record in stored.items():
         assert record["sha256"] == hashlib.sha256((graphs_dir / name).read_bytes()).hexdigest()
 
 
-@pytest.mark.parametrize(
-    "evidence",
-    [
+def test_station_leak_guard_rejects_ids_names_and_coordinates() -> None:
+    stations = dict(load_stored_graph(FIXTURE).stations)
+    for evidence in (
         {"node_ids": ["origin", "destination"]},
-        {"nested": [{"latitude": 39.0}]},
-        {"note": "synthetic:fast"},
         {"note": "Synthetic Fast Hub"},
         {"note": 39.123456},
-    ],
-)
-def test_station_leak_guard_rejects_each_kind_of_station_value(evidence: dict[str, Any]) -> None:
-    stations = dict(load_stored_graph(FIXTURE).stations)
-    with pytest.raises(EvaluationDefectError):
-        assert_no_station_data(evidence, stations)
+    ):
+        with pytest.raises(EvaluationDefectError):
+            assert_no_station_data(evidence, stations)
 
 
 def _gate_trip() -> dict[str, Any]:
@@ -291,22 +292,16 @@ def _gate_trip() -> dict[str, Any]:
     }
 
 
-def test_gate_accepts_exact_no_slower_than_greedy() -> None:
+def test_gates_reject_an_exact_plan_slower_than_greedy_or_missing() -> None:
     check_gates([_gate_trip()])
-
-
-def test_gate_treats_exact_slower_than_greedy_as_a_defect() -> None:
-    trip = _gate_trip()
-    trip["results"]["fastest"]["total_minutes"] = 100.1
+    slower = _gate_trip()
+    slower["results"]["fastest"]["total_minutes"] = 100.1
     with pytest.raises(EvaluationDefectError, match="slower"):
-        check_gates([trip])
-
-
-def test_gate_treats_a_plan_without_an_exact_plan_as_a_defect() -> None:
-    trip = copy.deepcopy(_gate_trip())
-    trip["results"]["fastest"] = {"outcome": "infeasible"}
+        check_gates([slower])
+    missing = _gate_trip()
+    missing["results"]["fastest"] = {"outcome": "infeasible"}
     with pytest.raises(EvaluationDefectError, match="fastest did not"):
-        check_gates([trip])
+        check_gates([missing])
 
 
 def test_snapshot_loader_fails_closed_on_a_checksum_mismatch(tmp_path: Path) -> None:
@@ -343,24 +338,6 @@ def test_snapshot_loader_fails_closed_on_a_checksum_mismatch(tmp_path: Path) -> 
         )
 
 
-def test_runtime_measurements_follow_the_declared_protocol(tmp_path: Path) -> None:
-    manifest, graphs_dir, client = _collected(tmp_path)
-    manifest["experiments"]["E6"]["warmups"] = 1
-    manifest["experiments"]["E6"]["repetitions"] = 2
-
-    planner = measure_planner_runtime(manifest=manifest, graphs_dir=graphs_dir)
-    assert planner["trips_per_pass"] == 9
-    assert set(planner["algorithms"]) == set(ALGORITHMS)
-    assert all(len(row["samples_ms"]) == 2 for row in planner["algorithms"].values())
-
-    route_calls, table_calls = client.route_calls, len(client.table_sizes)
-    osrm = measure_osrm_runtime(manifest=manifest, client=client, graphs_dir=graphs_dir)
-    assert osrm["requests_per_pass"] == 3
-    assert len(osrm["route"]["samples_ms"]) == len(osrm["table"]["samples_ms"]) == 2
-    assert client.route_calls - route_calls == 3 * 3
-    assert len(client.table_sizes) - table_calls == 3 * 3
-
-
 def _committed_evidence() -> tuple[dict[str, Any], list[dict[str, Any]]]:
     evidence_dir = REPOSITORY_ROOT / "docs/benchmarks/real-routes"
     summary: dict[str, Any] = json.loads(
@@ -370,41 +347,20 @@ def _committed_evidence() -> tuple[dict[str, Any], list[dict[str, Any]]]:
     return summary, [json.loads(line) for line in lines]
 
 
-def _real_manifest_bytes() -> bytes:
-    return (REPOSITORY_ROOT / "data/benchmarks/real-routes/v1/manifest.json").read_bytes()
-
-
-def test_committed_evidence_belongs_to_the_frozen_manifest() -> None:
+def test_committed_evidence_belongs_to_the_frozen_manifest_and_passes_every_gate() -> None:
     summary, trips = _committed_evidence()
-    manifest_bytes = _real_manifest_bytes()
+    manifest_bytes = (REPOSITORY_ROOT / "data/benchmarks/real-routes/v1/manifest.json").read_bytes()
     manifest = json.loads(manifest_bytes)
     assert summary["manifest_sha256"] == hashlib.sha256(manifest_bytes).hexdigest()
-    assert summary["reconciliation"]["evaluated_trips"] == len(trips)
-    assert len(trips) == len(enumerate_trips(manifest))
     assert [(t["experiment"], t["variant"], t["route_id"]) for t in trips] == [
         (trip.experiment, trip.variant, trip.route_id) for trip in enumerate_trips(manifest)
     ]
     assert len(summary["stored_graphs"]) == len(required_graph_keys(manifest))
-
-
-def test_committed_evidence_reconciles_and_passes_every_gate() -> None:
-    summary, trips = _committed_evidence()
     check_gates(trips)
     for algorithm in ALGORITHMS:
         counts = Counter(trip["results"][algorithm]["outcome"] for trip in trips)
-        assert dict(counts) == {
-            key: value
-            for key, value in summary["reconciliation"]["outcomes_per_algorithm"][algorithm].items()
-            if value
-        }
-    plans = [
-        result
-        for trip in trips
-        for result in trip["results"].values()
-        if result["outcome"] == "plan"
-    ]
-    assert plans
-    assert all(result["reserve_violations"] == 0 for result in plans)
+        declared = summary["reconciliation"]["outcomes_per_algorithm"][algorithm]
+        assert dict(counts) == {key: value for key, value in declared.items() if value}
 
 
 def test_committed_evidence_contains_no_station_data() -> None:

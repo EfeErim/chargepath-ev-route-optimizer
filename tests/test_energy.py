@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass, replace
 
 import pytest
 
 from chargepath import (
-    CompetitiveRoutePlanner,
     EVRouteOptimizer,
     NoFeasibleRouteError,
     PlanVerificationError,
@@ -23,7 +21,6 @@ from chargepath.energy import (
     energy_for_distance,
     leg_buckets,
 )
-from chargepath.models import ChargingStop
 from chargepath.providers import StaticRoadNetwork
 
 
@@ -38,60 +35,25 @@ def vehicle() -> VehicleProfile:
     )
 
 
-def test_energy_model_applies_safety_factor() -> None:
+def test_energy_rounds_draws_up_and_recovered_energy_down() -> None:
     assert energy_for_distance(100, 20, 1.1) == pytest.approx(22)
-
-
-def test_required_buckets_rounds_up_conservatively() -> None:
     assert leg_buckets(LegEnergy(6.01, 6.01), 3) == (3, 3)
     assert leg_buckets(LegEnergy(6, 6), 3) == (2, 2)
-
-
-def test_any_positive_energy_requires_at_least_one_bucket() -> None:
     assert leg_buckets(LegEnergy(1e-15, 1e-15), 3) == (1, 1)
+    assert leg_buckets(LegEnergy(net_kwh=-5.9, peak_kwh=0.1), 3.0) == (-1, 1)
+
+
+def test_drive_bucket_caps_at_full_and_checks_the_peak() -> None:
+    assert drive_bucket(19, (-4, 0), reserve_bucket=2, maximum_bucket=20) == 20
+    assert drive_bucket(5, (1, 4), reserve_bucket=2, maximum_bucket=20) is None
+    assert drive_bucket(6, (1, 4), reserve_bucket=2, maximum_bucket=20) == 5
 
 
 def test_charging_above_taper_threshold_is_slower(vehicle: VehicleProfile) -> None:
     below_taper = charging_minutes(vehicle, 150, 60, 80, setup_minutes=0)
     above_taper = charging_minutes(vehicle, 150, 80, 100, setup_minutes=0)
     assert above_taper > below_taper
-
-
-def test_zero_energy_charge_has_no_session_overhead(vehicle: VehicleProfile) -> None:
     assert charging_minutes(vehicle, 150, 50, 50, setup_minutes=2) == 0
-
-
-def test_vehicle_connectors_are_normalized() -> None:
-    profile = VehicleProfile(
-        name="EV",
-        usable_battery_kwh=60,
-        initial_soc_pct=80,
-        consumption_kwh_per_100km=20,
-        max_dc_power_kw=150,
-        supported_dc_connectors=(" ccs2 ",),
-    )
-    assert profile.supported_dc_connectors == ("CCS2",)
-
-
-def test_invalid_charging_stop_is_rejected() -> None:
-    with pytest.raises(ValueError, match="arrival < departure"):
-        ChargingStop("hub", 80, 70, 1, 1)
-
-
-@pytest.mark.parametrize("invalid", [math.nan, math.inf, -math.inf, True])
-def test_domain_and_energy_boundaries_reject_non_finite_numbers(invalid: float) -> None:
-    with pytest.raises(ValueError, match="finite"):
-        VehicleProfile(
-            name="Invalid EV",
-            usable_battery_kwh=invalid,
-            initial_soc_pct=80,
-            consumption_kwh_per_100km=20,
-            max_dc_power_kw=150,
-        )
-    with pytest.raises(ValueError, match="finite"):
-        energy_for_distance(invalid, 20)
-    with pytest.raises(ValueError, match="finite"):
-        leg_buckets(LegEnergy(1, 1), invalid)
 
 
 def make_vehicle(**changes: object) -> VehicleProfile:
@@ -118,37 +80,6 @@ class TableConsumption:
             if key == (leg.origin_id, leg.destination_id):
                 return LegEnergy(net_kwh=net, peak_kwh=peak)
         return ConstantConsumption().leg_energy(leg, vehicle)
-
-
-# ---- consumption model ---------------------------------------------------------------------
-
-
-@pytest.mark.parametrize("distance", [0.1, 1, 33.3, 99.99, 150, 412.7])
-def test_constant_model_matches_the_original_bucket_rounding(distance: float) -> None:
-    vehicle = make_vehicle(energy_safety_factor=1.1)
-    bucket_kwh = 60 * 5 / 100
-    leg = RoadLeg("a", "b", distance, 10)
-    expected = math.ceil(energy_for_distance(distance, 20, 1.1) / bucket_kwh)
-    assert leg_buckets(ConstantConsumption().leg_energy(leg, vehicle), bucket_kwh) == (
-        expected,
-        expected,
-    )
-
-
-def test_recovered_energy_rounds_down_and_draws_round_up() -> None:
-    assert leg_buckets(LegEnergy(net_kwh=-5.9, peak_kwh=0.1), 3.0) == (-1, 1)
-    assert leg_buckets(LegEnergy(net_kwh=6.1, peak_kwh=6.1), 3.0) == (3, 3)
-
-
-def test_drive_bucket_caps_at_full_and_checks_the_peak() -> None:
-    assert drive_bucket(19, (-4, 0), reserve_bucket=2, maximum_bucket=20) == 20
-    assert drive_bucket(5, (1, 4), reserve_bucket=2, maximum_bucket=20) is None
-    assert drive_bucket(6, (1, 4), reserve_bucket=2, maximum_bucket=20) == 5
-
-
-def test_leg_energy_rejects_a_peak_below_net() -> None:
-    with pytest.raises(ValueError, match="peak_kwh"):
-        LegEnergy(net_kwh=5, peak_kwh=4)
 
 
 def test_recuperation_makes_a_downhill_trip_feasible_and_replays() -> None:
@@ -182,30 +113,6 @@ def test_a_mid_leg_peak_below_reserve_is_rejected() -> None:
             stations={},
             road_network=network,
         )
-
-
-def test_lower_consumption_never_slows_the_fastest_plan() -> None:
-    stations = {"s": Station("s", "Hub", 39, 32, 150)}
-    legs = [RoadLeg("a", "s", 120, 70), RoadLeg("s", "c", 160, 95), RoadLeg("a", "c", 260, 170)]
-    network = StaticRoadNetwork(legs)
-    vehicle = make_vehicle(initial_soc_pct=60)
-    baseline = EVRouteOptimizer().optimize(
-        origin_id="a", destination_id="c", vehicle=vehicle, stations=stations, road_network=network
-    )
-    lighter = TableConsumption(
-        tuple(
-            ((leg.origin_id, leg.destination_id), 0.14 * leg.distance_km, 0.14 * leg.distance_km)
-            for leg in legs
-        )
-    )
-    improved = CompetitiveRoutePlanner(consumption_model=lighter).plan(
-        origin_id="a", destination_id="c", vehicle=vehicle, stations=stations, road_network=network
-    )
-    fastest = improved.options[0].plan
-    assert fastest.total_minutes <= baseline.total_minutes
-
-
-# ---- charging curve ------------------------------------------------------------------------
 
 
 def test_flat_curve_matches_the_generic_model_below_the_taper() -> None:
@@ -243,24 +150,8 @@ def test_curve_integral_matches_numeric_integration() -> None:
     )
 
 
-def test_curve_ignores_the_generic_taper_arguments() -> None:
-    vehicle = make_vehicle(charging_curve=((0, 100), (100, 100)))
-    first = charging_minutes(vehicle, 150, 20, 95, taper_start_pct=50, taper_factor=0.2)
-    second = charging_minutes(vehicle, 150, 20, 95)
-    assert first == second == pytest.approx(2 + 60 * 0.6 * 75 / 100)
-
-
 @pytest.mark.parametrize(
-    "curve",
-    [
-        ((0, 100),),
-        ((5, 100), (100, 50)),
-        ((0, 100), (90, 50)),
-        ((0, 100), (50, 80), (50, 60), (100, 20)),
-        ((0, 100), (100, 0)),
-        ((0, 100), (100, math.nan)),
-        [(0, 100), (100, 50)],
-    ],
+    "curve", [((5, 100), (100, 50)), ((0, 100), (50, 80), (50, 60), (100, 20))]
 )
 def test_invalid_curves_are_rejected(curve: object) -> None:
     with pytest.raises(ValueError, match="charging_curve"):

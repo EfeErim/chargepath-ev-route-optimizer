@@ -12,7 +12,7 @@ import json
 from pathlib import Path
 from statistics import median
 
-from chargepath.evaluation import canonical_json_bytes
+from chargepath.evidence import canonical_json_bytes
 from chargepath.models import RoutePlan, Station
 from chargepath.optimizer import EVRouteOptimizer
 from chargepath.providers.static import StaticRoadNetwork
@@ -24,7 +24,7 @@ from chargepath.speed import (
     SpeedAwareConsumption,
     SpeedChoiceNetwork,
 )
-from chargepath.verification import verify_route_plan
+from chargepath.verification import replay_route_plan
 
 ROOT = Path(__file__).resolve().parents[1]
 V1_GRAPHS = ROOT / "data/processed/real-routes/v1/graphs"
@@ -54,6 +54,7 @@ def run() -> None:
 
     rows = []
     savings: list[float] = []
+    violations: list[int] = []
     all_stations: dict[str, Station] = {}
     for trip, graph in verified_e1_graphs(manifest, graphs_dir=V1_GRAPHS, summary=reference):
         stations = dict(graph.stations)
@@ -70,13 +71,14 @@ def run() -> None:
                 stations=stations,
                 road_network=network,
             )
-            verify_route_plan(
+            replay = replay_route_plan(
                 plan,
                 vehicle=trip.vehicle,
                 stations=stations,
                 soc_step_pct=trip.soc_step_pct,
                 consumption_model=MODEL,
             )
+            violations.append(replay.reserve_violations)
             plans[name] = plan
         if plans["speed_choice"].total_minutes > plans["fixed_speed"].total_minutes + 1e-8:
             raise ValueError("speed choice was slower than fixed speed")
@@ -110,7 +112,8 @@ def run() -> None:
             "source": "docs/benchmarks/field-pilot/tum_id1_v1.json",
         },
         "speed_factors": list(DEFAULT_SPEED_FACTORS),
-        "reserve_violations_on_returned_plans": 0,
+        "replayed_plans": len(violations),
+        "reserve_violations_on_returned_plans": sum(violations),
         "summary": {
             "scenarios": len(rows),
             "improved": sum(1 for saving in savings if saving > 1e-6),
@@ -119,6 +122,8 @@ def run() -> None:
         },
         "scenarios": rows,
     }
+    if sum(violations):
+        raise ValueError("a returned plan violates the reserve under replay")
     assert_no_station_data(evidence, all_stations)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_bytes(canonical_json_bytes(evidence))

@@ -1,193 +1,60 @@
 # Changelog
 
-All notable changes to this project are documented here. The format follows
-[Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
-[Semantic Versioning](https://semver.org/).
+The project uses [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## Unreleased
 
-### Removed
-
-- `chargepath.examples`; its telemetry-derived vehicle inputs now live with their speed-model tests.
-- Dependabot automation; action versions remain pinned to commit SHAs.
-- Charging-model arguments that were never changed: `taper_start_pct`, `taper_factor` and
-  `session_setup_minutes` on `EVRouteOptimizer`, `GreedyFixedTargetOptimizer`,
-  `CompetitiveRoutePlanner` and `verify_route_plan`, and `target_soc_pct` on the greedy heuristic.
-  `charging_minutes` keeps them. Also `OsrmHttpClient(profile=...)` (always `driving`) and
+- Added `LookaheadGreedyOptimizer`, a one-step lookahead evaluation baseline, and
+  `scripts/run_baseline_comparison.py`: exact fastest is a median 2.6 min (0.5%) faster on the 72
+  E1 scenarios, maximum 26.5, with 22 ties.
+- Exact search breaks full ties toward the higher arrival SOC, compares minutes and kilometres at
+  nine decimal places, and skips states dominated by a higher bucket at the same node.
+  `summary_v1.json` and `trips_v1.jsonl` were regenerated; feasibility and plan validity counts
+  did not change.
+- The Pages deploy is a job in `ci.yml` that needs the checks and the new Chromium smoke test
+  (`browser_tests/`) of the same commit.
+- Demo responses are typed and formatted after planning and analysis; `chargepath.demo.browser` no
+  longer imports the HTTP server, and `chargepath-demo` points at `chargepath.demo.server:main`.
+- Removed `chargepath.examples`, Dependabot, charging-model arguments that never changed on the
+  planners and `verify_route_plan`, `OsrmHttpClient(profile=...)`, `TableCost`, `RoadTable` and
   `fetch_selected_plan_geometry`.
-- Re-validation in normalized EPDK records, route options and candidate graphs of values their
-  only producers already check, and the payload cross-checks in `build_snapshot_manifest` that its
-  caller already guarantees.
+- Merged the architecture notes into `docs/algorithm.md` and the OSRM setup into
+  `docs/reproducing.md`, and shortened the documentation and tests.
 
-### Changed
+## 0.3.0 - 2026-11-12
 
-- Exact search breaks full objective ties toward the higher arrival SOC, and compares minutes and
-  kilometres after rounding to nine decimal places so floating-point noise cannot decide a tie.
-  The exact-arithmetic property reference now checks the arrival SOC as well.
-- Regenerated `summary_v1.json` and `trips_v1.jsonl` with these tie-breaks. Only shortest-distance
-  charging statistics, distinct-option counts and some detours in the third decimal changed; plan
-  validity and feasibility counts are unchanged.
-- Exact search skips a state when a higher battery bucket at the same node was already settled.
-  The pruning is dominance-safe and does not change any objective value.
-- `docs/results.md` states that E6 runtimes are per 72-scenario pass, not per search; the Baum et
-  al. citation year is consistent (2020).
-- The demo services plan and analyze (replay for the SOC timeline, redundancy for the fastest
-  plan) before `chargepath.demo.responses` formats the JSON; formatting starts no search, replay,
-  or provider call. Responses are typed with `TypedDict`s and are byte-identical to 0.3.0.
-- `MAX_REQUEST_BYTES` lives in `chargepath.demo.schema`. Importing `chargepath.demo` or
-  `chargepath.demo.browser` no longer imports the HTTP server; server names are imported from
-  `chargepath.demo.server`, and the `chargepath-demo` command points at `chargepath.demo.server:main`.
-- The Pages deploy moved into `ci.yml` as a job that needs the checks of the same commit; pull
-  requests never deploy, and `pages.yml` was removed.
-- `TableCost` and `RoadTable` were removed; the OSRM table and route client protocols live in
-  `chargepath.providers.osrm`. `[project.urls]` was added.
-- The synthetic and real-route evaluations share one plan-and-replay function, one timing loop and
-  one serializer for indented JSON evidence (`canonical_json_bytes`), and the three follow-up scripts share
-  `verified_e1_graphs`. Every committed result is byte-identical.
+- `verify_route_plan` can check a plan against the road network and the requested endpoints, and
+  returns the battery level after each action.
+- Pluggable consumption models with signed per-leg energy and an in-leg peak check, optional
+  piecewise-linear charging curves, opt-in speed-dependent consumption with per-leg speed choice,
+  and an experimental terrain model that failed its held-out BMW i3 check.
+- Property, differential and metamorphic tests against an exact-rational reference solver.
+- Charging-time framing and a per-scenario savings chart for the real-route headline, both checked
+  against the committed outcomes.
+- Static browser build of the fixture demo on Pyodide, published to GitHub Pages.
+- Per-stop structural fallback note in the demo.
+- Split `chargepath/demo.py` into a package, shared validation in `chargepath.validation`, narrowed
+  package exports, and removed the Windows launchers.
 
-### Added
+## 0.2.0 - 2026-11-07
 
-- `chargepath.lookahead.LookaheadGreedyOptimizer`, a one-step lookahead heuristic that picks each
-  next charger and charge amount; it is an evaluation baseline, not a route option.
-  `scripts/run_baseline_comparison.py` compares it with exact fastest on the 72 E1 scenarios
-  and writes `docs/benchmarks/real-routes/lookahead_baseline_v1.json`.
-  Exact fastest was a median 2.6 min (0.5%) faster, p90 12.0, maximum 26.5, with 22 ties and no
-  heuristic failures. The README now says that a careful heuristic gets close on this benchmark.
-- `browser_tests/`, run in CI with the `browser` extra: the static demo in real Chromium with real
-  Pyodide, map tiles blocked, and unexpected JavaScript errors failing the test.
+- Related-work review in `docs/research.md`. Optimizer and results are identical to 0.2.0rc1.
 
-## [0.3.0] - 2026-11-12
+## 0.2.0rc1 - 2026-11-07
 
-### Changed
+- Real-route benchmark: 24 frozen routes in Türkiye, three vehicle profiles, separate OSRM
+  collection and offline evaluation with replay of every plan.
+- The OSRM adapter tolerates sub-meter negative distances.
 
-- Reorganized documentation: benchmark outputs live under `docs/benchmarks/` and version
-  history moved here.
-- Trimmed project tooling: CI runs on Ubuntu only (Python 3.11 and 3.13); the release-file
-  allowlist audit, wheel smoke check, constraints file, release guide, data dictionary, and
-  EPDK access report were removed. The EPDK findings now live in `docs/data_strategy.md`, and a
-  test checks that relative Markdown links resolve.
-- Narrowed the package exports: `chargepath` re-exports only the planner, model, and replay
-  names, and `chargepath.providers` only `StaticRoadNetwork`; import other names from their
-  modules. Removed the unused `.env.example`.
-- Removed the Windows launchers (`ChargePath.cmd`, `scripts/open_chargepath.ps1`,
-  `scripts/start_custom_map.ps1`); the live demo covers the no-install case, and integration mode
-  starts with `python -m chargepath.demo --mode integration`.
-- The demo and the real-route collector load EPDK snapshots through one
-  `station_data.load_snapshot_options` function, and both EPDK scripts share
-  `station_data.inspect_snapshot` instead of running a subprocess.
-- `docs/architecture.md` is now a module table that covers every module; `docs/source_registry.md`
-  was folded into `docs/research.md`.
-- Renamed benchmark scripts after what they do (`run_synthetic_benchmark.py`,
-  `build_route_manifest.py`, `collect_routes.py`, `evaluate_routes.py`,
-  `run_route_followup.py`).
-- Shortened the README.
-- Split `chargepath/demo.py` into a `chargepath.demo` package (`schema`, `services`, `server`);
-  `python -m chargepath.demo` and the `chargepath-demo` entry point are unchanged.
-- Moved repeated input validation into `chargepath.validation`. Some error messages changed wording,
-  for example unexpected request fields are now reported as `fields are invalid: unexpected [...]`.
-- Corrected the Sweda, Dolinskaya, and Klabjan (2017) author list and cited the refereed Schoenberg
-  and Dressler (2023) paper.
-- `verify_route_plan` returns the battery level after each replayed action, and the demo builds its
-  SOC timeline from it instead of recomputing leg energy.
-- The optimizer, greedy heuristic, and road-only baseline share `RoutePlan.assemble`,
-  `RoutePlan.stationary`, and one shortest-path search. Outputs are byte-identical.
-- Rewrote the README around results and design decisions. Replaced the unreachable
-  Artmeier et al. (2010) link with its DOI.
-- Benchmark data directories are named after what they hold (`data/benchmarks/real-routes/`,
-  `data/benchmarks/synthetic/`), and runtime evidence no longer records the interpreter path.
-- The demo shows all four route options in a two-by-two grid instead of a scrolling row; the README
-  screenshot was retaken.
-- CI and the Pages workflow use `actions/checkout` 7.0.1 and `actions/setup-python` 7.1.0, and the
-  dev tools are bumped to pytest 9.2, mypy 2.4 and Ruff 0.17. Dependabot opens monthly grouped
-  updates for actions and dev tools.
-- The static demo loads `pyodide.js` with a subresource-integrity hash, and the build refuses a
-  Pyodide version without a recorded hash. Pyodide is listed in the third-party notices.
+## 0.1.1 - 2026-11-05
 
-### Added
-
-- `verify_route_plan` accepts `road_network`, `origin_id` and `destination_id`. With them, every
-  leg must be one the network offers with the same distance and duration, and the plan must start
-  and end at the requested nodes. Route options, the synthetic benchmark and the real-route
-  evaluation pass all three; the committed results are unchanged.
-- Charging-time framing for the real-route headline: driving is a median 87.5% of the heuristic's
-  trip time, and median charging time falls from 70.7 to 53.0 minutes.
-- Opt-in speed-dependent consumption (`chargepath.speed`) with a per-leg speed choice, an
-  `ID3_PILOT_PROFILE` example vehicle (`chargepath.examples`), and `scripts/run_speed_choice.py`,
-  whose result on the 72 scenarios is that no plan improved.
-- A per-scenario savings chart in the README, drawn by `scripts/plot_e1_savings.py` from the
-  committed outcomes and checked by `tests/test_published_results.py`.
-- Differential, property-based, and metamorphic tests (`tests/test_properties.py`, Hypothesis)
-  against an exact-rational reference solver.
-- Pluggable consumption models (`ConsumptionModel`, `LegEnergy`) with signed per-leg energy, a peak
-  check inside each leg, and a full-battery cap, plus an optional piecewise-linear
-  `VehicleProfile.charging_curve`. Defaults reproduce earlier results byte for byte.
-- Per-stop structural fallback note for the fastest plan (`chargepath.redundancy`), labeled as
-  structure only.
-- A static browser build of the fixture demo that runs the planner in Pyodide
-  (`scripts/build_static_demo.py`), published to GitHub Pages by the `Demo site` workflow.
-- An experimental terrain consumption model (`chargepath.terrain`) and its held-out
-  evaluation on the BMW i3 pilot data, which it did not pass; it is not the default.
-- Literature additions in `docs/research.md`.
-- Tests that the replay checker rejects tampered plans, that the fastest objective breaks time ties
-  on charging stops before distance, and that the README headline follows from the committed
-  real-route outcomes.
-- `docs/map_demo.md` with captured output of the main commands.
-
-## [0.2.0] - 2026-11-07
-
-### Added
-
-- Related-work review in `docs/research.md` and new entries in the source registry.
-
-### Changed
-
-- Documentation only; optimizer code and benchmark results are identical to 0.2.0rc1.
-  Vehicle-specific charging curves were investigated and left as future work because
-  no suitable public data was found.
-
-## [0.2.0rc1] - 2026-11-07
-
-### Added
-
-- Real-route benchmark: 24 frozen routes on Türkiye's road network, three vehicle
-  profiles, separate OSRM collection and offline evaluation, and replay of every
-  returned plan.
-
-### Fixed
-
-- The OSRM adapter now tolerates sub-meter negative distances returned for some legs.
-
-## [0.1.1] - 2026-11-05
-
-### Changed
-
-- The Windows launcher works from a clean clone and asks before sending coordinates
-  to the public OSRM server.
 - Candidate widening stays within the default OSRM Table limit.
-- The UI labels how many distinct plans the strategies produced.
-- CI also runs on CPython 3.13.5.
+- The UI shows how many distinct plans the strategies produced.
+- `scripts/fetch_epdk_snapshot.py` downloads a station snapshot in one request.
 
-### Added
+## 0.1.0 - 2026-08-12
 
-- `scripts/fetch_epdk_snapshot.py` to download a station snapshot in one request.
-
-## [0.1.0] - 2026-08-12
-
-First public release.
-
-### Added
-
-- Exact SOC-bucketed Dijkstra planner with fastest-time, shortest-distance and
-  fewest-stop objectives, plus a fixed-80% greedy baseline.
-- Independent replay that checks every returned plan against the reserve constraint.
-- OSRM route/table adapter with recorded fixtures.
-- EPDK station-data normalizer and CCS2 DC corridor selection.
-- Synthetic benchmark suite with correctness and runtime results.
-- Offline Leaflet map demo served from loopback.
-
-[Unreleased]: https://github.com/EfeErim/chargepath-ev-route-optimizer/compare/v0.3.0...HEAD
-[0.3.0]: https://github.com/EfeErim/chargepath-ev-route-optimizer/compare/v0.2.0...v0.3.0
-[0.2.0]: https://github.com/EfeErim/chargepath-ev-route-optimizer/compare/v0.2.0rc1...v0.2.0
-[0.2.0rc1]: https://github.com/EfeErim/chargepath-ev-route-optimizer/compare/v0.1.1...v0.2.0rc1
-[0.1.1]: https://github.com/EfeErim/chargepath-ev-route-optimizer/compare/v0.1.0...v0.1.1
-[0.1.0]: https://github.com/EfeErim/chargepath-ev-route-optimizer/releases/tag/v0.1.0
+First public release: exact SOC-bucketed Dijkstra with fastest, shortest-distance and fewest-stop
+objectives, a fixed-80% greedy baseline, independent replay, an OSRM adapter with recorded
+fixtures, EPDK normalization and corridor selection, the synthetic benchmark and a loopback Leaflet
+demo.

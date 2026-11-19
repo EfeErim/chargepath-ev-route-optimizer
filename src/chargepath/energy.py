@@ -117,6 +117,40 @@ def drive_bucket(
     return remaining if remaining >= reserve_bucket else None
 
 
+@dataclass(frozen=True, slots=True)
+class SocGrid:
+    """The whole-bucket battery grid one trip is planned and replayed on.
+
+    The starting charge rounds down and the reserve rounds up, so the grid never adds range.
+    """
+
+    step_pct: int
+    bucket_kwh: float
+    initial: int
+    reserve: int
+    maximum: int
+
+    @classmethod
+    def for_vehicle(cls, vehicle: VehicleProfile, step_pct: int) -> SocGrid:
+        return cls(
+            step_pct=step_pct,
+            bucket_kwh=vehicle.usable_battery_kwh * step_pct / 100,
+            initial=math.floor(vehicle.initial_soc_pct / step_pct),
+            reserve=math.ceil(vehicle.reserve_soc_pct / step_pct),
+            maximum=100 // step_pct,
+        )
+
+    def soc_pct(self, bucket: int) -> float:
+        return float(bucket * self.step_pct)
+
+    def after_leg(self, bucket: int, buckets: LegBuckets) -> int | None:
+        """The bucket after driving a leg, or ``None`` when the leg would break the reserve."""
+
+        return drive_bucket(
+            bucket, buckets, reserve_bucket=self.reserve, maximum_bucket=self.maximum
+        )
+
+
 def leg_bucket_lookup(
     cache: LegBucketCache,
     *,

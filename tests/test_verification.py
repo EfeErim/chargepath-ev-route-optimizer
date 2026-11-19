@@ -6,7 +6,9 @@ with a plan that is valid except for one tampered field.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, replace
+from typing import Any
 
 import pytest
 
@@ -19,8 +21,10 @@ from chargepath import (
     VehicleProfile,
     verify_route_plan,
 )
-from chargepath.energy import ConstantConsumption, LegEnergy
+from chargepath.energy import ConstantConsumption, LegEnergy, charging_minutes
+from chargepath.models import ChargingStop
 from chargepath.providers import StaticRoadNetwork
+from chargepath.verification import replay_route_plan
 
 VEHICLE = VehicleProfile(
     name="Test EV",
@@ -60,57 +64,58 @@ def plan() -> RoutePlan:
     return result
 
 
-def test_untampered_plan_passes(plan: RoutePlan) -> None:
-    verify_route_plan(plan, vehicle=VEHICLE, stations=STATIONS)
+def _tampered_stop(plan: RoutePlan, **changes: Any) -> RoutePlan:
+    return replace(plan, charging_stops=(replace(plan.charging_stops[0], **changes),))
 
 
-def test_incompatible_connector_is_rejected(plan: RoutePlan) -> None:
-    stations = {"s": replace(STATIONS["s"], connector_type="CHADEMO")}
-    with pytest.raises(PlanVerificationError, match="connector is incompatible"):
-        verify_route_plan(plan, vehicle=VEHICLE, stations=stations)
-
-
-def test_unknown_charging_station_is_rejected(plan: RoutePlan) -> None:
-    with pytest.raises(PlanVerificationError, match="no matching station"):
-        verify_route_plan(plan, vehicle=VEHICLE, stations={})
-
-
-def test_leg_that_ends_below_reserve_is_rejected(plan: RoutePlan) -> None:
-    thirstier = replace(VEHICLE, consumption_kwh_per_100km=25)
-    with pytest.raises(PlanVerificationError, match="violates reserve"):
-        verify_route_plan(plan, vehicle=thirstier, stations=STATIONS)
-
-
-def test_peak_below_reserve_inside_a_leg_is_rejected(plan: RoutePlan) -> None:
+TAMPERING: list[tuple[str, Callable[[RoutePlan], dict[str, Any]], str]] = [
+    (
+        "incompatible-connector",
+        lambda plan: {"stations": {"s": replace(STATIONS["s"], connector_type="CHADEMO")}},
+        "connector is incompatible",
+    ),
+    ("unknown-station", lambda plan: {"stations": {}}, "no matching station"),
+    (
+        "leg-below-reserve",
+        lambda plan: {"vehicle": replace(VEHICLE, consumption_kwh_per_100km=25)},
+        "violates reserve",
+    ),
     # Net use on a -> s leaves 10%, exactly the reserve; the 15 kWh peak dips to 5%.
-    with pytest.raises(PlanVerificationError, match="violates reserve"):
-        verify_route_plan(
-            plan, vehicle=VEHICLE, stations=STATIONS, consumption_model=PeakOnFirstLeg()
-        )
+    (
+        "peak-below-reserve",
+        lambda plan: {"consumption_model": PeakOnFirstLeg()},
+        "violates reserve",
+    ),
+    (
+        "arrival-soc",
+        lambda plan: {"plan": replace(plan, arrival_soc_pct=plan.arrival_soc_pct + 5)},
+        "arrival SOC",
+    ),
+    (
+        "charging-energy",
+        lambda plan: {
+            "plan": _tampered_stop(
+                plan, energy_added_kwh=plan.charging_stops[0].energy_added_kwh + 1
+            )
+        },
+        "charging energy",
+    ),
+    (
+        "stop-off-path",
+        lambda plan: {"plan": _tampered_stop(plan, station_id="elsewhere")},
+        "not at its plan node",
+    ),
+    (
+        "stop-at-another-visit",
+        lambda plan: {"plan": _tampered_stop(plan, node_index=0)},
+        "not at its plan node",
+    ),
+    ("other-origin", lambda plan: {"origin_id": "s"}, "requested origin"),
+    ("other-destination", lambda plan: {"destination_id": "s"}, "requested destination"),
+]
 
 
-def test_tampered_arrival_soc_is_rejected(plan: RoutePlan) -> None:
-    with pytest.raises(PlanVerificationError, match="arrival SOC"):
-        verify_route_plan(
-            replace(plan, arrival_soc_pct=plan.arrival_soc_pct + 5),
-            vehicle=VEHICLE,
-            stations=STATIONS,
-        )
-
-
-def test_tampered_charging_energy_is_rejected(plan: RoutePlan) -> None:
-    stop = replace(
-        plan.charging_stops[0], energy_added_kwh=plan.charging_stops[0].energy_added_kwh + 1
-    )
-    with pytest.raises(PlanVerificationError, match="charging energy"):
-        verify_route_plan(
-            replace(plan, charging_stops=(stop,)),
-            vehicle=VEHICLE,
-            stations=STATIONS,
-        )
-
-
-def test_plan_checked_against_its_network_passes(plan: RoutePlan) -> None:
+def test_untampered_plan_passes_against_its_network(plan: RoutePlan) -> None:
     verify_route_plan(
         plan,
         vehicle=VEHICLE,
@@ -119,6 +124,18 @@ def test_plan_checked_against_its_network_passes(plan: RoutePlan) -> None:
         origin_id="a",
         destination_id="c",
     )
+
+
+@pytest.mark.parametrize(
+    ("tamper", "match"), [(t, m) for _, t, m in TAMPERING], ids=[i for i, _, _ in TAMPERING]
+)
+def test_one_tampered_field_is_rejected(
+    plan: RoutePlan, tamper: Callable[[RoutePlan], dict[str, Any]], match: str
+) -> None:
+    arguments: dict[str, Any] = {"plan": plan, "vehicle": VEHICLE, "stations": STATIONS}
+    arguments.update(tamper(plan))
+    with pytest.raises(PlanVerificationError, match=match):
+        verify_route_plan(arguments.pop("plan"), **arguments)
 
 
 def test_shortened_road_leg_is_rejected_against_the_network(plan: RoutePlan) -> None:
@@ -135,18 +152,45 @@ def test_shortened_road_leg_is_rejected_against_the_network(plan: RoutePlan) -> 
         verify_route_plan(tampered, vehicle=VEHICLE, stations=STATIONS, road_network=NETWORK)
 
 
-def test_plan_for_other_endpoints_is_rejected(plan: RoutePlan) -> None:
-    with pytest.raises(PlanVerificationError, match="requested origin"):
-        verify_route_plan(plan, vehicle=VEHICLE, stations=STATIONS, origin_id="s")
-    with pytest.raises(PlanVerificationError, match="requested destination"):
-        verify_route_plan(plan, vehicle=VEHICLE, stations=STATIONS, destination_id="s")
+def test_a_stop_is_replayed_at_the_visit_it_names() -> None:
+    # The plan passes "s" twice and charges on the second pass, when the battery is lower.
+    network = StaticRoadNetwork(
+        [RoadLeg("a", "s", 60, 45), RoadLeg("s", "b", 30, 20), RoadLeg("b", "s", 30, 20)]
+        + [RoadLeg("s", "c", 120, 90)]
+    )
+    legs = tuple(
+        next(leg for leg in network.neighbors(origin) if leg.destination_id == destination)
+        for origin, destination in (("a", "s"), ("s", "b"), ("b", "s"), ("s", "c"))
+    )
+    stop = ChargingStop(
+        station_id="s",
+        node_index=3,
+        arrival_soc_pct=0.0,
+        departure_soc_pct=60.0,
+        energy_added_kwh=36.0,
+        charging_minutes=charging_minutes(VEHICLE, 150, 0.0, 60.0),
+    )
+    revisit = RoutePlan.assemble(
+        node_ids=("a", "s", "b", "s", "c"),
+        legs=legs,
+        charging_stops=(stop,),
+        arrival_soc_pct=20.0,
+    )
+    vehicle = replace(VEHICLE, initial_soc_pct=40, reserve_soc_pct=0)
+    events = verify_route_plan(revisit, vehicle=vehicle, stations=STATIONS, road_network=network)
+    assert [(event.kind, event.node_id) for event in events][3:5] == [
+        ("arrive", "s"),
+        ("charge", "s"),
+    ]
+    first_visit = replace(revisit, charging_stops=(replace(stop, node_index=1),))
+    with pytest.raises(PlanVerificationError, match="charging arrival SOC"):
+        verify_route_plan(first_visit, vehicle=vehicle, stations=STATIONS)
 
 
-def test_charging_stop_off_the_path_is_rejected(plan: RoutePlan) -> None:
-    stop = replace(plan.charging_stops[0], station_id="elsewhere")
-    with pytest.raises(PlanVerificationError):
-        verify_route_plan(
-            replace(plan, charging_stops=(stop,)),
-            vehicle=VEHICLE,
-            stations=STATIONS,
-        )
+def test_replay_counts_reserve_violations_instead_of_raising(plan: RoutePlan) -> None:
+    # The peak model dips below the reserve on a -> s only; the stated SOC values still hold.
+    replay = replay_route_plan(
+        plan, vehicle=VEHICLE, stations=STATIONS, consumption_model=PeakOnFirstLeg()
+    )
+    assert replay.reserve_violations == 1
+    assert replay_route_plan(plan, vehicle=VEHICLE, stations=STATIONS).reserve_violations == 0

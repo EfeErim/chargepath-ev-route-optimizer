@@ -15,7 +15,7 @@ from statistics import median
 from typing import Any
 
 from chargepath.alternatives import GreedyFixedTargetOptimizer
-from chargepath.evaluation import canonical_json_bytes
+from chargepath.evidence import canonical_json_bytes, summary_stats
 from chargepath.lookahead import LookaheadGreedyOptimizer
 from chargepath.models import NoFeasibleRouteError, RoutePlan, Station
 from chargepath.optimizer import EVRouteOptimizer
@@ -23,10 +23,9 @@ from chargepath.providers.static import StaticRoadNetwork
 from chargepath.real_route_evaluation import (
     Trip,
     assert_no_station_data,
-    summary_stats,
     verified_e1_graphs,
 )
-from chargepath.verification import verify_route_plan
+from chargepath.verification import replay_route_plan
 
 ROOT = Path(__file__).resolve().parents[1]
 V1_GRAPHS = ROOT / "data/processed/real-routes/v1/graphs"
@@ -51,8 +50,14 @@ def _metrics(plan: RoutePlan | None) -> dict[str, float | int] | None:
 
 
 def _solve(
-    planner: Planner, trip: Trip, stations: dict[str, Station], network: StaticRoadNetwork
+    planner: Planner,
+    trip: Trip,
+    stations: dict[str, Station],
+    network: StaticRoadNetwork,
+    violations: list[int],
 ) -> RoutePlan | None:
+    """Plan one trip, replay the plan, and append its reserve-violation count."""
+
     try:
         plan = planner.optimize(
             origin_id="origin",
@@ -63,7 +68,7 @@ def _solve(
         )
     except NoFeasibleRouteError:
         return None
-    verify_route_plan(
+    replay = replay_route_plan(
         plan,
         vehicle=trip.vehicle,
         stations=stations,
@@ -72,6 +77,7 @@ def _solve(
         origin_id="origin",
         destination_id="destination",
     )
+    violations.append(replay.reserve_violations)
     return plan
 
 
@@ -107,15 +113,21 @@ def run() -> None:
     published = {(row["route"], row["profile"]): row for row in followup["scenarios"]}
 
     rows: list[dict[str, Any]] = []
+    violations: list[int] = []
     all_stations: dict[str, Station] = {}
     for trip, graph in verified_e1_graphs(manifest, graphs_dir=V1_GRAPHS, summary=reference):
         stations = dict(graph.stations)
         all_stations.update(stations)
         network = StaticRoadNetwork(graph.legs)
         step = trip.soc_step_pct
-        exact = _solve(EVRouteOptimizer(soc_step_pct=step), trip, stations, network)
-        greedy = _solve(GreedyFixedTargetOptimizer(soc_step_pct=step), trip, stations, network)
-        lookahead = _solve(LookaheadGreedyOptimizer(soc_step_pct=step), trip, stations, network)
+        exact, greedy, lookahead = (
+            _solve(planner, trip, stations, network, violations)
+            for planner in (
+                EVRouteOptimizer(soc_step_pct=step),
+                GreedyFixedTargetOptimizer(soc_step_pct=step),
+                LookaheadGreedyOptimizer(soc_step_pct=step),
+            )
+        )
         if exact is None:
             raise ValueError(f"expected a feasible exact plan for {trip.route_id}")
 
@@ -144,8 +156,8 @@ def run() -> None:
     evidence = {
         "input_benchmark": manifest["benchmark_id"],
         "manifest_sha256": hashlib.sha256(manifest_bytes).hexdigest(),
-        "preregistration": "PROJECT_PLAN.md, M9",
-        "reserve_violations_on_returned_plans": 0,
+        "replayed_plans": len(violations),
+        "reserve_violations_on_returned_plans": sum(violations),
         "summary": {
             "scenarios": len(rows),
             "exact_vs_greedy_fixed_80": _paired(rows, "greedy_fixed_80"),
@@ -156,6 +168,8 @@ def run() -> None:
         },
         "scenarios": rows,
     }
+    if sum(violations):
+        raise ValueError("a returned plan violates the reserve under replay")
     assert_no_station_data(evidence, all_stations)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_bytes(canonical_json_bytes(evidence))

@@ -19,21 +19,15 @@ FIXTURE = REPOSITORY_ROOT / "data" / "sample" / "synthetic_corridor.json"
 BRIDGE = Path(__file__).resolve().parent / "static-demo" / "static-api.js"
 # Pyodide 0.27 ships CPython 3.12, inside the project's supported 3.11+ range.
 PYODIDE_VERSION = "0.27.7"
-# Subresource-integrity hashes of each supported release's pyodide.js loader. The loader then
-# fetches the WebAssembly runtime and standard library from the same pinned CDN directory.
-PYODIDE_INTEGRITY = {
-    "0.27.7": "sha384-90so5tCKvl0xs9agU29IMKlAVzhfzFX7QO//YxQkRhJG58bBZrFN+2ZTRB026X5X",
-}
-WEB_ASSETS = ("app.css", "app.js", "leaflet.css", "leaflet.js")
+# Subresource-integrity hash of that release's pyodide.js loader. The loader then fetches the
+# WebAssembly runtime and standard library from the same pinned CDN directory.
+PYODIDE_SRI = "sha384-90so5tCKvl0xs9agU29IMKlAVzhfzFX7QO//YxQkRhJG58bBZrFN+2ZTRB026X5X"
+WEB_ASSETS = ("app.css", "app.js", "leaflet.css", "leaflet.js", "LICENSE-leaflet.txt")
 
 
-def build(output: Path, *, pyodide_version: str = PYODIDE_VERSION) -> list[Path]:
+def build(output: Path) -> list[Path]:
     """Write the static demo into ``output`` and return the files written, sorted."""
 
-    if not re.fullmatch(r"\d+\.\d+\.\d+", pyodide_version):
-        raise ValueError("pyodide_version must be an exact x.y.z release")
-    if pyodide_version not in PYODIDE_INTEGRITY:
-        raise ValueError(f"no integrity hash is recorded for Pyodide {pyodide_version}")
     if output.exists():
         shutil.rmtree(output)
     output.mkdir(parents=True)
@@ -42,14 +36,11 @@ def build(output: Path, *, pyodide_version: str = PYODIDE_VERSION) -> list[Path]
         shutil.copyfile(WEB_ROOT / name, output / name)
     shutil.copyfile(FIXTURE, output / "synthetic_corridor.json")
     (output / "static-api.js").write_text(
-        BRIDGE.read_text(encoding="utf-8").replace("__PYODIDE_VERSION__", pyodide_version),
+        BRIDGE.read_text(encoding="utf-8").replace("__PYODIDE_VERSION__", PYODIDE_VERSION),
         encoding="utf-8",
     )
     (output / "index.html").write_text(
-        static_index(
-            (WEB_ROOT / "index.html").read_text(encoding="utf-8"),
-            pyodide_version=pyodide_version,
-        ),
+        static_index((WEB_ROOT / "index.html").read_text(encoding="utf-8")),
         encoding="utf-8",
     )
     _write_source_archive(output / "chargepath-src.zip")
@@ -58,7 +49,7 @@ def build(output: Path, *, pyodide_version: str = PYODIDE_VERSION) -> list[Path]
     return sorted(path for path in output.iterdir())
 
 
-def static_index(html: str, *, pyodide_version: str) -> str:
+def static_index(html: str) -> str:
     """Make asset links relative and load Pyodide plus the bridge before the app script."""
 
     html = html.replace('href="/"', 'href="./"')
@@ -67,8 +58,8 @@ def static_index(html: str, *, pyodide_version: str) -> str:
     if html.count(marker) != 1 or "/api/" in html:
         raise ValueError("index.html no longer matches the static build's expectations")
     loader = (
-        f'<script src="https://cdn.jsdelivr.net/pyodide/v{pyodide_version}/full/pyodide.js" '
-        f'integrity="{PYODIDE_INTEGRITY[pyodide_version]}" crossorigin="anonymous"></script>\n    '
+        f'<script src="https://cdn.jsdelivr.net/pyodide/v{PYODIDE_VERSION}/full/pyodide.js" '
+        f'integrity="{PYODIDE_SRI}" crossorigin="anonymous"></script>\n    '
         '<script src="static-api.js"></script>\n    '
     )
     return html.replace(marker, loader + marker)
@@ -80,6 +71,7 @@ def _write_source_archive(target: Path) -> None:
         for path in sorted(PACKAGE_ROOT.rglob("*.py")):
             relative = path.relative_to(PACKAGE_ROOT.parent).as_posix()
             info = zipfile.ZipInfo(relative, date_time=(1980, 1, 1, 0, 0, 0))
+            # writestr() keeps a ZipInfo's own method, which defaults to stored.
             info.compress_type = zipfile.ZIP_DEFLATED
             archive.writestr(info, path.read_bytes())
 
@@ -87,9 +79,8 @@ def _write_source_archive(target: Path) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=REPOSITORY_ROOT / "outputs" / "static-demo")
-    parser.add_argument("--pyodide-version", default=PYODIDE_VERSION)
     args = parser.parse_args()
-    written = build(args.output, pyodide_version=args.pyodide_version)
+    written = build(args.output)
     print(f"Static demo written to {args.output} ({len(written)} files). It is not deployed.")
 
 

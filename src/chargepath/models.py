@@ -168,7 +168,11 @@ class RoadLeg:
 
 @dataclass(frozen=True, slots=True)
 class ChargingStop:
+    """One charging session. ``node_index`` is the position in ``RoutePlan.node_ids`` where it
+    happens, so a plan that passes the same station twice still says which visit charges."""
+
     station_id: str
+    node_index: int
     arrival_soc_pct: float
     departure_soc_pct: float
     energy_added_kwh: float
@@ -177,6 +181,12 @@ class ChargingStop:
     def __post_init__(self) -> None:
         if not isinstance(self.station_id, str) or not self.station_id.strip():
             raise ValueError("charging-stop station_id must not be empty")
+        if (
+            isinstance(self.node_index, bool)
+            or not isinstance(self.node_index, int)
+            or self.node_index < 0
+        ):
+            raise ValueError("charging-stop node_index must be a non-negative integer")
         numeric_values = (
             self.arrival_soc_pct,
             self.departure_soc_pct,

@@ -6,7 +6,6 @@ import argparse
 import json
 import sys
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from importlib.resources import files
@@ -21,27 +20,19 @@ from chargepath.demo.services import (
     FixturePlanningService,
     IntegrationPlanningService,
     PlanningService,
-    plan_response,
+    api_response,
 )
 from chargepath.fixtures import load_synthetic_scenario
 from chargepath.providers.osrm import DEFAULT_OSRM_ENDPOINT
 
 DEFAULT_PORT = 8743
-HEALTH_API_VERSION = 3
-
-
-@dataclass(frozen=True, slots=True)
-class DemoServerConfig:
-    service: PlanningService
-    port: int = DEFAULT_PORT
-
-    def __post_init__(self) -> None:
-        if (
-            isinstance(self.port, bool)
-            or not isinstance(self.port, int)
-            or not 0 <= self.port <= 65_535
-        ):
-            raise ValueError("port must be between 0 and 65535")
+STATIC_ASSETS = {
+    "/": ("index.html", "text/html; charset=utf-8"),
+    "/app.css": ("app.css", "text/css; charset=utf-8"),
+    "/app.js": ("app.js", "text/javascript; charset=utf-8"),
+    "/leaflet.css": ("leaflet.css", "text/css; charset=utf-8"),
+    "/leaflet.js": ("leaflet.js", "text/javascript; charset=utf-8"),
+}
 
 
 class DemoHttpServer(ThreadingHTTPServer):
@@ -53,37 +44,18 @@ class DemoRequestHandler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:  # noqa: N802
         path = self.path.split("?", maxsplit=1)[0]
-        if path == "/api/config":
-            self._send_json(HTTPStatus.OK, self._demo_server.service.public_config())
-            return
-        if path == "/health":
-            self._send_json(
-                HTTPStatus.OK,
-                {
-                    "status": "ok",
-                    "service": "chargepath-demo",
-                    "api_version": HEALTH_API_VERSION,
-                },
-            )
-            return
-        assets = {
-            "/": ("index.html", "text/html; charset=utf-8"),
-            "/app.css": ("app.css", "text/css; charset=utf-8"),
-            "/app.js": ("app.js", "text/javascript; charset=utf-8"),
-            "/leaflet.css": ("leaflet.css", "text/css; charset=utf-8"),
-            "/leaflet.js": ("leaflet.js", "text/javascript; charset=utf-8"),
-        }
-        asset = assets.get(path)
+        asset = STATIC_ASSETS.get(path)
         if asset is None:
-            self._send_json(HTTPStatus.NOT_FOUND, {"error": "Not found"})
+            self._send_api("GET", path, b"")
             return
         name, content_type = asset
         payload = files("chargepath.web").joinpath(name).read_bytes()
         self._send_bytes(HTTPStatus.OK, payload, content_type=content_type)
 
     def do_POST(self) -> None:  # noqa: N802
-        if self.path.split("?", maxsplit=1)[0] != "/api/plan":
-            self._send_json(HTTPStatus.NOT_FOUND, {"error": "Not found"})
+        path = self.path.split("?", maxsplit=1)[0]
+        if path != "/api/plan":
+            self._send_api("POST", path, b"")
             return
         if self.headers.get_content_type() != "application/json":
             self._send_json(
@@ -106,17 +78,12 @@ class DemoRequestHandler(BaseHTTPRequestHandler):
                 {"error": f"Request body must be between 1 and {MAX_REQUEST_BYTES} bytes"},
             )
             return
-        try:
-            payload = json.loads(self.rfile.read(byte_count))
-        except (json.JSONDecodeError, UnicodeDecodeError, ValueError) as error:
-            self._send_json(HTTPStatus.BAD_REQUEST, {"error": str(error) or "Invalid request"})
-            return
-        status, result = plan_response(self._demo_server.service, payload)
-        self._send_json(HTTPStatus(status), result)
+        self._send_api("POST", path, self.rfile.read(byte_count))
 
-    @property
-    def _demo_server(self) -> DemoHttpServer:
-        return cast(DemoHttpServer, self.server)
+    def _send_api(self, method: str, path: str, body: bytes) -> None:
+        service = cast(DemoHttpServer, self.server).service
+        status, payload = api_response(service, method, path, body)
+        self._send_json(HTTPStatus(status), payload)
 
     def _send_json(self, status: HTTPStatus, payload: Mapping[str, object]) -> None:
         body = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
@@ -145,10 +112,11 @@ class DemoRequestHandler(BaseHTTPRequestHandler):
         return
 
 
-def create_server(config: DemoServerConfig) -> DemoHttpServer:
+def create_server(service: PlanningService, port: int = DEFAULT_PORT) -> DemoHttpServer:
     """Create a server that can only listen on IPv4 loopback."""
-    server = DemoHttpServer(("127.0.0.1", config.port), DemoRequestHandler)
-    server.service = config.service
+
+    server = DemoHttpServer(("127.0.0.1", port), DemoRequestHandler)
+    server.service = service
     return server
 
 
@@ -216,8 +184,8 @@ def main(argv: Sequence[str] | None = None) -> None:
     args = parser.parse_args(argv)
     try:
         service = _service_from_args(args)
-        server = create_server(DemoServerConfig(service=service, port=cast(int, args.port)))
-    except (OSError, ValueError, json.JSONDecodeError) as error:
+        server = create_server(service, cast(int, args.port))
+    except (OSError, OverflowError, ValueError, json.JSONDecodeError) as error:
         parser.error(str(error))
     host = cast(str, server.server_address[0])
     port = server.server_address[1]

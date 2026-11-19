@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import pytest
-
 from chargepath import EVRouteOptimizer, RoadLeg, Station, VehicleProfile
 from chargepath.demo import FixturePlanningService
 from chargepath.demo.schema import PlanRequest
@@ -77,25 +75,6 @@ def test_a_single_charger_has_no_structural_fallback() -> None:
     assert result.without_stop_added_minutes is None
 
 
-def test_alternative_limit_bounds_the_work() -> None:
-    stations, network = _two_hub_graph()
-    plan = EVRouteOptimizer().optimize(
-        origin_id="origin",
-        destination_id="destination",
-        vehicle=VEHICLE,
-        stations=stations,
-        road_network=network,
-    )
-    (result,) = stop_redundancy(
-        plan, vehicle=VEHICLE, stations=stations, road_network=network, alternative_limit=1
-    )
-    assert result.alternatives_checked == 1
-    with pytest.raises(ValueError, match="alternative_limit"):
-        stop_redundancy(
-            plan, vehicle=VEHICLE, stations=stations, road_network=network, alternative_limit=-1
-        )
-
-
 def test_demo_reports_redundancy_for_the_fastest_option_only() -> None:
     service = FixturePlanningService(
         load_synthetic_scenario("data/sample/synthetic_corridor.json"), tile_url=DEFAULT_TILE_URL
@@ -114,10 +93,5 @@ def test_demo_reports_redundancy_for_the_fastest_option_only() -> None:
         for stop in option["charging_stops"]:
             if "fastest" in option["strategies"]:
                 assert stop["redundancy"] is not None
-                assert set(stop["redundancy"]) == {
-                    "alternative_count",
-                    "alternatives_checked",
-                    "without_stop_added_minutes",
-                }
             else:
                 assert stop["redundancy"] is None

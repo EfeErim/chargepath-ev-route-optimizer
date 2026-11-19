@@ -1,18 +1,20 @@
 import json
 import shutil
+from dataclasses import replace
 from pathlib import Path
+from typing import Any
 
 import pytest
 
-from chargepath import RoadLeg, ShortestDrivingTimeBaseline, VehicleProfile
+from chargepath import RoadLeg, RoutePlan, ShortestDrivingTimeBaseline, VehicleProfile, evaluation
 from chargepath.evaluation import (
     PLAN_ALGORITHMS,
     REQUIRED_TOPOLOGY_CLASSES,
     build_correctness_artifact,
-    build_runtime_artifact,
-    canonical_json_bytes,
+    evaluate_plan,
     load_benchmark_manifest,
 )
+from chargepath.evidence import canonical_json_bytes
 from chargepath.providers import StaticRoadNetwork
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
@@ -24,8 +26,6 @@ SYNTHETIC_RUNTIME = REPOSITORY_ROOT / "docs/benchmarks/synthetic/runtime_2026-11
 def test_manifest_pins_fixture_and_covers_every_required_class() -> None:
     manifest = load_benchmark_manifest(SYNTHETIC_MANIFEST)
 
-    assert manifest.benchmark_id == "chargepath-m3-synthetic-v1"
-    assert len(manifest.fixture_sha256) == 64
     assert len(manifest.cases) == len(REQUIRED_TOPOLOGY_CLASSES) == 8
     assert {case.topology_class for case in manifest.cases} == REQUIRED_TOPOLOGY_CLASSES
     assert {case.expected_feasibility_source["kind"] for case in manifest.cases} == {
@@ -74,11 +74,10 @@ def test_shortest_driving_time_baseline_uses_full_node_path_tie_break() -> None:
     assert plan.node_ids == ("origin", "bravo", "destination")
 
 
-def test_correctness_artifact_reconciles_and_passes_reference_gates() -> None:
-    manifest = load_benchmark_manifest(SYNTHETIC_MANIFEST)
-    artifact = build_correctness_artifact(manifest)
+def test_committed_correctness_evidence_matches_regenerated_bytes() -> None:
+    artifact = build_correctness_artifact(load_benchmark_manifest(SYNTHETIC_MANIFEST))
 
-    assert artifact["case_count"] == 8
+    assert SYNTHETIC_CORRECTNESS.read_bytes() == canonical_json_bytes(artifact)
     assert artifact["result_count"] == 8 * len(PLAN_ALGORITHMS)
     assert artifact["correctness_gates"] == {
         "all_returned_plans_verified": True,
@@ -87,17 +86,6 @@ def test_correctness_artifact_reconciles_and_passes_reference_gates() -> None:
         "exact_algorithms_match_reference": True,
         "input_result_counts_reconcile": True,
     }
-    for summary in artifact["algorithm_summaries"].values():
-        assert summary["returned_plans"] == summary["verified_plans"]
-        assert summary["reference_infeasible_returned"] == 0
-
-
-def test_committed_correctness_evidence_matches_regenerated_bytes() -> None:
-    manifest = load_benchmark_manifest(SYNTHETIC_MANIFEST)
-
-    regenerated = canonical_json_bytes(build_correctness_artifact(manifest))
-
-    assert SYNTHETIC_CORRECTNESS.read_bytes() == regenerated
 
 
 def test_committed_runtime_evidence_is_bound_to_manifest_and_protocol() -> None:
@@ -112,43 +100,37 @@ def test_committed_runtime_evidence_is_bound_to_manifest_and_protocol() -> None:
     assert runtime["protocol"]["network_access"] == "none"
 
 
-def test_soc_grid_sensitivity_changes_only_resolution_and_exposes_boundary() -> None:
-    artifact = build_correctness_artifact(load_benchmark_manifest(SYNTHETIC_MANIFEST))
-    sensitivity = artifact["soc_grid_sensitivity"][0]
-    runs = sensitivity["runs"]
-
-    assert sensitivity["factor"] == "soc_step_pct"
-    assert [run["soc_step_pct"] for run in runs] == [10, 5, 2]
-    assert [run["feasible"] for run in runs] == [False, False, True]
-    assert runs[2]["plan"]["arrival_soc_pct"] == 12
-
-
-def test_pruning_audit_compares_against_unpruned_small_graph() -> None:
-    artifact = build_correctness_artifact(load_benchmark_manifest(SYNTHETIC_MANIFEST))
-    audit = artifact["pruning_audits"][0]
-
-    assert audit["unpruned_candidate_ids"] == ["fast_near", "slow_far"]
-    assert audit["pruned_candidate_ids"] == ["fast_near"]
-    assert audit["unpruned"]["feasible"] is True
-    assert audit["pruned"]["feasible"] is True
-    assert audit["same_plan"] is True
-    assert audit["pruning_time_gap_minutes"] == 0
-
-
-def test_runtime_artifact_declares_protocol_environment_median_and_p95() -> None:
-    artifact = build_runtime_artifact(
-        load_benchmark_manifest(SYNTHETIC_MANIFEST),
-        warmup_count=0,
-        measured_repetitions=2,
-        command="test protocol",
+def test_reserve_violations_are_counted_by_the_replay(monkeypatch: pytest.MonkeyPatch) -> None:
+    # A planner that ignores the reserve returns a plan arriving at 5%; the replay must count the
+    # leg that ends below the 10% reserve rather than the evaluation writing a fixed zero.
+    vehicle = VehicleProfile(
+        name="Reserve EV",
+        usable_battery_kwh=50,
+        initial_soc_pct=90,
+        consumption_kwh_per_100km=20,
+        max_dc_power_kw=100,
+        reserve_soc_pct=10,
+        energy_safety_factor=1.0,
     )
+    network = StaticRoadNetwork([RoadLeg("origin", "destination", 212.5, 120)])
 
-    assert artifact["protocol"]["warmup_count"] == 0
-    assert artifact["protocol"]["measured_repetitions"] == 2
-    assert artifact["protocol"]["clock"] == "time.perf_counter_ns"
-    assert artifact["environment"]["python_version"]
-    assert artifact["environment"]["platform"]
-    for result in artifact["algorithm_results"]:
-        assert result["median_ms"] >= 0
-        assert result["p95_ms"] >= result["median_ms"]
-        assert len(result["measured_samples_ms"]) == 2
+    def reserve_blind_planner(algorithm: str, **arguments: Any) -> RoutePlan:
+        return ShortestDrivingTimeBaseline(soc_step_pct=arguments["soc_step_pct"]).optimize(
+            origin_id=arguments["origin_id"],
+            destination_id=arguments["destination_id"],
+            vehicle=replace(arguments["vehicle"], reserve_soc_pct=0),
+            road_network=arguments["road_network"],
+        )
+
+    monkeypatch.setattr(evaluation, "plan_route", reserve_blind_planner)
+    plan, violations = evaluate_plan(
+        "shortest_driving_time",
+        origin_id="origin",
+        destination_id="destination",
+        vehicle=vehicle,
+        stations={},
+        road_network=network,
+        soc_step_pct=5,
+    )
+    assert plan.arrival_soc_pct == 5
+    assert violations == 1

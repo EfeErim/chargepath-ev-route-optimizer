@@ -9,13 +9,9 @@ description = "A local-first EV trip optimizer that selects charging stops over 
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
-license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md", "licenses/leaflet-BSD-2-Clause.txt"]
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md", "src/chargepath/web/LICENSE-leaflet.txt"]
 authors = [{ name = "Efe Erim" }]
 dependencies = []
-classifiers = [
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.13",
-]
 
 [project.urls]
 Homepage = "https://efeerim.github.io/chargepath-ev-route-optimizer/"
@@ -32,16 +28,14 @@ dev = [
   "pytest==9.2.0",
   "ruff==0.17.4",
 ]
-# Only for browser_tests/, which also needs `python -m playwright install chromium` and network.
-browser = [
-  "playwright==1.64.1",
-]
+browser = ["playwright==1.64.1"]
+pilot = ["pyarrow==21.0.0"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
-"chargepath.web" = ["*.html", "*.css", "*.js"]
+"chargepath.web" = ["*.html", "*.css", "*.js", "LICENSE-leaflet.txt"]
 
 [tool.setuptools.data-files]
 "share/chargepath" = ["data/sample/synthetic_corridor.json"]
@@ -49,7 +43,6 @@ where = ["src"]
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
-addopts = "-ra"
 
 [tool.ruff]
 target-version = "py311"

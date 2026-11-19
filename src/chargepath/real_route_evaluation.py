@@ -9,7 +9,6 @@ from __future__ import annotations
 import hashlib
 import json
 import platform
-import statistics
 import sys
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
@@ -18,13 +17,8 @@ from pathlib import Path
 from typing import Any
 
 from chargepath.baselines import ShortestDrivingTimeBaseline
-from chargepath.evaluation import (
-    OPTION_ALGORITHMS,
-    evaluate_plan,
-    nearest_rank,
-    plan_route,
-    time_passes,
-)
+from chargepath.evaluation import OPTION_ALGORITHMS, evaluate_plan, plan_route
+from chargepath.evidence import summary_stats, time_passes, timing_summary
 from chargepath.models import NoFeasibleRouteError, RoutePlan, Station, VehicleProfile
 from chargepath.providers.static import StaticRoadNetwork
 from chargepath.real_route_collection import (
@@ -32,7 +26,6 @@ from chargepath.real_route_collection import (
     StoredGraph,
     load_stored_graph,
     load_verified_graph,
-    timing_summary,
 )
 
 FASTEST = "fastest"
@@ -167,7 +160,9 @@ def _plan_fingerprint(plan: RoutePlan) -> tuple[object, ...]:
     )
 
 
-def _plan_metrics(plan: RoutePlan, *, reference_km: float | None) -> dict[str, Any]:
+def _plan_metrics(
+    plan: RoutePlan, *, reference_km: float | None, reserve_violations: int
+) -> dict[str, Any]:
     return {
         "outcome": "plan",
         "total_minutes": plan.total_minutes,
@@ -177,7 +172,7 @@ def _plan_metrics(plan: RoutePlan, *, reference_km: float | None) -> dict[str, A
         "charging_stops": len(plan.charging_stops),
         "arrival_soc_pct": plan.arrival_soc_pct,
         "detour_km": None if reference_km is None else plan.total_distance_km - reference_km,
-        "reserve_violations": 0,
+        "reserve_violations": reserve_violations,
     }
 
 
@@ -205,7 +200,7 @@ def run_trip_on_graph(
     fingerprints: set[tuple[object, ...]] = set()
     for algorithm in algorithms:
         try:
-            plan = evaluate_plan(
+            plan, reserve_violations = evaluate_plan(
                 algorithm,
                 origin_id="origin",
                 destination_id="destination",
@@ -218,7 +213,9 @@ def run_trip_on_graph(
             results[algorithm] = {"outcome": "infeasible"}
             continue
         # Replay failures propagate as defects, not reportable trip outcomes.
-        results[algorithm] = _plan_metrics(plan, reference_km=reference_km)
+        results[algorithm] = _plan_metrics(
+            plan, reference_km=reference_km, reserve_violations=reserve_violations
+        )
         if algorithm in OPTION_ALGORITHMS:
             fingerprints.add(_plan_fingerprint(plan))
     return {
@@ -238,14 +235,18 @@ def _round_value(value: Any) -> Any:
 
 
 def check_gates(trips: Sequence[Mapping[str, Any]]) -> None:
-    """Raise on any result the benchmark treats as a defect: exact must dominate greedy."""
+    """Raise on any result the benchmark treats as a defect: a replayed reserve violation, or an
+    exact plan slower than another algorithm's."""
 
     for trip in trips:
         results = trip["results"]
+        label = f"{trip['experiment']}/{trip['variant']}/{trip['route_id']}"
+        for algorithm, result in results.items():
+            if result.get("reserve_violations"):
+                raise EvaluationDefectError(f"{label}: {algorithm} plan violates the reserve")
         fastest = results.get(FASTEST)
         if fastest is None:
             continue
-        label = f"{trip['experiment']}/{trip['variant']}/{trip['route_id']}"
         for algorithm, result in results.items():
             if result["outcome"] != "plan":
                 continue
@@ -253,19 +254,6 @@ def check_gates(trips: Sequence[Mapping[str, Any]]) -> None:
                 raise EvaluationDefectError(f"{label}: {algorithm} planned but fastest did not")
             if fastest["total_minutes"] > result["total_minutes"] + MINUTE_TOLERANCE:
                 raise EvaluationDefectError(f"{label}: fastest is slower than {algorithm}")
-
-
-def summary_stats(values: list[float]) -> dict[str, Any]:
-    if not values:
-        return {"count": 0, "median": None, "p90": None, "minimum": None, "maximum": None}
-    ordered = sorted(values)
-    return {
-        "count": len(ordered),
-        "median": round(statistics.median(ordered), 3),
-        "p90": round(nearest_rank(ordered, 0.9), 3),
-        "minimum": round(ordered[0], 3),
-        "maximum": round(ordered[-1], 3),
-    }
 
 
 def _savings(trips: Sequence[Mapping[str, Any]]) -> dict[str, Any]:

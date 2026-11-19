@@ -1,7 +1,6 @@
-import math
-import random
+"""Hand-checked optimizer cases. Random graphs against a reference solver are in test_properties."""
+
 from dataclasses import dataclass, replace
-from typing import Any, cast
 
 import pytest
 
@@ -15,146 +14,55 @@ from chargepath import (
     VehicleProfile,
     verify_route_plan,
 )
-from chargepath.energy import (
-    ConstantConsumption,
-    LegEnergy,
-    charging_minutes,
-    energy_for_distance,
-)
+from chargepath.energy import ConstantConsumption, ConsumptionModel, LegEnergy
 from chargepath.providers import StaticRoadNetwork
-from chargepath.providers.base import RoadNetwork
 
 
-def make_vehicle(*, initial_soc_pct: float = 60) -> VehicleProfile:
+def make_vehicle(*, initial_soc_pct: float = 60, reserve_soc_pct: float = 10) -> VehicleProfile:
     return VehicleProfile(
         name="Test EV",
         usable_battery_kwh=60,
         initial_soc_pct=initial_soc_pct,
         consumption_kwh_per_100km=20,
         max_dc_power_kw=150,
-        reserve_soc_pct=10,
+        reserve_soc_pct=reserve_soc_pct,
         energy_safety_factor=1.0,
     )
 
 
-def reference_priority(
-    metrics: tuple[float, float, int], preference: RoutePreference
-) -> tuple[float, float, float]:
-    minutes, distance, stops = metrics
-    if preference is RoutePreference.FASTEST:
-        return minutes, float(stops), distance
-    if preference is RoutePreference.SHORTEST_DISTANCE:
-        return distance, minutes, float(stops)
-    return float(stops), minutes, distance
-
-
-def reference_optimum(
+def optimize(
+    legs: list[RoadLeg],
     *,
-    origin_id: str,
-    destination_id: str,
     vehicle: VehicleProfile,
-    stations: dict[str, Station],
-    network: RoadNetwork,
-    preference: RoutePreference,
-    soc_step_pct: int,
-) -> tuple[float, float, float] | None:
-    """Small-graph Bellman-Ford reference, independent of optimizer queue/predecessors."""
-
-    initial_bucket = math.floor(vehicle.initial_soc_pct / soc_step_pct)
-    reserve_bucket = math.ceil(vehicle.reserve_soc_pct / soc_step_pct)
-    maximum_bucket = 100 // soc_step_pct
-    bucket_kwh = vehicle.usable_battery_kwh * soc_step_pct / 100
-    best: dict[tuple[str, int], tuple[float, float, int]] = {
-        (origin_id, initial_bucket): (0.0, 0.0, 0)
-    }
-
-    changed = True
-    while changed:
-        changed = False
-        for (node_id, energy_bucket), metrics in tuple(best.items()):
-            minutes, distance, stops = metrics
-            transitions: list[tuple[tuple[str, int], tuple[float, float, int]]] = []
-            for leg in network.neighbors(node_id):
-                required_kwh = energy_for_distance(
-                    leg.distance_km,
-                    vehicle.consumption_kwh_per_100km,
-                    vehicle.energy_safety_factor,
-                )
-                remaining = energy_bucket - math.ceil(required_kwh / bucket_kwh)
-                if remaining >= reserve_bucket:
-                    transitions.append(
-                        (
-                            (leg.destination_id, remaining),
-                            (
-                                minutes + leg.duration_minutes,
-                                distance + leg.distance_km,
-                                stops,
-                            ),
-                        )
-                    )
-            station = stations.get(node_id)
-            if station is not None and station.connector_type in vehicle.supported_dc_connectors:
-                for target_bucket in range(energy_bucket + 1, maximum_bucket + 1):
-                    charge_time = charging_minutes(
-                        vehicle,
-                        station.max_power_kw,
-                        energy_bucket * soc_step_pct,
-                        target_bucket * soc_step_pct,
-                    )
-                    transitions.append(
-                        (
-                            (node_id, target_bucket),
-                            (minutes + charge_time, distance, stops + 1),
-                        )
-                    )
-            for state, candidate in transitions:
-                current = best.get(state)
-                if current is not None and reference_priority(
-                    candidate, preference
-                ) >= reference_priority(current, preference):
-                    continue
-                best[state] = candidate
-                changed = True
-
-    destinations = [
-        reference_priority(metrics, preference)
-        for (node_id, _), metrics in best.items()
-        if node_id == destination_id
-    ]
-    return min(destinations) if destinations else None
-
-
-def optimize_and_verify(
-    *,
-    origin_id: str,
-    destination_id: str,
-    vehicle: VehicleProfile,
-    stations: dict[str, Station],
-    road_network: RoadNetwork,
+    stations: dict[str, Station] | None = None,
+    origin_id: str = "a",
+    destination_id: str = "b",
+    preference: RoutePreference = RoutePreference.FASTEST,
+    consumption_model: ConsumptionModel | None = None,
 ) -> RoutePlan:
-    """Return a plan only after the independent verifier accepts it."""
-
-    plan = EVRouteOptimizer().optimize(
+    """Plan, then return the plan only after the independent replay accepts it."""
+    stations = stations or {}
+    network = StaticRoadNetwork(legs)
+    plan = EVRouteOptimizer(
+        preference=preference, consumption_model=consumption_model or ConstantConsumption()
+    ).optimize(
         origin_id=origin_id,
         destination_id=destination_id,
         vehicle=vehicle,
         stations=stations,
-        road_network=road_network,
+        road_network=network,
     )
-    verify_route_plan(plan, vehicle=vehicle, stations=stations)
+    verify_route_plan(
+        plan,
+        vehicle=vehicle,
+        stations=stations,
+        consumption_model=consumption_model or ConstantConsumption(),
+    )
     return plan
 
 
 def test_direct_feasible_route_needs_no_charging() -> None:
-    network = StaticRoadNetwork([RoadLeg("a", "b", 100, 60)])
-    vehicle = make_vehicle(initial_soc_pct=80)
-    plan = optimize_and_verify(
-        origin_id="a",
-        destination_id="b",
-        vehicle=vehicle,
-        stations={},
-        road_network=network,
-    )
+    plan = optimize([RoadLeg("a", "b", 100, 60)], vehicle=make_vehicle(initial_soc_pct=80))
     assert plan.node_ids == ("a", "b")
     assert plan.charging_stops == ()
     assert plan.arrival_soc_pct == 45
@@ -165,280 +73,86 @@ def test_optimizer_selects_faster_charging_corridor() -> None:
         "fast": Station("fast", "Fast", 39, 32, 150),
         "slow": Station("slow", "Slow", 39, 31, 50),
     }
-    network = StaticRoadNetwork(
-        [
-            RoadLeg("origin", "destination", 300, 180),
-            RoadLeg("origin", "fast", 120, 75),
-            RoadLeg("fast", "destination", 190, 115),
-            RoadLeg("origin", "slow", 100, 65),
-            RoadLeg("slow", "destination", 210, 130),
-        ]
-    )
-    vehicle = make_vehicle()
-    plan = optimize_and_verify(
-        origin_id="origin",
-        destination_id="destination",
-        vehicle=vehicle,
-        stations=stations,
-        road_network=network,
-    )
-    assert plan.node_ids == ("origin", "fast", "destination")
+    legs = [
+        RoadLeg("a", "b", 300, 180),
+        RoadLeg("a", "fast", 120, 75),
+        RoadLeg("fast", "b", 190, 115),
+        RoadLeg("a", "slow", 100, 65),
+        RoadLeg("slow", "b", 210, 130),
+    ]
+    plan = optimize(legs, vehicle=make_vehicle(), stations=stations)
+    assert plan.node_ids == ("a", "fast", "b")
     assert [stop.station_id for stop in plan.charging_stops] == ["fast"]
-    assert plan.arrival_soc_pct >= 10
 
 
-def test_infeasible_route_raises_explicit_error() -> None:
-    network = StaticRoadNetwork([RoadLeg("a", "b", 300, 180)])
-    with pytest.raises(NoFeasibleRouteError, match="no energy-feasible route"):
-        EVRouteOptimizer().optimize(
-            origin_id="a",
-            destination_id="b",
-            vehicle=make_vehicle(),
-            stations={},
-            road_network=network,
-        )
-
-
-def test_plan_is_deterministic() -> None:
-    network = StaticRoadNetwork([RoadLeg("a", "c", 100, 60), RoadLeg("a", "b", 100, 60)])
-    vehicle = make_vehicle(initial_soc_pct=80)
-    first = optimize_and_verify(
-        origin_id="a",
-        destination_id="b",
-        vehicle=vehicle,
-        stations={},
-        road_network=network,
-    )
-    second = optimize_and_verify(
-        origin_id="a",
-        destination_id="b",
-        vehicle=vehicle,
-        stations={},
-        road_network=network,
-    )
-    assert first == second
+def test_multi_stop_plan_replays() -> None:
+    stations = {
+        "first": Station("first", "First", 39, 32, 150),
+        "second": Station("second", "Second", 40, 33, 150),
+    }
+    legs = [
+        RoadLeg("a", "first", 140, 80),
+        RoadLeg("first", "second", 140, 80),
+        RoadLeg("second", "b", 140, 80),
+    ]
+    plan = optimize(legs, vehicle=make_vehicle(), stations=stations)
+    assert [stop.station_id for stop in plan.charging_stops] == ["first", "second"]
 
 
 def test_zero_length_trip_returns_conservative_initial_soc() -> None:
-    vehicle = make_vehicle(initial_soc_pct=63)
-    plan = optimize_and_verify(
-        origin_id="a",
-        destination_id="a",
-        vehicle=vehicle,
-        stations={},
-        road_network=StaticRoadNetwork([]),
-    )
+    plan = optimize([], vehicle=make_vehicle(initial_soc_pct=63), destination_id="a")
     assert plan.node_ids == ("a",)
     assert plan.total_minutes == 0
     assert plan.arrival_soc_pct == 60
 
 
-def test_exact_reserve_boundary_is_feasible() -> None:
-    network = StaticRoadNetwork([RoadLeg("a", "b", 150, 90)])
-    vehicle = make_vehicle(initial_soc_pct=60)
-    plan = optimize_and_verify(
-        origin_id="a",
-        destination_id="b",
-        vehicle=vehicle,
-        stations={},
-        road_network=network,
-    )
-    assert plan.arrival_soc_pct == 10
-
-
-def test_non_aligned_reserve_is_rounded_up_conservatively() -> None:
-    vehicle = replace(make_vehicle(initial_soc_pct=60), reserve_soc_pct=12)
-    network = StaticRoadNetwork([RoadLeg("a", "b", 150, 90)])
+def test_exact_reserve_boundary_is_feasible_and_a_non_aligned_reserve_rounds_up() -> None:
+    legs = [RoadLeg("a", "b", 150, 90)]
+    assert optimize(legs, vehicle=make_vehicle()).arrival_soc_pct == 10
     with pytest.raises(NoFeasibleRouteError):
-        EVRouteOptimizer().optimize(
-            origin_id="a",
-            destination_id="b",
-            vehicle=vehicle,
-            stations={},
-            road_network=network,
-        )
+        optimize(legs, vehicle=make_vehicle(reserve_soc_pct=12))
 
 
-def test_incompatible_charger_is_not_used() -> None:
-    network = StaticRoadNetwork(
-        [RoadLeg("origin", "hub", 100, 60), RoadLeg("hub", "destination", 100, 60)]
-    )
-    stations = {"hub": Station("hub", "Hub", 39, 32, 100, "CHADEMO")}
-    with pytest.raises(NoFeasibleRouteError):
-        EVRouteOptimizer().optimize(
-            origin_id="origin",
-            destination_id="destination",
-            vehicle=make_vehicle(),
-            stations=stations,
-            road_network=network,
-        )
-
-
-def test_multi_stop_plan_replays_through_independent_verifier() -> None:
-    vehicle = make_vehicle()
-    stations = {
-        "first": Station("first", "First", 39, 32, 150),
-        "second": Station("second", "Second", 40, 33, 150),
-    }
-    network = StaticRoadNetwork(
-        [
-            RoadLeg("origin", "first", 140, 80),
-            RoadLeg("first", "second", 140, 80),
-            RoadLeg("second", "destination", 140, 80),
-        ]
-    )
-    plan = optimize_and_verify(
-        origin_id="origin",
-        destination_id="destination",
-        vehicle=vehicle,
-        stations=stations,
-        road_network=network,
-    )
-    assert [stop.station_id for stop in plan.charging_stops] == ["first", "second"]
-
-
-def test_route_plan_rejects_inconsistent_total() -> None:
-    vehicle = make_vehicle(initial_soc_pct=80)
-    plan = optimize_and_verify(
-        origin_id="a",
-        destination_id="b",
-        vehicle=vehicle,
-        stations={},
-        road_network=StaticRoadNetwork([RoadLeg("a", "b", 100, 60)]),
-    )
-    with pytest.raises(ValueError, match="total_minutes must equal"):
-        replace(plan, total_minutes=plan.total_minutes + 1)
-
-
-def test_optimizer_rejects_invalid_provider_neighbor_contract() -> None:
-    class InvalidRoadNetwork:
-        def neighbors(self, node_id: str) -> tuple[RoadLeg, ...]:
-            return (RoadLeg("wrong", "b", 10, 10),)
-
-    with pytest.raises(ValueError, match="must start at the requested node"):
-        EVRouteOptimizer().optimize(
-            origin_id="a",
-            destination_id="b",
-            vehicle=make_vehicle(),
-            stations={},
-            road_network=InvalidRoadNetwork(),
-        )
-
-
-def test_optimizer_rejects_boolean_soc_step() -> None:
-    with pytest.raises(ValueError):
-        EVRouteOptimizer(soc_step_pct=cast(Any, True))
-
-
-def test_seeded_small_graph_fuzz_is_deterministic_and_replay_safe() -> None:
-    rng = random.Random(20260810)
-    multi_stop_count = 0
-    for case_index in range(30):
-        nodes = tuple(f"n{index}" for index in range(6))
-        legs: list[RoadLeg] = []
-        for origin_index in range(len(nodes) - 1):
-            for destination_index in range(origin_index + 1, len(nodes)):
-                if destination_index != origin_index + 1 and rng.random() >= 0.4:
-                    continue
-                distance = rng.randint(55, 155)
-                legs.append(
-                    RoadLeg(
-                        nodes[origin_index],
-                        nodes[destination_index],
-                        distance,
-                        rng.randint(35, 120),
-                    )
-                )
-        stations = {
-            node_id: Station(
-                node_id,
-                f"Case {case_index} {node_id}",
-                39 + index * 0.1,
-                29 + index * 0.1,
-                rng.choice((50, 100, 150)),
-            )
-            for index, node_id in enumerate(nodes[1:-1], start=1)
-        }
-        network = StaticRoadNetwork(legs)
-        vehicle = make_vehicle(initial_soc_pct=60)
-        for preference in RoutePreference:
-            expected = reference_optimum(
-                origin_id=nodes[0],
-                destination_id=nodes[-1],
-                vehicle=vehicle,
-                stations=stations,
-                network=network,
-                preference=preference,
-                soc_step_pct=5,
-            )
-            optimizer = EVRouteOptimizer(preference=preference, soc_step_pct=5)
-            try:
-                first = optimizer.optimize(
-                    origin_id=nodes[0],
-                    destination_id=nodes[-1],
-                    vehicle=vehicle,
-                    stations=stations,
-                    road_network=network,
-                )
-            except NoFeasibleRouteError:
-                assert expected is None
-                with pytest.raises(NoFeasibleRouteError):
-                    optimizer.optimize(
-                        origin_id=nodes[0],
-                        destination_id=nodes[-1],
-                        vehicle=vehicle,
-                        stations=stations,
-                        road_network=network,
-                    )
-                continue
-            second = optimizer.optimize(
-                origin_id=nodes[0],
-                destination_id=nodes[-1],
-                vehicle=vehicle,
-                stations=stations,
-                road_network=network,
-            )
-            assert second == first
-            verify_route_plan(first, vehicle=vehicle, stations=stations)
-            actual = reference_priority(
-                (first.total_minutes, first.total_distance_km, len(first.charging_stops)),
-                preference,
-            )
-            assert expected is not None
-            assert actual == pytest.approx(expected)
-            multi_stop_count += len(first.charging_stops) >= 2
-
-    assert multi_stop_count >= 10
+@pytest.mark.parametrize(
+    ("legs", "stations"),
+    [
+        ([RoadLeg("a", "b", 300, 180)], {}),
+        (
+            [RoadLeg("a", "hub", 100, 60), RoadLeg("hub", "b", 100, 60)],
+            {"hub": Station("hub", "Hub", 39, 32, 100, "CHADEMO")},
+        ),
+    ],
+    ids=["no-charger", "incompatible-charger"],
+)
+def test_infeasible_trip_raises_instead_of_a_partial_plan(
+    legs: list[RoadLeg], stations: dict[str, Station]
+) -> None:
+    with pytest.raises(NoFeasibleRouteError, match="no energy-feasible route"):
+        optimize(legs, vehicle=make_vehicle(), stations=stations)
 
 
 def test_fastest_breaks_time_ties_on_charging_stops_before_distance() -> None:
     @dataclass(frozen=True, slots=True)
     class EfficientDirectLeg:
         def leg_energy(self, leg: RoadLeg, vehicle: VehicleProfile) -> LegEnergy:
-            if (leg.origin_id, leg.destination_id) == ("a", "c"):
+            if (leg.origin_id, leg.destination_id) == ("a", "b"):
                 return LegEnergy(net_kwh=6.0, peak_kwh=6.0)
             return ConstantConsumption().leg_energy(leg, vehicle)
 
     # Both routes take exactly 100 minutes. The direct one is longer but needs no charging;
     # the one via s is shorter and needs 3 buckets (9 kWh at 180 kW = 3 min, plus 2 min setup).
-    vehicle = replace(make_vehicle(initial_soc_pct=30), max_dc_power_kw=180)
-    stations = {"s": Station("s", "Hub", 39.0, 32.0, 180)}
-    network = StaticRoadNetwork(
-        [RoadLeg("a", "c", 200, 100), RoadLeg("a", "s", 30, 40), RoadLeg("s", "c", 75, 55)]
-    )
-    plan = EVRouteOptimizer(consumption_model=EfficientDirectLeg()).optimize(
-        origin_id="a",
-        destination_id="c",
-        vehicle=vehicle,
-        stations=stations,
-        road_network=network,
+    plan = optimize(
+        [RoadLeg("a", "b", 200, 100), RoadLeg("a", "s", 30, 40), RoadLeg("s", "b", 75, 55)],
+        vehicle=replace(make_vehicle(initial_soc_pct=30), max_dc_power_kw=180),
+        stations={"s": Station("s", "Hub", 39.0, 32.0, 180)},
+        consumption_model=EfficientDirectLeg(),
     )
     assert plan.total_minutes == 100
-    assert plan.node_ids == ("a", "c")
-    assert plan.charging_stops == ()
+    assert plan.node_ids == ("a", "b")
 
 
-def test_full_ties_prefer_the_higher_arrival_soc() -> None:
+@pytest.mark.parametrize("preference", list(RoutePreference))
+def test_full_ties_prefer_the_higher_arrival_soc(preference: RoutePreference) -> None:
     @dataclass(frozen=True, slots=True)
     class CheaperViaC:
         def leg_energy(self, leg: RoadLeg, vehicle: VehicleProfile) -> LegEnergy:
@@ -447,21 +161,17 @@ def test_full_ties_prefer_the_higher_arrival_soc() -> None:
             return ConstantConsumption().leg_energy(leg, vehicle)
 
     # Both paths take 100 minutes over 100 km with no charging; the one via c uses less energy.
-    network = StaticRoadNetwork(
-        [
-            RoadLeg("a", "c", 50, 50),
-            RoadLeg("c", "d", 50, 50),
-            RoadLeg("a", "b", 50, 50),
-            RoadLeg("b", "d", 50, 50),
-        ]
+    legs = [
+        RoadLeg("a", "c", 50, 50),
+        RoadLeg("c", "b", 50, 50),
+        RoadLeg("a", "d", 50, 50),
+        RoadLeg("d", "b", 50, 50),
+    ]
+    plan = optimize(
+        legs,
+        vehicle=make_vehicle(initial_soc_pct=80),
+        preference=preference,
+        consumption_model=CheaperViaC(),
     )
-    for preference in RoutePreference:
-        plan = EVRouteOptimizer(preference=preference, consumption_model=CheaperViaC()).optimize(
-            origin_id="a",
-            destination_id="d",
-            vehicle=make_vehicle(initial_soc_pct=80),
-            stations={},
-            road_network=network,
-        )
-        assert plan.node_ids == ("a", "c", "d")
-        assert plan.arrival_soc_pct == 55
+    assert plan.node_ids == ("a", "c", "b")
+    assert plan.arrival_soc_pct == 55

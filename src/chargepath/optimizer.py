@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import heapq
 import itertools
-import math
 from dataclasses import dataclass
 from enum import StrEnum
 
@@ -13,9 +12,9 @@ from chargepath.energy import (
     DEFAULT_CONSUMPTION,
     ConsumptionModel,
     LegBucketCache,
+    SocGrid,
     buckets_for_leg,
     charging_minutes,
-    drive_bucket,
     leg_bucket_lookup,
 )
 from chargepath.models import (
@@ -105,7 +104,7 @@ class EVRouteOptimizer:
         stations: dict[str, Station],
         road_network: RoadNetwork,
     ) -> RoutePlan:
-        return self._optimize_with_cache(
+        return self.optimize_with_cache(
             origin_id=origin_id,
             destination_id=destination_id,
             vehicle=vehicle,
@@ -114,7 +113,7 @@ class EVRouteOptimizer:
             required_buckets_cache={},
         )
 
-    def _optimize_with_cache(
+    def optimize_with_cache(
         self,
         *,
         origin_id: str,
@@ -125,29 +124,24 @@ class EVRouteOptimizer:
         required_buckets_cache: LegBucketCache,
     ) -> RoutePlan:
         validation.trip_endpoints(origin_id, destination_id)
+        grid = SocGrid.for_vehicle(vehicle, self.soc_step_pct)
         if origin_id == destination_id:
-            initial_bucket = math.floor(vehicle.initial_soc_pct / self.soc_step_pct)
-            arrival_soc = initial_bucket * self.soc_step_pct
-            return RoutePlan.stationary(origin_id, arrival_soc_pct=float(arrival_soc))
+            return RoutePlan.stationary(origin_id, arrival_soc_pct=grid.soc_pct(grid.initial))
 
-        maximum_bucket = 100 // self.soc_step_pct
-        initial_bucket = math.floor(vehicle.initial_soc_pct / self.soc_step_pct)
-        reserve_bucket = math.ceil(vehicle.reserve_soc_pct / self.soc_step_pct)
-        bucket_kwh = vehicle.usable_battery_kwh * self.soc_step_pct / 100
         leg_lookup = leg_bucket_lookup(
             required_buckets_cache,
             vehicle=vehicle,
             model=self.consumption_model,
-            bucket_kwh=bucket_kwh,
+            bucket_kwh=grid.bucket_kwh,
         )
-        start: State = (origin_id, initial_bucket)
+        start: State = (origin_id, grid.initial)
 
         best_metrics: dict[State, _SearchMetrics] = {start: _SearchMetrics()}
         predecessors: dict[State, tuple[State, Action]] = {}
         queue: list[tuple[Priority, int, State]] = []
         sequence = itertools.count()
         heapq.heappush(
-            queue, (self._priority(_SearchMetrics(), initial_bucket), next(sequence), start)
+            queue, (self._priority(_SearchMetrics(), grid.initial), next(sequence), start)
         )
         destination_state: State | None = None
         # Highest bucket already settled at each node. A state settled earlier has a priority no
@@ -169,19 +163,15 @@ class EVRouteOptimizer:
                 break
 
             for leg in road_network.neighbors(node_id):
-                if leg.origin_id != node_id:
-                    raise ValueError("road-network neighbor leg must start at the requested node")
-                remaining_bucket = drive_bucket(
+                remaining_bucket = grid.after_leg(
                     energy_bucket,
                     buckets_for_leg(
                         leg_lookup,
                         leg,
                         vehicle=vehicle,
                         model=self.consumption_model,
-                        bucket_kwh=bucket_kwh,
+                        bucket_kwh=grid.bucket_kwh,
                     ),
-                    reserve_bucket=reserve_bucket,
-                    maximum_bucket=maximum_bucket,
                 )
                 if remaining_bucket is None:
                     continue
@@ -198,15 +188,11 @@ class EVRouteOptimizer:
                 )
 
             station = stations.get(node_id)
-            if station is None:
-                continue
-            if station.id != node_id:
-                raise ValueError("station mapping key must match station.id")
-            if energy_bucket >= maximum_bucket:
+            if station is None or energy_bucket >= grid.maximum:
                 continue
             if station.connector_type not in vehicle.supported_dc_connectors:
                 continue
-            for target_bucket in range(energy_bucket + 1, maximum_bucket + 1):
+            for target_bucket in range(energy_bucket + 1, grid.maximum + 1):
                 from_soc = energy_bucket * self.soc_step_pct
                 to_soc = target_bucket * self.soc_step_pct
                 duration = charging_minutes(vehicle, station.max_power_kw, from_soc, to_soc)
@@ -294,6 +280,7 @@ class EVRouteOptimizer:
             stops.append(
                 ChargingStop(
                     station_id=action.station_id,
+                    node_index=len(node_ids) - 1,
                     arrival_soc_pct=float(from_soc),
                     departure_soc_pct=float(to_soc),
                     energy_added_kwh=(to_soc - from_soc) * vehicle.usable_battery_kwh / 100,

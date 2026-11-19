@@ -17,9 +17,9 @@ from chargepath.energy import (
     SESSION_SETUP_MINUTES,
     ConsumptionModel,
     LegBuckets,
+    SocGrid,
     buckets_for_leg,
     charging_minutes,
-    drive_bucket,
     leg_bucket_lookup,
 )
 from chargepath.models import (
@@ -59,15 +59,13 @@ class LookaheadGreedyOptimizer:
     ) -> RoutePlan:
         validation.trip_endpoints(origin_id, destination_id)
         step = self.soc_step_pct
-        energy_bucket = math.floor(vehicle.initial_soc_pct / step)
+        grid = SocGrid.for_vehicle(vehicle, step)
+        energy_bucket = grid.initial
         if origin_id == destination_id:
-            return RoutePlan.stationary(origin_id, arrival_soc_pct=float(energy_bucket * step))
+            return RoutePlan.stationary(origin_id, arrival_soc_pct=grid.soc_pct(energy_bucket))
 
-        reserve_bucket = math.ceil(vehicle.reserve_soc_pct / step)
-        maximum_bucket = 100 // step
-        bucket_kwh = vehicle.usable_battery_kwh * step / 100
         leg_lookup = leg_bucket_lookup(
-            {}, vehicle=vehicle, model=self.consumption_model, bucket_kwh=bucket_kwh
+            {}, vehicle=vehicle, model=self.consumption_model, bucket_kwh=grid.bucket_kwh
         )
 
         def buckets(leg: RoadLeg) -> LegBuckets:
@@ -76,7 +74,7 @@ class LookaheadGreedyOptimizer:
                 leg,
                 vehicle=vehicle,
                 model=self.consumption_model,
-                bucket_kwh=bucket_kwh,
+                bucket_kwh=grid.bucket_kwh,
             )
 
         remaining_paths: dict[str, tuple[RoadLeg, ...] | None] = {}
@@ -98,10 +96,10 @@ class LookaheadGreedyOptimizer:
             path = remaining_path(node_id)
             if path is None:
                 return None
-            needed = reserve_bucket
+            needed = grid.reserve
             for leg in reversed(path):
                 net, peak = buckets(leg)
-                needed = max(needed + net, reserve_bucket + peak)
+                needed = max(needed + net, grid.reserve + peak)
             return needed
 
         def charge_minutes(station: Station, from_bucket: int, to_bucket: int) -> float:
@@ -113,7 +111,7 @@ class LookaheadGreedyOptimizer:
             if missing_buckets <= 0:
                 return 0.0
             power_kw = min(station.max_power_kw, vehicle.max_dc_power_kw)
-            return SESSION_SETUP_MINUTES + 60 * missing_buckets * bucket_kwh / power_kw
+            return SESSION_SETUP_MINUTES + 60 * missing_buckets * grid.bucket_kwh / power_kw
 
         def usable(station: Station | None) -> bool:
             return station is not None and station.connector_type in vehicle.supported_dc_connectors
@@ -126,19 +124,15 @@ class LookaheadGreedyOptimizer:
 
         while current != destination_id:
             here = stations.get(current)
-            highest_departure = maximum_bucket if usable(here) else energy_bucket
+            highest_departure = grid.maximum if usable(here) else energy_bucket
             current_remaining = remaining_minutes(current)
 
             best: tuple[tuple[float, int, str], RoadLeg, int] | None = None
             for leg in road_network.neighbors(current):
-                if leg.origin_id != current:
-                    raise ValueError("road-network neighbor leg must start at the requested node")
                 next_id = leg.destination_id
                 next_station = stations.get(next_id)
                 if next_id != destination_id and (next_id in visited or not usable(next_station)):
                     continue
-                if next_station is not None and next_station.id != next_id:
-                    raise ValueError("station mapping key must match station.id")
                 if not remaining_minutes(next_id) < current_remaining:
                     continue
                 needed_after = 0 if next_id == destination_id else bucket_needed_to_finish(next_id)
@@ -146,12 +140,7 @@ class LookaheadGreedyOptimizer:
                     continue
                 leg_buckets = buckets(leg)
                 for departure in range(energy_bucket, highest_departure + 1):
-                    arrival = drive_bucket(
-                        departure,
-                        leg_buckets,
-                        reserve_bucket=reserve_bucket,
-                        maximum_bucket=maximum_bucket,
-                    )
+                    arrival = grid.after_leg(departure, leg_buckets)
                     if arrival is None:
                         continue
                     if next_id == destination_id:
@@ -179,19 +168,15 @@ class LookaheadGreedyOptimizer:
                 stops.append(
                     ChargingStop(
                         station_id=station.id,
+                        node_index=len(node_ids) - 1,
                         arrival_soc_pct=float(energy_bucket * step),
                         departure_soc_pct=float(departure * step),
-                        energy_added_kwh=(departure - energy_bucket) * bucket_kwh,
+                        energy_added_kwh=(departure - energy_bucket) * grid.bucket_kwh,
                         charging_minutes=charge_minutes(station, energy_bucket, departure),
                     )
                 )
                 energy_bucket = departure
-            arrival = drive_bucket(
-                energy_bucket,
-                buckets(chosen_leg),
-                reserve_bucket=reserve_bucket,
-                maximum_bucket=maximum_bucket,
-            )
+            arrival = grid.after_leg(energy_bucket, buckets(chosen_leg))
             assert arrival is not None
             energy_bucket = arrival
             current = chosen_leg.destination_id
@@ -203,7 +188,7 @@ class LookaheadGreedyOptimizer:
             node_ids=tuple(node_ids),
             legs=tuple(legs),
             charging_stops=tuple(stops),
-            arrival_soc_pct=float(energy_bucket * step),
+            arrival_soc_pct=grid.soc_pct(energy_bucket),
         )
 
 

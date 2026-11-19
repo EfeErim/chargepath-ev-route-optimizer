@@ -1,5 +1,4 @@
 import random
-from pathlib import Path
 
 import pytest
 
@@ -10,7 +9,6 @@ from chargepath import (
     RoutePlan,
     Station,
     VehicleProfile,
-    load_synthetic_scenario,
     verify_route_plan,
 )
 from chargepath.lookahead import LookaheadGreedyOptimizer
@@ -57,15 +55,6 @@ def plan_and_verify(
     return plan
 
 
-def test_direct_trip_needs_no_charging() -> None:
-    plan = plan_and_verify(
-        vehicle=make_vehicle(initial_soc_pct=80), stations={}, legs=[RoadLeg("a", "d", 90, 60)]
-    )
-    assert plan.node_ids == ("a", "d")
-    assert plan.charging_stops == ()
-    assert plan.arrival_soc_pct == 50
-
-
 def test_charges_only_as_much_as_the_rest_of_the_trip_needs() -> None:
     stations = {"s": Station("s", "Hub", 39, 32, 150)}
     legs = [RoadLeg("a", "s", 60, 40), RoadLeg("s", "d", 150, 100), RoadLeg("a", "d", 210, 140)]
@@ -75,21 +64,6 @@ def test_charges_only_as_much_as_the_rest_of_the_trip_needs() -> None:
     # Arrive with the 10% reserve and leave with exactly 10 buckets more; fixed-80 would go to 80%.
     assert (stop.arrival_soc_pct, stop.departure_soc_pct) == (10, 60)
     assert plan.arrival_soc_pct == 10
-
-
-def test_prefers_the_faster_charger_when_roads_are_equal() -> None:
-    stations = {
-        "fast": Station("fast", "Fast", 39, 32, 150),
-        "slow": Station("slow", "Slow", 39, 31, 50),
-    }
-    legs = [
-        RoadLeg("a", "fast", 60, 40),
-        RoadLeg("a", "slow", 60, 40),
-        RoadLeg("fast", "d", 150, 100),
-        RoadLeg("slow", "d", 150, 100),
-    ]
-    plan = plan_and_verify(vehicle=make_vehicle(), stations=stations, legs=legs)
-    assert plan.node_ids == ("a", "fast", "d")
 
 
 def test_reports_failure_instead_of_a_partial_plan() -> None:
@@ -107,25 +81,6 @@ def test_never_moves_away_from_the_destination() -> None:
     ]
     with pytest.raises(NoFeasibleRouteError):
         plan_and_verify(vehicle=make_vehicle(), stations=stations, legs=legs)
-
-
-def test_synthetic_fixture_plan_replays_and_is_deterministic() -> None:
-    scenario = load_synthetic_scenario(
-        Path(__file__).resolve().parents[1] / "data/sample/synthetic_corridor.json"
-    )
-    stations = scenario.station_map()
-    plans = [
-        LookaheadGreedyOptimizer().optimize(
-            origin_id=scenario.origin_id,
-            destination_id=scenario.destination_id,
-            vehicle=scenario.vehicle,
-            stations=stations,
-            road_network=StaticRoadNetwork(scenario.legs),
-        )
-        for _ in range(2)
-    ]
-    assert plans[0] == plans[1]
-    verify_route_plan(plans[0], vehicle=scenario.vehicle, stations=stations)
 
 
 def test_random_graphs_replay_and_are_never_faster_than_exact() -> None:

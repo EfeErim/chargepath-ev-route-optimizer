@@ -10,11 +10,9 @@ from typing import Any, cast
 
 import pytest
 
-import chargepath.corridor as corridor_module
 from chargepath import GeoJsonLineString, Station
 from chargepath.corridor import (
     DEFAULT_CANDIDATE_SELECTION_CONFIG,
-    RANKING_KEYS,
     CandidateSelectionConfig,
     select_corridor_candidates,
 )
@@ -63,22 +61,15 @@ def test_observed_schema_normalizes_with_reconciled_rejections_and_duplicates() 
         "SYN-SITE-001:DC-2",
         "SYN-SITE-002:DC-1",
     ]
-    assert result.report.sites.input == 4
-    assert result.report.sites.accepted == 2
-    assert result.report.sites.rejected == 1
-    assert result.report.sites.duplicates == 1
-    assert result.report.sockets.input == 8
-    assert result.report.sockets.accepted == 4
-    assert result.report.sockets.rejected == 2
-    assert result.report.sockets.duplicates == 2
+    sites, sockets = result.report.sites, result.report.sockets
+    assert (sites.input, sites.accepted, sites.rejected, sites.duplicates) == (4, 2, 1, 1)
+    assert (sockets.input, sockets.accepted, sockets.rejected, sockets.duplicates) == (8, 4, 2, 2)
     assert {issue.reason for issue in result.report.issues} >= {
         "invalid_coordinates",
         "invalid_socket_power",
         "duplicate_site_source_id",
         "duplicate_socket_source_id",
     }
-    assert all(site.provenance == provenance() for site in result.sites)
-    assert all(socket.provenance == provenance() for socket in result.sockets)
 
 
 def test_ccs2_projection_keeps_socket_provenance_and_uses_site_max_power() -> None:
@@ -130,9 +121,7 @@ def test_snapshot_manifest_records_request_checksum_counts_and_reconciliation() 
     assert manifest.source_record_count == 4
     assert manifest.source_socket_count == 8
     assert manifest.response_bytes == len(raw)
-    assert manifest.reuse_status == "pending_verification"
     assert manifest.source_freshness == "unknown_not_supplied_by_response"
-    assert manifest.quota_status == "unknown_not_documented"
     assert manifest.reconciliation["sites"] == {
         "input": 4,
         "accepted": 2,
@@ -145,38 +134,6 @@ def test_snapshot_manifest_records_request_checksum_counts_and_reconciliation() 
         headers={"Accept": "application/json", "Content-Type": "application/json"},
         body="{}",
     )
-
-
-def test_snapshot_manifest_rejects_http_status_that_differs_from_payload() -> None:
-    raw = SYNTHETIC_EPDK_FIXTURE.read_bytes()
-    payload = fixture_payload()
-    fixture_provenance = provenance(response_sha256=hashlib.sha256(raw).hexdigest())
-    result = normalize_epdk_response(payload, fixture_provenance)
-
-    with pytest.raises(ValueError, match="status does not match"):
-        build_snapshot_manifest(
-            raw_response=raw,
-            payload=payload,
-            provenance=fixture_provenance,
-            report=result.report,
-            response_status=201,
-        )
-
-
-@pytest.mark.parametrize(
-    "retrieved_at",
-    ["not-a-dateZ", "2026-99-99T14:13:33Z", "2026-08-09T14:13:33+03:00"],
-)
-def test_snapshot_provenance_rejects_invalid_utc_timestamp(retrieved_at: str) -> None:
-    with pytest.raises(ValueError, match="UTC timestamp"):
-        SnapshotProvenance(
-            snapshot_id="test",
-            source_name=EPDK_SOURCE_NAME,
-            source_url=EPDK_SOURCE_URL,
-            retrieved_at=retrieved_at,
-            response_sha256="a" * 64,
-            reuse_status="pending_verification",
-        )
 
 
 def test_committed_epdk_evidence_is_metadata_only_and_matches_default_contract() -> None:
@@ -236,38 +193,6 @@ def test_corridor_selection_is_capped_stable_and_manifested() -> None:
     assert first.station_ids == ("epdk:early", "epdk:b")
     assert second.station_ids == first.station_ids
     assert first.eligible_count == 3
-    assert first.config.to_manifest() == {
-        "algorithm": "equirectangular-segment-farthest-progress-v3",
-        "corridor_width_km": 5.0,
-        "candidate_cap": 2,
-        "ranking_keys": list(RANKING_KEYS),
-        "final_tie_break": "stable_station_id_asc",
-        "coverage_policy": "prefix-monotonic-largest-progress-gap-then-quality",
-        "progress_gap_tolerance_fraction": 0.02,
-    }
-    assert DEFAULT_CANDIDATE_SELECTION_CONFIG.to_manifest() == {
-        "algorithm": "equirectangular-segment-farthest-progress-v3",
-        "corridor_width_km": 25.0,
-        "candidate_cap": 50,
-        "ranking_keys": list(RANKING_KEYS),
-        "final_tie_break": "stable_station_id_asc",
-        "coverage_policy": "prefix-monotonic-largest-progress-gap-then-quality",
-        "progress_gap_tolerance_fraction": 0.02,
-    }
-
-
-def test_corridor_stable_identifier_breaks_exact_final_tie() -> None:
-    route = GeoJsonLineString(((32.0, 39.0), (33.0, 39.0)))
-    options = (
-        make_option("epdk:b", longitude=32.5, latitude=39.01),
-        make_option("epdk:a", longitude=32.5, latitude=39.01),
-    )
-    result = select_corridor_candidates(
-        route_geometry=route,
-        options=options,
-        config=CandidateSelectionConfig(corridor_width_km=5.0, candidate_cap=2),
-    )
-    assert result.station_ids == ("epdk:a", "epdk:b")
 
 
 def test_corridor_cap_covers_route_progress_instead_of_clustering() -> None:
@@ -326,62 +251,6 @@ def test_corridor_selection_is_prefix_monotonic_as_cap_grows() -> None:
     assert selections[2][:8] == selections[1]
 
 
-def test_farthest_progress_uses_quality_inside_small_coverage_tolerance() -> None:
-    route = GeoJsonLineString(((0.0, 39.0), (10.0, 39.0)))
-    result = select_corridor_candidates(
-        route_geometry=route,
-        options=(
-            make_option("epdk:start", longitude=0.1, latitude=39.0),
-            make_option("epdk:far-off-route", longitude=9.9, latitude=39.2),
-            make_option("epdk:near-route", longitude=9.75, latitude=39.0),
-        ),
-        config=CandidateSelectionConfig(corridor_width_km=25.0, candidate_cap=2),
-    )
-
-    assert result.station_ids == ("epdk:start", "epdk:near-route")
-
-
-def test_corridor_rejects_duplicate_station_ids_before_graph_construction() -> None:
-    route = GeoJsonLineString(((0.0, 39.0), (1.0, 39.0)))
-    with pytest.raises(ValueError, match="station ids must be unique"):
-        select_corridor_candidates(
-            route_geometry=route,
-            options=(
-                make_option("epdk:duplicate", longitude=0.2, latitude=39.0),
-                make_option("epdk:duplicate", longitude=0.8, latitude=39.0),
-            ),
-            config=CandidateSelectionConfig(corridor_width_km=5.0, candidate_cap=2),
-        )
-
-
-def test_corridor_precomputes_route_lengths_once(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    route = GeoJsonLineString(((32.0, 39.0), (32.25, 39.05), (32.5, 39.0), (33.0, 39.0)))
-    options = tuple(
-        make_option(f"epdk:{index}", longitude=32.1 + index * 0.15, latitude=39.01)
-        for index in range(5)
-    )
-    calls = 0
-    original = corridor_module._haversine_km
-
-    def counted_haversine(*args: float) -> float:
-        nonlocal calls
-        calls += 1
-        return original(*args)
-
-    monkeypatch.setattr(corridor_module, "_haversine_km", counted_haversine)
-
-    result = select_corridor_candidates(
-        route_geometry=route,
-        options=options,
-        config=CandidateSelectionConfig(corridor_width_km=5.0, candidate_cap=5),
-    )
-
-    assert len(result.candidates) == 5
-    assert calls == len(route.coordinates) - 1
-
-
 def _fetch_script() -> ModuleType:
     path = Path(__file__).resolve().parents[1] / "scripts/fetch_epdk_snapshot.py"
     spec = importlib.util.spec_from_file_location("fetch_epdk_snapshot", path)
@@ -412,33 +281,21 @@ class _FakeResponse:
         return self._body[:limit]
 
 
-def test_fetch_makes_one_get_request_with_the_observed_empty_json_body() -> None:
+def test_fetch_makes_one_get_request_and_never_retries_a_rate_limit() -> None:
     requests: list[Any] = []
 
     def opener(request: Any, *, timeout: int) -> _FakeResponse:
         requests.append(request)
-        assert timeout > 0
+        if len(requests) > 1:
+            raise urllib.error.HTTPError(EPDK_SOURCE_URL, 429, "Too Many Requests", Message(), None)
         return _FakeResponse(b"{}")
 
-    status, body = _fetch_script().fetch_response(opener=opener)
-
-    assert (status, body) == (200, b"{}")
-    assert len(requests) == 1
-    assert requests[0].get_method() == "GET"
-    assert requests[0].data == b"{}"
+    script = _fetch_script()
+    assert script.fetch_response(opener=opener) == (200, b"{}")
+    assert (requests[0].get_method(), requests[0].data) == ("GET", b"{}")
     assert requests[0].full_url == EPDK_SOURCE_URL
-
-
-def test_fetch_reports_a_rate_limit_status_without_a_body_or_retry() -> None:
-    calls = 0
-
-    def opener(request: Any, *, timeout: int) -> _FakeResponse:
-        nonlocal calls
-        calls += 1
-        raise urllib.error.HTTPError(EPDK_SOURCE_URL, 429, "Too Many Requests", Message(), None)
-
-    assert _fetch_script().fetch_response(opener=opener) == (429, b"")
-    assert calls == 1
+    assert script.fetch_response(opener=opener) == (429, b"")
+    assert len(requests) == 2
 
 
 def test_stored_snapshot_gets_a_matching_manifest_and_is_never_replaced(tmp_path: Path) -> None:

@@ -7,7 +7,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from chargepath.evaluation import canonical_json_bytes
+from chargepath.evidence import canonical_json_bytes
 from chargepath.models import Station
 from chargepath.real_route_collection import load_stored_graph
 from chargepath.real_route_evaluation import (

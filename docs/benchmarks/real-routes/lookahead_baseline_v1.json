@@ -1,7 +1,7 @@
 {
   "input_benchmark": "chargepath-m6-real-route-v1",
   "manifest_sha256": "1c637e15d52fb053ac52d7721a4223b294927729cae6aa9bdb7d82724f76cadf",
-  "preregistration": "PROJECT_PLAN.md, M9",
+  "replayed_plans": 215,
   "reserve_violations_on_returned_plans": 0,
   "scenarios": [
     {

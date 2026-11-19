@@ -1,41 +1,27 @@
 $ErrorActionPreference = "Stop"
 
 $repositoryRoot = Split-Path -Parent $PSScriptRoot
-$windowsVenvPython = Join-Path $repositoryRoot ".venv\Scripts\python.exe"
-$posixVenvPython = Join-Path $repositoryRoot ".venv/bin/python"
-$pythonArguments = @()
+$python = @(
+    (Join-Path $repositoryRoot ".venv\Scripts\python.exe"),
+    (Join-Path $repositoryRoot ".venv/bin/python")
+) | Where-Object { Test-Path $_ } | Select-Object -First 1
+if (-not $python) { $python = "python" }
 
-if (Test-Path $windowsVenvPython) {
-    $pythonExecutable = $windowsVenvPython
-} elseif (Test-Path $posixVenvPython) {
-    $pythonExecutable = $posixVenvPython
-} elseif (Get-Command py -ErrorAction SilentlyContinue) {
-    $pythonExecutable = "py"
-    $pythonArguments = @("-3.11")
-} elseif (Get-Command python -ErrorAction SilentlyContinue) {
-    $pythonExecutable = "python"
-} else {
-    throw "Python 3.11+ was not found. Create .venv or install Python."
-}
+$steps = @(
+    @("-m", "pytest", "-q"),
+    @("examples/run_synthetic_demo.py"),
+    @("-m", "ruff", "check", "."),
+    @("-m", "ruff", "format", "--check", "."),
+    @("-m", "mypy")
+)
 
 Push-Location $repositoryRoot
 try {
-& $pythonExecutable @pythonArguments -m pytest -q
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-& $pythonExecutable @pythonArguments examples/run_synthetic_demo.py
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-& $pythonExecutable @pythonArguments -m ruff check .
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-& $pythonExecutable @pythonArguments -m ruff format --check .
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-& $pythonExecutable @pythonArguments -m mypy
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-Write-Host "All project checks passed."
+    foreach ($arguments in $steps) {
+        & $python @arguments
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    }
+    Write-Host "All project checks passed."
 } finally {
     Pop-Location
 }

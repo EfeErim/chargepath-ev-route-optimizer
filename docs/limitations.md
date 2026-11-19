@@ -1,89 +1,41 @@
 # Limitations
 
-## Product boundary
+ChargePath is a planning demonstration, not navigation. It does not follow a moving vehicle and
+cannot promise that a charger will work.
 
-ChargePath is a planning demonstration, not safety-certified navigation. It does not monitor a moving vehicle or guarantee that a selected charger will be usable.
+## Model
 
-## Road data
+- Each exact option is optimal only on the candidate graph, the discrete SOC grid and the models
+  below, not for the real, time-dependent road and charging system.
+- Default consumption is constant with a safety factor. It ignores speed, grade, traffic, wind,
+  temperature, payload, tires, degradation and driving style. The opt-in speed and terrain models
+  are fitted to one car each; the terrain model failed its held-out check and needs caller-supplied
+  elevation, which a DEM would misread at bridges and tunnels.
+- Rounding energy up to buckets can reject a narrowly feasible trip. The demo retries at 2% after a
+  5% failure, which is still a discrete model.
+- Charging uses a generic two-segment taper unless a curve is supplied, and the project ships no
+  measured curves. Battery temperature, charger limits, power sharing and handshake time are not
+  modeled. Station power is a cap, not delivered power. Only CCS2 DC charging is modeled.
 
-- OpenStreetMap completeness and turn restrictions vary by location.
-- OSRM travel time is not automatically live traffic.
-- Candidate graph pruning can omit a better route if configured too aggressively. Local OSRM mode
-  widens an infeasible capped search only up to the configured local limit; it does not prove that a
-  feasible capped result is globally best among every corridor station. Remote OSRM requests never
-  auto-expand because the project has no third-party quota or SLA guarantee.
-- OSRM Table distance describes the fastest route selected by its profile, not a globally
-  shortest-distance route.
+## Roads and stations
 
-## Station data
+- OSRM times come from one OpenStreetMap extract and a car profile, not live traffic. Table
+  distances follow the fastest route, so "shortest distance" compares those legs only.
+- The candidate cap bounds the OSRM Table request and can hide a better charger. Local mode widens
+  only an infeasible search, only up to its limit; remote mode never widens.
+- The EPDK snapshot shows presence, not availability, access, price or working status. Coordinates
+  may mark a site rather than its entrance. Quota, update cadence, identifier stability and
+  redistribution terms are undocumented, and the service has returned HTTP 429.
+- The demo's per-stop fallback note is graph structure only: other compatible chargers in direct
+  reach (nearest twelve by driving time) and the added minutes without that stop.
 
-- The 2026-08-09 EPDK check verified access and one observed schema, and a 2026-11-05 response
-  still matched it. A later request that day returned HTTP 429, so a rate limit exists, but quota,
-  update cadence, cross-snapshot identifier behavior, and redistribution conditions remain
-  undocumented.
-- Static station presence does not prove availability, access, compatibility, price, or working status at arrival.
-- The per-stop fallback note in the demo is structural only. It counts other compatible chargers in
-  direct reach on the same candidate graph (nearest twelve by driving time) and the added minutes when
-  the stop's charger is removed before planning. It knows nothing about occupancy, outages, or
-  reliability, and it is not a probability that a fallback will work.
-- A coordinate can represent the site rather than the correct road entrance or carriageway.
-- The public EPDK Swagger publishes no response schema. Ingestion is tested against a synthetic
-  fixture of the observed shape and fails closed on unreviewed fields.
+## Evidence
 
-## Energy model
-
-- Constant consumption ignores speed, grade, traffic, wind, temperature, precipitation, cabin load, payload, tire state, degradation, and driving style.
-- The safety factor is not a substitute for calibration.
-- An experimental terrain model (`chargepath.terrain`) adds climb and recuperation energy from
-  caller-supplied per-leg ascent and descent. It failed its held-out check (lower
-  hillier-section error, higher whole-trip error) and is not the default. The project supplies no
-  elevation data; a digital elevation model sampled along OSRM geometry would also misread bridges,
-  tunnels, and cuttings.
-- Regenerative braking is not modeled by the default constant model. The consumption interface accepts
-  signed per-leg energy, but any such model needs its own calibration evidence.
-- Discrete buckets conservatively round consumption and can reject narrowly feasible continuous solutions.
-  The demo retries a coarse 5% infeasible search at 2% and labels the returned resolution, but it
-  still cannot establish feasibility in a continuous or calibrated vehicle model.
-
-## Charging model
-
-- The piecewise taper is generic. A caller may supply a vehicle charging curve, but the project ships
-  none, and a curve still ignores temperature, preconditioning, and power sharing.
-- Vehicle and battery temperature, charger voltage/current limits, power sharing, handshake time, and thermal throttling are not modeled.
-- Station power is a cap, not a promise of delivered power.
-- Only CCS2 DC charging is modeled; AC charging and other connectors are outside the optimization
-  claim.
-
-## Optimization claim
-
-Each exact option (fastest, shortest distance, fewest sessions) is optimal for its lexicographic
-objective only within the supplied candidate graph, discrete SOC grid, and model assumptions, not for
-the real, time-dependent transportation system. The greedy fixed-80 strategy is intentionally
-heuristic and may fail even when exact search finds a feasible plan. More options do not imply that
-one is operationally safer or more reliable with static station data.
-
-## Validation boundary
-
-Synthetic tests prove software invariants against synthetic inputs. Real-world SOC accuracy requires logged trips, a defined vehicle set, and a separate calibration protocol.
-
-The synthetic benchmark contains eight small, hand-audited synthetic cases. Its measured advantage for
-partial charging, 0-minute pruning gap, and millisecond runtimes apply only to that fixture and one
-recorded machine run. They do not establish national-scale performance, general pruning safety, or
-real-world trip-time accuracy.
-
-The real-route benchmark covers 24 selected routes on one OSM extract and one static EPDK snapshot. Its 624 scenario
-outcomes include repeated routes at different settings. The evaluated solver assumes each compatible
-candidate can be used. The fixed-80 comparison combines stop selection and charging amounts.
-Benchmark runtime is measured per batch, separately from OSRM, and excludes browser latency.
-Exact reproduction requires the frozen input bytes. See [real-route results](results.md#real-route-benchmark).
-
-The separate [public telemetry pilots](results.md#field-pilot--volkswagen-id3) evaluate energy and
-charging on a small number of vehicles using recorded speeds. VW charging type is inferred and
-charger capabilities are unavailable. The BMW pilot includes only three hillier held-out sections.
-Neither pilot provides ground truth for the real-route plans.
-
-## Demo boundary
-
-The default UI flow uses the bundled synthetic fixture. Optional OSRM, EPDK snapshot, tile, or
-geocoding integrations may fail independently and do not turn the project into an offline navigation
-product or a live charging service.
+- The synthetic suite is eight hand-audited cases; its timings and 0-minute pruning gap say nothing
+  about scale or other graphs.
+- The real-route benchmark is 24 routes on one extract and one snapshot, assumes every compatible
+  candidate is usable, and needs the frozen inputs, which are not in Git, to rerun. Runtime is per
+  batch, separate from OSRM and the browser. See [results](results.md#real-route-benchmark).
+- The [field pilots](results.md#field-pilot--volkswagen-id3) use a few cars and recorded speeds;
+  the VW charging type is inferred and the BMW data has three hillier held-out sections. They are
+  not ground truth for the real-route plans.

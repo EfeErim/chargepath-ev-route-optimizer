@@ -12,13 +12,12 @@ occupancy, outages, or reliability, and a count of alternatives is not a probabi
 
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass, replace
 
 from chargepath.energy import (
     DEFAULT_CONSUMPTION,
     ConsumptionModel,
-    drive_bucket,
+    SocGrid,
     leg_buckets,
 )
 from chargepath.models import NoFeasibleRouteError, RoutePlan, Station, VehicleProfile
@@ -58,16 +57,14 @@ def stop_redundancy(
         raise ValueError("alternative_limit must not be negative")
     optimizer = EVRouteOptimizer(soc_step_pct=soc_step_pct, consumption_model=consumption_model)
     origin_id, destination_id = plan.node_ids[0], plan.node_ids[-1]
+    grid = SocGrid.for_vehicle(vehicle, soc_step_pct)
     departure_buckets = _departure_buckets(
-        plan, vehicle=vehicle, soc_step_pct=soc_step_pct, model=consumption_model
+        plan, vehicle=vehicle, grid=grid, model=consumption_model
     )
-    reserve_bucket = math.ceil(vehicle.reserve_soc_pct / soc_step_pct)
-    maximum_bucket = 100 // soc_step_pct
-    bucket_kwh = vehicle.usable_battery_kwh * soc_step_pct / 100
 
     results: list[StopRedundancy] = []
     for stop in plan.charging_stops:
-        stop_index = plan.node_ids.index(stop.station_id)
+        stop_index = stop.node_index
         previous_node = plan.node_ids[stop_index - 1] if stop_index > 0 else None
 
         without = {key: value for key, value in stations.items() if key != stop.station_id}
@@ -99,11 +96,9 @@ def stop_redundancy(
             )[:alternative_limit]
             for leg in candidates:
                 checked += 1
-                arrival = drive_bucket(
+                arrival = grid.after_leg(
                     departure_buckets[stop_index - 1],
-                    leg_buckets(consumption_model.leg_energy(leg, vehicle), bucket_kwh),
-                    reserve_bucket=reserve_bucket,
-                    maximum_bucket=maximum_bucket,
+                    leg_buckets(consumption_model.leg_energy(leg, vehicle), grid.bucket_kwh),
                 )
                 if arrival is None:
                     continue
@@ -111,7 +106,7 @@ def stop_redundancy(
                     optimizer.optimize(
                         origin_id=leg.destination_id,
                         destination_id=destination_id,
-                        vehicle=replace(vehicle, initial_soc_pct=float(arrival * soc_step_pct)),
+                        vehicle=replace(vehicle, initial_soc_pct=grid.soc_pct(arrival)),
                         stations=stations,
                         road_network=road_network,
                     )
@@ -134,22 +129,20 @@ def _departure_buckets(
     plan: RoutePlan,
     *,
     vehicle: VehicleProfile,
-    soc_step_pct: int,
+    grid: SocGrid,
     model: ConsumptionModel,
 ) -> list[int]:
     """Bucket held when leaving each plan node, after any charge there."""
 
-    bucket_kwh = vehicle.usable_battery_kwh * soc_step_pct / 100
-    maximum_bucket = 100 // soc_step_pct
-    stops = {stop.station_id: stop for stop in plan.charging_stops}
-    bucket = math.floor(vehicle.initial_soc_pct / soc_step_pct)
+    stops = {stop.node_index: stop for stop in plan.charging_stops}
+    bucket = grid.initial
     departures: list[int] = []
-    for index, node in enumerate(plan.node_ids):
-        stop = stops.get(node)
+    for index in range(len(plan.node_ids)):
+        stop = stops.get(index)
         if stop is not None:
-            bucket = round(stop.departure_soc_pct / soc_step_pct)
+            bucket = round(stop.departure_soc_pct / grid.step_pct)
         departures.append(bucket)
         if index < len(plan.legs):
-            net, _ = leg_buckets(model.leg_energy(plan.legs[index], vehicle), bucket_kwh)
-            bucket = min(maximum_bucket, bucket - net)
+            net, _ = leg_buckets(model.leg_energy(plan.legs[index], vehicle), grid.bucket_kwh)
+            bucket = min(grid.maximum, bucket - net)
     return departures

@@ -10,30 +10,17 @@ as short as possible and the battery never drops below a reserve. Road routing c
 [OSRM](https://project-osrm.org/); the charging decision is solved exactly on a discrete battery
 grid.
 
-On 24 routes across Türkiye's road network with three vehicle profiles, the exact planner was a
-median **24.7 minutes (4.2%) faster** than the simple rule of charging to 80% at each stop. That
-covers the 71 of 72 scenarios where both found a plan; the 80% heuristic found none on the remaining
-one. The percentage looks small because driving is a median 87.5% of the trip and no charging
-planner can shorten it. Measured against the part a planner does control, the median time spent
-charging fell from 70.7 to 53.0 minutes, a median cut of 28.7% in the 66 scenarios where the
-heuristic charged.
-
-Most of that gain is available without exact search. A stronger heuristic picks each next charger and
-how much to charge there by a one-step lookahead. Against it the exact planner
-was a median **2.6 minutes (0.5%) faster**, tied in 22 of 72 scenarios and at most 26.5 minutes faster; the heuristic never failed. On this benchmark a careful heuristic gets close.
-What exact search adds is the worst cases, a guarantee that no plan on the same graph and SOC grid
-is faster, and the yardstick itself: without the optimum, the heuristic's 2.6-minute gap could not
-be measured. Whether the gap widens with sparser chargers or vehicle-specific charging curves is
-untested.
-
-All 2,525 plans produced across the main experiments, and the 215 in the baseline comparison, were
-replayed by a separate checker with zero reserve violations. These are modeled minutes on one road
-extract and one static charger snapshot, not measured drives.
-
 **[Live demo](https://efeerim.github.io/chargepath-ev-route-optimizer/)**: the planner runs in your
-browser through Pyodide on a synthetic corridor. The first load downloads about 10 MB.
+browser through Pyodide on a synthetic corridor.
 
 ![Map demo](docs/images/map-demo.png)
+
+On 72 modeled trips over 24 real routes in Türkiye:
+
+- 24.7 minutes faster (median) than charging to 80% at every stop.
+- 2.6 minutes faster (median) than a one-step lookahead heuristic, so most of the gain is
+  available without exact search.
+- Every returned plan replayed by a separate checker, with zero reserve violations.
 
 ## Quickstart
 
@@ -56,9 +43,30 @@ through Pyodide (`browser_tests/`). The Pages demo is deployed only after those 
 same commit.
 
 Planning between arbitrary points needs a charger snapshot and a local OSRM server; see the
-[map demo guide](docs/map_demo.md) and [OSRM setup](docs/osrm_setup.md).
+[map demo guide](docs/map_demo.md) and [reproducing](docs/reproducing.md#local-osrm).
 
 ## Results
+
+On 24 routes across Türkiye's road network with three vehicle profiles, the exact planner was a
+median **24.7 minutes (4.2%) faster** than the simple rule of charging to 80% at each stop. That
+covers the 71 of 72 scenarios where both found a plan; the 80% heuristic found none on the remaining
+one. The percentage looks small because driving is a median 87.5% of the trip and no charging
+planner can shorten it. Measured against the part a planner does control, the median time spent
+charging fell from 70.7 to 53.0 minutes, a median cut of 28.7% in the 66 scenarios where the
+heuristic charged.
+
+A stronger heuristic picks each next charger and how much to charge there by a one-step
+lookahead. Against it the exact planner was a median **2.6 minutes (0.5%) faster**, tied in 22 of
+72 scenarios and at most 26.5 minutes faster; the heuristic never failed. On this benchmark a
+careful heuristic gets close. What exact search adds is the worst cases, a guarantee that no plan
+on the same graph and SOC grid is faster, and the yardstick itself: without the optimum, the
+heuristic's 2.6-minute gap could not be measured. Whether the gap widens with sparser chargers or
+vehicle-specific charging curves is untested.
+
+All 2,525 plans produced across the main experiments, and the 215 in the baseline comparison, were
+replayed by a separate checker. The replay counts every driven leg that ends or peaks below the
+reserve, and that count is zero for every plan. These are modeled minutes on one road extract and
+one static charger snapshot, not measured drives.
 
 ![Minutes saved per scenario against charging to 80%, by vehicle set](docs/images/e1-savings.svg)
 
@@ -102,8 +110,7 @@ flowchart LR
    compatible charger moves to any higher bucket and costs setup time plus a tapered charging time.
 4. Replay every returned plan with `verify_route_plan` before it is shown or counted.
 
-The [algorithm notes](docs/algorithm.md) give the formulas and the
-[architecture notes](docs/architecture.md) map each step to a module.
+The [algorithm notes](docs/algorithm.md) give the formulas and map each step to a module.
 
 ## Design decisions
 
@@ -153,7 +160,7 @@ data is too thin to change the defaults.
 The problem is a shortest feasible path with charging stops, studied by
 [Baum et al., 2020](https://doi.org/10.1287/trsc.2018.0889) and
 [Merting et al., 2015](https://drops.dagstuhl.de/entities/document/10.4230/OASIcs.ATMOS.2015.29).
-A comparison with other open-source and commercial planners is in [research](docs/research.md).
+Sources and related planners are in [background](docs/research.md).
 
 ## License
 
