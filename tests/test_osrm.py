@@ -133,6 +133,11 @@ def test_table_clamps_sub_meter_negative_cells_to_zero(duration: float, distance
         ),
         (FakeTransport({"code": "Ok"}, status_code=503), OsrmTransportError, "HTTP 503"),
         (FakeTransport(b"not-json"), OsrmResponseError, "malformed JSON"),
+        (
+            FakeTransport(b"<html>Bad Gateway</html>", status_code=502),
+            OsrmTransportError,
+            "HTTP 502",
+        ),
         (TimeoutTransport(), OsrmTimeoutError, "10s"),
     ],
 )

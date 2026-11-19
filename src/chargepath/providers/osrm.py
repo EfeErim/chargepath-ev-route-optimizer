@@ -293,6 +293,10 @@ class OsrmHttpClient:
         try:
             decoded = json.loads(response.body)
         except (UnicodeDecodeError, json.JSONDecodeError) as error:
+            if response.status_code != 200:
+                raise OsrmTransportError(
+                    f"OSRM returned HTTP {response.status_code} without a JSON body"
+                ) from error
             raise OsrmResponseError("OSRM returned malformed JSON") from error
         payload = _object(decoded, field="response")
         code = payload.get("code")

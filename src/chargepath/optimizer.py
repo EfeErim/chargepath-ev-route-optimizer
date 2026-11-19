@@ -209,9 +209,14 @@ class EVRouteOptimizer:
                 )
 
         if destination_state is None:
-            raise NoFeasibleRouteError(
-                f"no energy-feasible route from {origin_id!r} to {destination_id!r}"
-            )
+            reason = f"no energy-feasible route from {origin_id!r} to {destination_id!r}"
+            if grid.initial < grid.reserve:
+                reason += (
+                    f": on the {grid.step_pct}% grid the starting charge rounds down to "
+                    f"{grid.soc_pct(grid.initial):g}%, below the {grid.soc_pct(grid.reserve):g}% "
+                    "reserve"
+                )
+            raise NoFeasibleRouteError(reason)
         return self._reconstruct(
             start=start,
             destination=destination_state,

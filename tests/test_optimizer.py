@@ -131,6 +131,12 @@ def test_infeasible_trip_raises_instead_of_a_partial_plan(
         optimize(legs, vehicle=make_vehicle(), stations=stations)
 
 
+def test_infeasibility_names_a_start_that_rounds_below_the_reserve() -> None:
+    legs = [RoadLeg("a", "b", 1, 1)]
+    with pytest.raises(NoFeasibleRouteError, match="rounds down to 10%, below the 15% reserve"):
+        optimize(legs, vehicle=make_vehicle(initial_soc_pct=12, reserve_soc_pct=11))
+
+
 def test_fastest_breaks_time_ties_on_charging_stops_before_distance() -> None:
     @dataclass(frozen=True, slots=True)
     class EfficientDirectLeg:
