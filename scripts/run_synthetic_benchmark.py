@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+from datetime import date
 from pathlib import Path
 
 from chargepath.evaluation import (
@@ -16,7 +17,11 @@ from chargepath.evidence import canonical_json_bytes
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MANIFEST = REPOSITORY_ROOT / "data/benchmarks/synthetic/v1/manifest.json"
 DEFAULT_CORRECTNESS_OUT = REPOSITORY_ROOT / "docs/benchmarks/synthetic/correctness_v1.json"
-DEFAULT_RUNTIME_OUT = REPOSITORY_ROOT / "docs/benchmarks/synthetic/runtime_2026-11-17.json"
+# Timings are machine- and day-specific, so each run writes a new file named after its date
+# instead of overwriting an earlier measurement.
+DEFAULT_RUNTIME_OUT = (
+    REPOSITORY_ROOT / f"docs/benchmarks/synthetic/runtime_{date.today().isoformat()}.json"
+)
 
 
 def _arguments() -> argparse.Namespace:

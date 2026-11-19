@@ -146,8 +146,9 @@ class LookaheadGreedyOptimizer:
                     if next_id == destination_id:
                         later = 0.0
                     else:
-                        assert next_station is not None
-                        later = later_charging_estimate(next_station, needed_after - arrival)
+                        later = later_charging_estimate(
+                            _require(next_station), needed_after - arrival
+                        )
                     charge_now = (
                         0.0
                         if departure == energy_bucket
@@ -177,7 +178,8 @@ class LookaheadGreedyOptimizer:
                 )
                 energy_bucket = departure
             arrival = grid.after_leg(energy_bucket, buckets(chosen_leg))
-            assert arrival is not None
+            if arrival is None:
+                raise AssertionError("the chosen leg was scored as drivable")
             energy_bucket = arrival
             current = chosen_leg.destination_id
             legs.append(chosen_leg)

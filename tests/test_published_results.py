@@ -9,11 +9,15 @@ from __future__ import annotations
 import importlib.util
 import json
 import statistics
+from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
+from chargepath.evidence import nearest_rank
+
 ROOT = Path(__file__).resolve().parents[1]
 TRIPS = ROOT / "docs/benchmarks/real-routes/trips_v1.jsonl"
+FOLLOWUP = ROOT / "docs/benchmarks/real-routes/followup_v1.json"
 # Whitespace is collapsed so line wrapping in the README does not matter.
 README = " ".join((ROOT / "README.md").read_text(encoding="utf-8").split())
 
@@ -120,9 +124,56 @@ def test_lookahead_baseline_matches_the_readme() -> None:
     assert sum(1 for saved in savings if abs(saved) <= 1e-6) == 22
     assert round(statistics.median(savings), 1) == 2.6
     assert round(statistics.median(percent), 1) == 0.5
+    assert round(nearest_rank(savings, 0.9), 1) == 12.0
     assert round(max(savings), 1) == 26.5
     # Exact fastest and the lookahead heuristic planned all 72 scenarios, fixed-80 planned 71.
     assert artifact["replayed_plans"] == 72 + 72 + 71 == 215
     assert artifact["reserve_violations_on_returned_plans"] == 0
     assert "median **2.6 minutes (0.5%) faster**, tied in 22 of 72 scenarios" in README
     assert "at most 26.5 minutes faster" in README
+    assert "p90 12.0 min" in README
+
+
+def test_followup_decomposition_and_candidate_cap_match_the_readme() -> None:
+    scenarios = json.loads(FOLLOWUP.read_text(encoding="utf-8"))["scenarios"]
+    assert len(scenarios) == 72
+
+    paired = [row for row in scenarios if row.get("greedy_min") is not None]
+    assert len(paired) == 71
+    charge_amounts = [row["greedy_min"] - row["fixed_path_min"] for row in paired]
+    free_path = [row["fixed_path_min"] - row["nominal_min"] for row in paired]
+    assert round(statistics.median(charge_amounts), 1) == 9.6
+    assert round(statistics.median(free_path), 1) == 10.5
+    assert "medians of 9.6 min and 10.5 min" in README
+
+    sparse = [
+        row["sparse_candidates_min"] - row["nominal_min"]
+        for row in scenarios
+        if row.get("sparse_candidates_min") is not None
+    ]
+    assert len(scenarios) - len(sparse) == 4
+    assert round(statistics.median(sparse), 1) == 3.5
+    assert round(max(sparse)) == 91
+    assert (
+        "lowering it from 50 to 12 cost a median 3.5 minutes, up to 91 minutes, "
+        "and made 4 of 72 scenarios infeasible"
+    ) in README
+
+
+def test_soc_grid_cost_matches_the_readme() -> None:
+    minutes: dict[tuple[str, str], dict[int, float]] = defaultdict(dict)
+    for row in _rows():
+        if row["experiment"] == "E2":
+            fastest = row["results"]["fastest"]
+            assert fastest["outcome"] == "plan"
+            key = (row["route_id"], row["group"])
+            minutes[key][row["soc_step_pct"]] = fastest["total_minutes"]
+
+    medians = {
+        group: statistics.median(
+            steps[5] - steps[2] for (_, row_group), steps in minutes.items() if row_group == group
+        )
+        for group in ("set-40kwh", "set-60kwh", "set-80kwh")
+    }
+    assert (round(min(medians.values()), 1), round(max(medians.values()), 1)) == (0.8, 3.3)
+    assert "the 5% grid added a median 0.8 to 3.3 minutes against a 2% grid" in README
