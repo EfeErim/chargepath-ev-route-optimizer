@@ -121,7 +121,10 @@ def leg_from_json(value: Any, *, field: str, with_geometry: bool) -> RoadLeg:
     )
 
 
-def load_synthetic_scenario(path: str | Path) -> SyntheticScenario:
+SYNTHETIC_SCENARIO_PATH = Path(__file__).with_name("data") / "synthetic_corridor.json"
+
+
+def load_synthetic_scenario(path: str | Path = SYNTHETIC_SCENARIO_PATH) -> SyntheticScenario:
     """Load a repository fixture and reject unlabeled or structurally invalid data."""
 
     fixture_path = Path(path)

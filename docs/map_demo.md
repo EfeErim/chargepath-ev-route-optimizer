@@ -7,7 +7,7 @@ python -m chargepath.demo
 ```
 
 Open `http://127.0.0.1:8743`; the server binds loopback only. Fixture mode is the default and plans
-the synthetic `data/sample/synthetic_corridor.json` with no OSRM or EPDK call. Only the two declared
+the synthetic `src/chargepath/data/synthetic_corridor.json` with no OSRM or EPDK call. Only the two declared
 endpoint markers are accepted, because the fixture has no roads for arbitrary clicks.
 
 The UI shows one tab per strategy with the aliases that chose each plan, unavailable strategies,

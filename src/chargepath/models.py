@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass
 from typing import Literal
 
@@ -181,12 +180,8 @@ class ChargingStop:
     def __post_init__(self) -> None:
         if not isinstance(self.station_id, str) or not self.station_id.strip():
             raise ValueError("charging-stop station_id must not be empty")
-        if (
-            isinstance(self.node_index, bool)
-            or not isinstance(self.node_index, int)
-            or self.node_index < 0
-        ):
-            raise ValueError("charging-stop node_index must be a non-negative integer")
+        if self.node_index < 0:
+            raise ValueError("charging-stop node_index must not be negative")
         numeric_values = (
             self.arrival_soc_pct,
             self.departure_soc_pct,
@@ -205,57 +200,32 @@ class ChargingStop:
 
 @dataclass(frozen=True, slots=True)
 class RoutePlan:
+    """A planned trip. Totals are summed from its legs and stops.
+
+    Plain ``sum`` keeps integer totals for integer inputs. The committed benchmark artifacts are
+    byte-pinned, so the totals must not switch to float sums.
+    """
+
     node_ids: tuple[str, ...]
     legs: tuple[RoadLeg, ...]
     charging_stops: tuple[ChargingStop, ...]
-    total_distance_km: float
-    driving_minutes: float
-    charging_minutes: float
     arrival_soc_pct: float
-    total_minutes: float
 
-    @classmethod
-    def assemble(
-        cls,
-        *,
-        node_ids: tuple[str, ...],
-        legs: tuple[RoadLeg, ...],
-        charging_stops: tuple[ChargingStop, ...],
-        arrival_soc_pct: float,
-    ) -> RoutePlan:
-        """Build a plan whose totals are summed from its legs and stops.
+    @property
+    def total_distance_km(self) -> float:
+        return sum(leg.distance_km for leg in self.legs)
 
-        Plain ``sum`` keeps integer totals for integer inputs. The committed benchmark artifacts
-        are byte-pinned, so this must not switch to float sums.
-        """
+    @property
+    def driving_minutes(self) -> float:
+        return sum(leg.duration_minutes for leg in self.legs)
 
-        driving = sum(leg.duration_minutes for leg in legs)
-        charging = sum(stop.charging_minutes for stop in charging_stops)
-        return cls(
-            node_ids=node_ids,
-            legs=legs,
-            charging_stops=charging_stops,
-            total_distance_km=sum(leg.distance_km for leg in legs),
-            driving_minutes=driving,
-            charging_minutes=charging,
-            arrival_soc_pct=arrival_soc_pct,
-            total_minutes=driving + charging,
-        )
+    @property
+    def charging_minutes(self) -> float:
+        return sum(stop.charging_minutes for stop in self.charging_stops)
 
-    @classmethod
-    def stationary(cls, node_id: str, *, arrival_soc_pct: float) -> RoutePlan:
-        """The plan for a trip whose origin is its destination."""
-
-        return cls(
-            node_ids=(node_id,),
-            legs=(),
-            charging_stops=(),
-            total_distance_km=0.0,
-            driving_minutes=0.0,
-            charging_minutes=0.0,
-            arrival_soc_pct=arrival_soc_pct,
-            total_minutes=0.0,
-        )
+    @property
+    def total_minutes(self) -> float:
+        return self.driving_minutes + self.charging_minutes
 
     def __post_init__(self) -> None:
         if not self.node_ids or any(
@@ -270,40 +240,5 @@ class RoutePlan:
                 self.node_ids[index + 1],
             ):
                 raise ValueError("route-plan leg endpoints must match node order")
-        numeric_values = (
-            self.total_distance_km,
-            self.driving_minutes,
-            self.charging_minutes,
-            self.arrival_soc_pct,
-            self.total_minutes,
-        )
-        if not all(_is_finite_number(value) for value in numeric_values):
-            raise ValueError("route-plan numeric values must be finite numbers")
-        if not 0 <= self.arrival_soc_pct <= 100:
+        if not _is_finite_number(self.arrival_soc_pct) or not 0 <= self.arrival_soc_pct <= 100:
             raise ValueError("route-plan arrival_soc_pct must be between 0 and 100")
-        if any(
-            value < 0
-            for value in (
-                self.total_distance_km,
-                self.driving_minutes,
-                self.charging_minutes,
-                self.total_minutes,
-            )
-        ):
-            raise ValueError("route-plan totals must not be negative")
-
-        expected_distance = sum(leg.distance_km for leg in self.legs)
-        expected_driving = sum(leg.duration_minutes for leg in self.legs)
-        expected_charging = sum(stop.charging_minutes for stop in self.charging_stops)
-        if not math.isclose(self.total_distance_km, expected_distance, abs_tol=1e-9):
-            raise ValueError("route-plan total_distance_km does not match its legs")
-        if not math.isclose(self.driving_minutes, expected_driving, abs_tol=1e-9):
-            raise ValueError("route-plan driving_minutes does not match its legs")
-        if not math.isclose(self.charging_minutes, expected_charging, abs_tol=1e-9):
-            raise ValueError("route-plan charging_minutes does not match its stops")
-        if not math.isclose(
-            self.total_minutes,
-            self.driving_minutes + self.charging_minutes,
-            abs_tol=1e-9,
-        ):
-            raise ValueError("route-plan total_minutes must equal driving plus charging")

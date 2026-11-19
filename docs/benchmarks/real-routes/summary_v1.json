@@ -484,10 +484,10 @@
             "shortest_driving_time": {
               "charging_minutes": {
                 "count": 2,
-                "maximum": 0.0,
+                "maximum": 0,
                 "median": 0.0,
-                "minimum": 0.0,
-                "p90": 0.0
+                "minimum": 0,
+                "p90": 0
               },
               "charging_stops": {
                 "count": 2,
@@ -676,10 +676,10 @@
             "shortest_driving_time": {
               "charging_minutes": {
                 "count": 3,
-                "maximum": 0.0,
-                "median": 0.0,
-                "minimum": 0.0,
-                "p90": 0.0
+                "maximum": 0,
+                "median": 0,
+                "minimum": 0,
+                "p90": 0
               },
               "charging_stops": {
                 "count": 3,
@@ -1554,10 +1554,10 @@
             "shortest_driving_time": {
               "charging_minutes": {
                 "count": 1,
-                "maximum": 0.0,
-                "median": 0.0,
-                "minimum": 0.0,
-                "p90": 0.0
+                "maximum": 0,
+                "median": 0,
+                "minimum": 0,
+                "p90": 0
               },
               "charging_stops": {
                 "count": 1,
@@ -1746,10 +1746,10 @@
             "shortest_driving_time": {
               "charging_minutes": {
                 "count": 2,
-                "maximum": 0.0,
+                "maximum": 0,
                 "median": 0.0,
-                "minimum": 0.0,
-                "p90": 0.0
+                "minimum": 0,
+                "p90": 0
               },
               "charging_stops": {
                 "count": 2,
@@ -1938,10 +1938,10 @@
             "shortest_driving_time": {
               "charging_minutes": {
                 "count": 2,
-                "maximum": 0.0,
+                "maximum": 0,
                 "median": 0.0,
-                "minimum": 0.0,
-                "p90": 0.0
+                "minimum": 0,
+                "p90": 0
               },
               "charging_stops": {
                 "count": 2,
@@ -2130,10 +2130,10 @@
             "shortest_driving_time": {
               "charging_minutes": {
                 "count": 2,
-                "maximum": 0.0,
+                "maximum": 0,
                 "median": 0.0,
-                "minimum": 0.0,
-                "p90": 0.0
+                "minimum": 0,
+                "p90": 0
               },
               "charging_stops": {
                 "count": 2,
@@ -2322,10 +2322,10 @@
             "shortest_driving_time": {
               "charging_minutes": {
                 "count": 3,
-                "maximum": 0.0,
-                "median": 0.0,
-                "minimum": 0.0,
-                "p90": 0.0
+                "maximum": 0,
+                "median": 0,
+                "minimum": 0,
+                "p90": 0
               },
               "charging_stops": {
                 "count": 3,
@@ -2514,10 +2514,10 @@
             "shortest_driving_time": {
               "charging_minutes": {
                 "count": 3,
-                "maximum": 0.0,
-                "median": 0.0,
-                "minimum": 0.0,
-                "p90": 0.0
+                "maximum": 0,
+                "median": 0,
+                "minimum": 0,
+                "p90": 0
               },
               "charging_stops": {
                 "count": 3,
@@ -2772,10 +2772,10 @@
             "shortest_driving_time": {
               "charging_minutes": {
                 "count": 3,
-                "maximum": 0.0,
-                "median": 0.0,
-                "minimum": 0.0,
-                "p90": 0.0
+                "maximum": 0,
+                "median": 0,
+                "minimum": 0,
+                "p90": 0
               },
               "charging_stops": {
                 "count": 3,
@@ -2964,10 +2964,10 @@
             "shortest_driving_time": {
               "charging_minutes": {
                 "count": 2,
-                "maximum": 0.0,
+                "maximum": 0,
                 "median": 0.0,
-                "minimum": 0.0,
-                "p90": 0.0
+                "minimum": 0,
+                "p90": 0
               },
               "charging_stops": {
                 "count": 2,
@@ -3156,10 +3156,10 @@
             "shortest_driving_time": {
               "charging_minutes": {
                 "count": 2,
-                "maximum": 0.0,
+                "maximum": 0,
                 "median": 0.0,
-                "minimum": 0.0,
-                "p90": 0.0
+                "minimum": 0,
+                "p90": 0
               },
               "charging_stops": {
                 "count": 2,
@@ -3348,10 +3348,10 @@
             "shortest_driving_time": {
               "charging_minutes": {
                 "count": 2,
-                "maximum": 0.0,
+                "maximum": 0,
                 "median": 0.0,
-                "minimum": 0.0,
-                "p90": 0.0
+                "minimum": 0,
+                "p90": 0
               },
               "charging_stops": {
                 "count": 2,
@@ -3540,10 +3540,10 @@
             "shortest_driving_time": {
               "charging_minutes": {
                 "count": 2,
-                "maximum": 0.0,
+                "maximum": 0,
                 "median": 0.0,
-                "minimum": 0.0,
-                "p90": 0.0
+                "minimum": 0,
+                "p90": 0
               },
               "charging_stops": {
                 "count": 2,
@@ -3776,10 +3776,10 @@
             "shortest_driving_time": {
               "charging_minutes": {
                 "count": 2,
-                "maximum": 0.0,
+                "maximum": 0,
                 "median": 0.0,
-                "minimum": 0.0,
-                "p90": 0.0
+                "minimum": 0,
+                "p90": 0
               },
               "charging_stops": {
                 "count": 2,
@@ -3968,10 +3968,10 @@
             "shortest_driving_time": {
               "charging_minutes": {
                 "count": 2,
-                "maximum": 0.0,
+                "maximum": 0,
                 "median": 0.0,
-                "minimum": 0.0,
-                "p90": 0.0
+                "minimum": 0,
+                "p90": 0
               },
               "charging_stops": {
                 "count": 2,
@@ -4160,10 +4160,10 @@
             "shortest_driving_time": {
               "charging_minutes": {
                 "count": 2,
-                "maximum": 0.0,
+                "maximum": 0,
                 "median": 0.0,
-                "minimum": 0.0,
-                "p90": 0.0
+                "minimum": 0,
+                "p90": 0
               },
               "charging_stops": {
                 "count": 2,
@@ -5510,10 +5510,10 @@
             "shortest_driving_time": {
               "charging_minutes": {
                 "count": 1,
-                "maximum": 0.0,
-                "median": 0.0,
-                "minimum": 0.0,
-                "p90": 0.0
+                "maximum": 0,
+                "median": 0,
+                "minimum": 0,
+                "p90": 0
               },
               "charging_stops": {
                 "count": 1,
@@ -7622,10 +7622,10 @@
             "shortest_driving_time": {
               "charging_minutes": {
                 "count": 1,
-                "maximum": 0.0,
-                "median": 0.0,
-                "minimum": 0.0,
-                "p90": 0.0
+                "maximum": 0,
+                "median": 0,
+                "minimum": 0,
+                "p90": 0
               },
               "charging_stops": {
                 "count": 1,

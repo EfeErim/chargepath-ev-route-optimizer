@@ -20,13 +20,13 @@ from chargepath.demo import (
 )
 from chargepath.demo.responses import ConfigPayload, PlanPayload
 from chargepath.demo.server import create_server
-from chargepath.fixtures import load_synthetic_scenario
+from chargepath.fixtures import SYNTHETIC_SCENARIO_PATH, load_synthetic_scenario
 from chargepath.models import GeoJsonLineString, NoFeasibleRouteError
 from chargepath.providers.base import CoordinateLike
 from chargepath.providers.osrm import OsrmResponseError, OsrmTableCost, OsrmTableResult
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-SYNTHETIC_FIXTURE = REPOSITORY_ROOT / "data/sample/synthetic_corridor.json"
+SYNTHETIC_FIXTURE = SYNTHETIC_SCENARIO_PATH
 EPDK_FIXTURE = REPOSITORY_ROOT / "tests/fixtures/epdk/observed_v1/synthetic_response.json"
 LOCAL_OSRM = "http://127.0.0.1:5000"
 

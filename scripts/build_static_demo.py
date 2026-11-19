@@ -12,10 +12,12 @@ import shutil
 import zipfile
 from pathlib import Path
 
+from chargepath.fixtures import SYNTHETIC_SCENARIO_PATH
+
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 WEB_ROOT = REPOSITORY_ROOT / "src" / "chargepath" / "web"
 PACKAGE_ROOT = REPOSITORY_ROOT / "src" / "chargepath"
-FIXTURE = REPOSITORY_ROOT / "data" / "sample" / "synthetic_corridor.json"
+FIXTURE = SYNTHETIC_SCENARIO_PATH
 BRIDGE = Path(__file__).resolve().parent / "static-demo" / "static-api.js"
 # Pyodide 0.27 ships CPython 3.12, inside the project's supported 3.11+ range.
 PYODIDE_VERSION = "0.27.7"
@@ -69,6 +71,8 @@ def _write_source_archive(target: Path) -> None:
     # Fixed timestamps keep the archive byte-identical for identical sources.
     with zipfile.ZipFile(target, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         for path in sorted(PACKAGE_ROOT.rglob("*.py")):
+            if "benchmarks" in path.relative_to(PACKAGE_ROOT).parts:
+                continue
             relative = path.relative_to(PACKAGE_ROOT.parent).as_posix()
             info = zipfile.ZipInfo(relative, date_time=(1980, 1, 1, 0, 0, 0))
             # writestr() keeps a ZipInfo's own method, which defaults to stored.

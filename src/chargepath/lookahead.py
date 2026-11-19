@@ -62,7 +62,12 @@ class LookaheadGreedyOptimizer:
         grid = SocGrid.for_vehicle(vehicle, step)
         energy_bucket = grid.initial
         if origin_id == destination_id:
-            return RoutePlan.stationary(origin_id, arrival_soc_pct=grid.soc_pct(energy_bucket))
+            return RoutePlan(
+                node_ids=(origin_id,),
+                legs=(),
+                charging_stops=(),
+                arrival_soc_pct=grid.soc_pct(energy_bucket),
+            )
 
         leg_lookup = leg_bucket_lookup(
             {}, vehicle=vehicle, model=self.consumption_model, bucket_kwh=grid.bucket_kwh
@@ -186,7 +191,7 @@ class LookaheadGreedyOptimizer:
             node_ids.append(current)
             visited.add(current)
 
-        return RoutePlan.assemble(
+        return RoutePlan(
             node_ids=tuple(node_ids),
             legs=tuple(legs),
             charging_stops=tuple(stops),

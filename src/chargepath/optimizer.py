@@ -126,7 +126,12 @@ class EVRouteOptimizer:
         validation.trip_endpoints(origin_id, destination_id)
         grid = SocGrid.for_vehicle(vehicle, self.soc_step_pct)
         if origin_id == destination_id:
-            return RoutePlan.stationary(origin_id, arrival_soc_pct=grid.soc_pct(grid.initial))
+            return RoutePlan(
+                node_ids=(origin_id,),
+                legs=(),
+                charging_stops=(),
+                arrival_soc_pct=grid.soc_pct(grid.initial),
+            )
 
         leg_lookup = leg_bucket_lookup(
             required_buckets_cache,
@@ -293,7 +298,7 @@ class EVRouteOptimizer:
                 )
             )
 
-        return RoutePlan.assemble(
+        return RoutePlan(
             node_ids=tuple(node_ids),
             legs=tuple(legs),
             charging_stops=tuple(stops),

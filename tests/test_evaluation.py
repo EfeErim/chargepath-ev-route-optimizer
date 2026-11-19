@@ -6,15 +6,16 @@ from typing import Any
 
 import pytest
 
-from chargepath import RoadLeg, RoutePlan, ShortestDrivingTimeBaseline, VehicleProfile, evaluation
-from chargepath.evaluation import (
+from chargepath import RoadLeg, RoutePlan, ShortestDrivingTimeBaseline, VehicleProfile
+from chargepath.benchmarks import evaluation
+from chargepath.benchmarks.evaluation import (
     PLAN_ALGORITHMS,
     REQUIRED_TOPOLOGY_CLASSES,
     build_correctness_artifact,
     evaluate_plan,
     load_benchmark_manifest,
 )
-from chargepath.evidence import canonical_json_bytes
+from chargepath.benchmarks.evidence import canonical_json_bytes
 from chargepath.providers import StaticRoadNetwork
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]

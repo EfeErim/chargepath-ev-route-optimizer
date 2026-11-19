@@ -13,7 +13,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
-from chargepath.evidence import nearest_rank
+from chargepath.benchmarks.evidence import nearest_rank
 
 ROOT = Path(__file__).resolve().parents[1]
 TRIPS = ROOT / "docs/benchmarks/real-routes/trips_v1.jsonl"

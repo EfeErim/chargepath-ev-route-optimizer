@@ -257,9 +257,6 @@ def test_selected_geometries_are_fetched_once_per_leg_and_concurrently() -> None
         via_hub,
         node_ids=("origin", "destination"),
         legs=(direct_leg,),
-        total_distance_km=30,
-        driving_minutes=60,
-        total_minutes=60,
     )
     corridor = GeoJsonLineString(((29.0, 41.0), (29.2, 41.2)))
 

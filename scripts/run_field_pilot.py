@@ -9,8 +9,8 @@ from bisect import bisect_left
 from pathlib import Path
 from statistics import mean
 
+from chargepath.benchmarks.evidence import canonical_json_bytes
 from chargepath.energy import charging_minutes, energy_for_distance
-from chargepath.evidence import canonical_json_bytes
 from chargepath.models import VehicleProfile
 
 SOURCE_SHA256 = "76788d07fe5bb0b0af81ef9041fd7854e05de00b9ef34f616584ce623385e6c8"

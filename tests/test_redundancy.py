@@ -76,9 +76,7 @@ def test_a_single_charger_has_no_structural_fallback() -> None:
 
 
 def test_demo_reports_redundancy_for_the_fastest_option_only() -> None:
-    service = FixturePlanningService(
-        load_synthetic_scenario("data/sample/synthetic_corridor.json"), tile_url=DEFAULT_TILE_URL
-    )
+    service = FixturePlanningService(load_synthetic_scenario(), tile_url=DEFAULT_TILE_URL)
     config = service.public_config()
     endpoints = config["endpoints"]
     assert isinstance(endpoints, list)

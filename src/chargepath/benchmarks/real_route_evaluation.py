@@ -17,16 +17,16 @@ from pathlib import Path
 from typing import Any
 
 from chargepath.baselines import ShortestDrivingTimeBaseline
-from chargepath.evaluation import OPTION_ALGORITHMS, evaluate_plan, plan_route
-from chargepath.evidence import summary_stats, time_passes, timing_summary
-from chargepath.models import NoFeasibleRouteError, RoutePlan, Station, VehicleProfile
-from chargepath.providers.static import StaticRoadNetwork
-from chargepath.real_route_collection import (
+from chargepath.benchmarks.evaluation import OPTION_ALGORITHMS, evaluate_plan, plan_route
+from chargepath.benchmarks.evidence import summary_stats, time_passes, timing_summary
+from chargepath.benchmarks.real_route_collection import (
     GraphKey,
     StoredGraph,
     load_stored_graph,
     load_verified_graph,
 )
+from chargepath.models import NoFeasibleRouteError, RoutePlan, Station, VehicleProfile
+from chargepath.providers.static import StaticRoadNetwork
 
 FASTEST = "fastest"
 GREEDY = "greedy_fixed_80"

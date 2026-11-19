@@ -7,12 +7,12 @@ import hashlib
 from datetime import date
 from pathlib import Path
 
-from chargepath.evaluation import (
+from chargepath.benchmarks.evaluation import (
     build_correctness_artifact,
     build_runtime_artifact,
     load_benchmark_manifest,
 )
-from chargepath.evidence import canonical_json_bytes
+from chargepath.benchmarks.evidence import canonical_json_bytes
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MANIFEST = REPOSITORY_ROOT / "data/benchmarks/synthetic/v1/manifest.json"

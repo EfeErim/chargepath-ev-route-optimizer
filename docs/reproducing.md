@@ -141,5 +141,5 @@ or duplicate records and projected 7,640 public sites with at least one `DC_CCS`
 
 The Swagger publishes no response model. `tests/fixtures/epdk/observed_v1/synthetic_response.json`
 mirrors the observed shape with invented rows plus deliberate invalid and duplicate cases, and the
-normalizer fails closed on unreviewed fields. `data/sample/synthetic_corridor.json`, used by the CLI
+normalizer fails closed on unreviewed fields. `src/chargepath/data/synthetic_corridor.json`, used by the CLI
 demo, the map demo and the fixture tests, is also synthetic.

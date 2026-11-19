@@ -14,12 +14,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
+from chargepath.benchmarks.evidence import time_passes, timing_summary
 from chargepath.corridor import (
     FARTHEST_PROGRESS_ALGORITHM,
     CandidateSelectionConfig,
     select_corridor_candidates,
 )
-from chargepath.evidence import time_passes, timing_summary
 from chargepath.models import GeoJsonLineString, RoadLeg, Station
 from chargepath.providers.osrm import (
     CandidateGraphBuilder,

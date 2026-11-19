@@ -13,7 +13,7 @@ components below are loaded or queried at runtime and are not bundled.
 | [Pyodide](https://github.com/pyodide/pyodide/tree/0.27.7) | 0.27.7, loaded from the jsDelivr CDN by the static demo only, with a subresource-integrity hash on `pyodide.js` | [MPL-2.0](https://github.com/pyodide/pyodide/blob/0.27.7/LICENSE) | Runs the planner in the browser for the GitHub Pages demo. Not bundled and not used by the package or the local server. |
 | EPDK charging-station service | Optional static snapshot | Redistribution status unresolved | Real response rows are excluded from Git and the release. Only metadata and project-authored synthetic fixtures are included. |
 
-Files under `data/sample/`, `data/benchmarks/synthetic/`, and `tests/fixtures/` are project-authored
+`src/chargepath/data/synthetic_corridor.json` and files under `data/benchmarks/synthetic/` and `tests/fixtures/` are project-authored
 synthetic fixtures. The recorded OSRM fixture was produced from the included synthetic OSM ring.
 The real-route selection distances and model results derive from OpenStreetMap data, © OpenStreetMap
 contributors, ODbL. Source extracts and station rows stay outside Git.

@@ -4,6 +4,16 @@ The project uses [Semantic Versioning](https://semver.org/).
 
 ## Unreleased
 
+- Benchmark and evidence code moved to `chargepath.benchmarks` and is no longer shipped in the
+  static demo's source archive. The synthetic corridor ships as package data at
+  `chargepath/data/synthetic_corridor.json`, and `load_synthetic_scenario()` loads it by default;
+  the command-line example is `scripts/plan_synthetic_trip.py`.
+- `RoutePlan` derives its distance and time totals from its legs and stops;
+  `RoutePlan.assemble` and `RoutePlan.stationary` are gone. A plan without charging now records
+  `charging_minutes` as `0` in every strategy, so the evidence files were rewritten with the same
+  values.
+- `charging_minutes` no longer re-validates station power and model constants on every search
+  edge.
 - Added `LookaheadGreedyOptimizer`, a one-step lookahead evaluation baseline, and
   `scripts/run_baseline_comparison.py`: exact fastest is a median 2.6 min (0.5%) faster on the 72
   E1 scenarios, maximum 26.5, with 22 ties.

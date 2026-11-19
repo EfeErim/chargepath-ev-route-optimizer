@@ -51,8 +51,6 @@ def stop_redundancy(
 ) -> tuple[StopRedundancy, ...]:
     """Measure, per charging stop of an exact fastest plan, the structural fallback options."""
 
-    if isinstance(alternative_limit, bool) or not isinstance(alternative_limit, int):
-        raise ValueError("alternative_limit must be an integer")
     if alternative_limit < 0:
         raise ValueError("alternative_limit must not be negative")
     optimizer = EVRouteOptimizer(soc_step_pct=soc_step_pct, consumption_model=consumption_model)

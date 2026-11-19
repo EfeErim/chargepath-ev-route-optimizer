@@ -141,7 +141,7 @@ def test_one_tampered_field_is_rejected(
 def test_shortened_road_leg_is_rejected_against_the_network(plan: RoutePlan) -> None:
     # Halving s -> c keeps every other contract intact, so only the network check catches it.
     shorter = replace(plan.legs[1], distance_km=plan.legs[1].distance_km / 2)
-    tampered = RoutePlan.assemble(
+    tampered = RoutePlan(
         node_ids=plan.node_ids,
         legs=(plan.legs[0], shorter),
         charging_stops=plan.charging_stops,
@@ -170,7 +170,7 @@ def test_a_stop_is_replayed_at_the_visit_it_names() -> None:
         energy_added_kwh=36.0,
         charging_minutes=charging_minutes(VEHICLE, 150, 0.0, 60.0),
     )
-    revisit = RoutePlan.assemble(
+    revisit = RoutePlan(
         node_ids=("a", "s", "b", "s", "c"),
         legs=legs,
         charging_stops=(stop,),

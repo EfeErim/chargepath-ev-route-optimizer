@@ -9,16 +9,9 @@ from typing import Any
 
 import pytest
 
-from chargepath.evidence import canonical_json_bytes
-from chargepath.models import GeoJsonLineString, Station, VehicleProfile
-from chargepath.providers.base import CoordinateLike
-from chargepath.providers.osrm import (
-    OsrmResponseError,
-    OsrmTableCost,
-    OsrmTableResult,
-)
-from chargepath.real_route_benchmark import Province, SelectedRoute, build_manifest
-from chargepath.real_route_collection import (
+from chargepath.benchmarks.evidence import canonical_json_bytes
+from chargepath.benchmarks.real_route_benchmark import Province, SelectedRoute, build_manifest
+from chargepath.benchmarks.real_route_collection import (
     GraphKey,
     collect_graphs,
     load_frozen_options,
@@ -26,7 +19,7 @@ from chargepath.real_route_collection import (
     load_verified_graph,
     required_graph_keys,
 )
-from chargepath.real_route_evaluation import (
+from chargepath.benchmarks.real_route_evaluation import (
     EvaluationDefectError,
     assert_no_station_data,
     check_gates,
@@ -34,6 +27,13 @@ from chargepath.real_route_evaluation import (
     evaluate,
     run_trip_on_graph,
     trips_bytes,
+)
+from chargepath.models import GeoJsonLineString, Station, VehicleProfile
+from chargepath.providers.base import CoordinateLike
+from chargepath.providers.osrm import (
+    OsrmResponseError,
+    OsrmTableCost,
+    OsrmTableResult,
 )
 from chargepath.station_data import CompatibleStationOption, SnapshotProvenance
 

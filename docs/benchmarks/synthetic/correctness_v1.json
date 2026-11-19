@@ -79,7 +79,7 @@
           "feasible": true,
           "plan": {
             "arrival_soc_pct": 45.0,
-            "charging_minutes": 0.0,
+            "charging_minutes": 0,
             "charging_stops": [],
             "driving_minutes": 60,
             "node_ids": [
@@ -902,7 +902,7 @@
           "feasible": true,
           "plan": {
             "arrival_soc_pct": 10.0,
-            "charging_minutes": 0.0,
+            "charging_minutes": 0,
             "charging_stops": [],
             "driving_minutes": 90,
             "node_ids": [

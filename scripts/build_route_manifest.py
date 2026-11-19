@@ -7,14 +7,14 @@ import hashlib
 import json
 from pathlib import Path
 
-from chargepath.evidence import canonical_json_bytes
-from chargepath.providers.osrm import Coordinate, OsrmHttpClient
-from chargepath.real_route_benchmark import (
+from chargepath.benchmarks.evidence import canonical_json_bytes
+from chargepath.benchmarks.real_route_benchmark import (
     build_manifest,
     distance_key,
     load_provinces,
     select_routes,
 )
+from chargepath.providers.osrm import Coordinate, OsrmHttpClient
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 BENCHMARK_DIR = REPOSITORY_ROOT / "data/benchmarks/real-routes/v1"

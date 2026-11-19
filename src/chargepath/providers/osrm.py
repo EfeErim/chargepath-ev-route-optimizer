@@ -178,8 +178,6 @@ class OsrmHttpClient:
         allow_remote_endpoint: bool = False,
         transport: HttpTransport | None = None,
     ) -> None:
-        if not isinstance(allow_remote_endpoint, bool):
-            raise ValueError("allow_remote_endpoint must be boolean")
         self._endpoint = _validate_endpoint(endpoint, allow_remote=allow_remote_endpoint)
         if not math.isfinite(timeout_seconds) or timeout_seconds <= 0:
             raise ValueError("OSRM timeout_seconds must be positive and finite")

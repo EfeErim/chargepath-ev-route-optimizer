@@ -12,11 +12,11 @@ import json
 from pathlib import Path
 from statistics import median
 
-from chargepath.evidence import canonical_json_bytes
+from chargepath.benchmarks.evidence import canonical_json_bytes
+from chargepath.benchmarks.real_route_evaluation import assert_no_station_data, verified_e1_graphs
 from chargepath.models import RoutePlan, Station
 from chargepath.optimizer import EVRouteOptimizer
 from chargepath.providers.static import StaticRoadNetwork
-from chargepath.real_route_evaluation import assert_no_station_data, verified_e1_graphs
 from chargepath.speed import (
     DEFAULT_SPEED_FACTORS,
     PILOT_QUADRATIC_SHARE,

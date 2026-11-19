@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from chargepath.real_route_benchmark import (
+from chargepath.benchmarks.real_route_benchmark import (
     DISTANCE_BANDS,
     Province,
     distance_key,

@@ -9,7 +9,7 @@ if (-not $python) { $python = "python" }
 
 $steps = @(
     @("-m", "pytest", "-q"),
-    @("examples/run_synthetic_demo.py"),
+    @("scripts/plan_synthetic_trip.py"),
     @("-m", "ruff", "check", "."),
     @("-m", "ruff", "format", "--check", "."),
     @("-m", "mypy")

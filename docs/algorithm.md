@@ -137,8 +137,8 @@ All under `src/chargepath/`. The core imports no web framework, map library or H
 | `verification.py`, `redundancy.py` | Independent replay; structural per-stop fallback note for the demo |
 | `providers/` | In-memory road network and the OSRM Route/Table adapter behind an injectable transport |
 | `station_data.py`, `corridor.py` | EPDK normalization, CCS2 DC projection, snapshot loading; capped corridor selection |
-| `fixtures.py`, `evaluation.py` | Synthetic fixture loading and the synthetic benchmark |
-| `real_route_benchmark.py`, `real_route_collection.py`, `real_route_evaluation.py` | Route selection, OSRM collection, offline evaluation |
+| `fixtures.py`, `data/` | Synthetic scenario loading and the bundled synthetic corridor |
+| `benchmarks/` | Synthetic benchmark, real-route selection, OSRM collection, offline evaluation and evidence helpers; not shipped in the static demo |
 | `demo/`, `web/` | Request schema, planning services, response formatting, loopback server, Pyodide entry point; Leaflet UI that never computes feasibility |
 
 Invalid domain data raises `ValueError` at construction. OSRM timeouts and malformed responses stay

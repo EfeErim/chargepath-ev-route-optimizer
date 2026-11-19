@@ -19,8 +19,8 @@ from chargepath.alternatives import (
     GreedyFixedTargetOptimizer,
 )
 from chargepath.baselines import ShortestDrivingTimeBaseline
+from chargepath.benchmarks.evidence import nearest_rank, time_passes
 from chargepath.corridor import CandidateSelectionConfig, select_corridor_candidates
-from chargepath.evidence import nearest_rank, time_passes
 from chargepath.fixtures import leg_from_json, station_from_json, vehicle_from_json
 from chargepath.models import (
     GeoJsonLineString,

@@ -193,25 +193,9 @@ def charging_minutes(
     With ``vehicle.charging_curve`` the accepted power follows that piecewise-linear curve, capped
     by the station and the vehicle. Without it, a generic two-segment taper applies.
     """
-    for value, field in (
-        (station_power_kw, "station_power_kw"),
-        (from_soc_pct, "from_soc_pct"),
-        (to_soc_pct, "to_soc_pct"),
-        (taper_start_pct, "taper_start_pct"),
-        (taper_factor, "taper_factor"),
-        (setup_minutes, "setup_minutes"),
-    ):
-        _require_finite(value, field=field)
-    if station_power_kw <= 0:
-        raise ValueError("station_power_kw must be positive")
+    # Station power and the SOC grid are validated where they are built; this runs per search edge.
     if not 0 <= from_soc_pct <= to_soc_pct <= 100:
         raise ValueError("charge SOC values must satisfy 0 <= from <= to <= 100")
-    if not 0 < taper_start_pct < 100:
-        raise ValueError("taper_start_pct must be between 0 and 100")
-    if not 0 < taper_factor <= 1:
-        raise ValueError("taper_factor must be between 0 and 1")
-    if setup_minutes < 0:
-        raise ValueError("setup_minutes must not be negative")
     if from_soc_pct == to_soc_pct:
         return 0.0
 

@@ -43,7 +43,12 @@ class ShortestDrivingTimeBaseline:
         validation.trip_endpoints(origin_id, destination_id)
         grid = SocGrid.for_vehicle(vehicle, self.soc_step_pct)
         if origin_id == destination_id:
-            return RoutePlan.stationary(origin_id, arrival_soc_pct=grid.soc_pct(grid.initial))
+            return RoutePlan(
+                node_ids=(origin_id,),
+                legs=(),
+                charging_stops=(),
+                arrival_soc_pct=grid.soc_pct(grid.initial),
+            )
 
         legs = self.shortest_path(origin_id, destination_id, road_network)
         if legs is None:
@@ -64,16 +69,11 @@ class ShortestDrivingTimeBaseline:
                 )
             energy_bucket = remaining
 
-        driving_minutes = sum(leg.duration_minutes for leg in legs)
         return RoutePlan(
             node_ids=(origin_id, *(leg.destination_id for leg in legs)),
             legs=legs,
             charging_stops=(),
-            total_distance_km=sum(leg.distance_km for leg in legs),
-            driving_minutes=driving_minutes,
-            charging_minutes=0.0,
             arrival_soc_pct=grid.soc_pct(energy_bucket),
-            total_minutes=driving_minutes,
         )
 
     @staticmethod

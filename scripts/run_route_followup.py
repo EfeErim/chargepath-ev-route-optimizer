@@ -11,12 +11,16 @@ from pathlib import Path
 from statistics import median
 
 from chargepath.alternatives import GreedyFixedTargetOptimizer
-from chargepath.evidence import canonical_json_bytes, nearest_rank
+from chargepath.benchmarks.evidence import canonical_json_bytes, nearest_rank
+from chargepath.benchmarks.real_route_collection import load_verified_graph
+from chargepath.benchmarks.real_route_evaluation import (
+    Trip,
+    assert_no_station_data,
+    verified_e1_graphs,
+)
 from chargepath.models import NoFeasibleRouteError, RoutePlan, Station
 from chargepath.optimizer import EVRouteOptimizer
 from chargepath.providers.static import StaticRoadNetwork
-from chargepath.real_route_collection import load_verified_graph
-from chargepath.real_route_evaluation import Trip, assert_no_station_data, verified_e1_graphs
 from chargepath.verification import replay_route_plan
 
 ROOT = Path(__file__).resolve().parents[1]

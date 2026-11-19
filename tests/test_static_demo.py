@@ -13,9 +13,10 @@ from typing import Any
 import pytest
 
 from chargepath.demo import browser
+from chargepath.fixtures import SYNTHETIC_SCENARIO_PATH
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-FIXTURE = REPOSITORY_ROOT / "data/sample/synthetic_corridor.json"
+FIXTURE = SYNTHETIC_SCENARIO_PATH
 
 
 def _load_build_script() -> ModuleType:

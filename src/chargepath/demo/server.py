@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
 from collections.abc import Mapping, Sequence
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -22,7 +21,7 @@ from chargepath.demo.services import (
     PlanningService,
     api_response,
 )
-from chargepath.fixtures import load_synthetic_scenario
+from chargepath.fixtures import SYNTHETIC_SCENARIO_PATH, load_synthetic_scenario
 from chargepath.providers.osrm import DEFAULT_OSRM_ENDPOINT
 
 DEFAULT_PORT = 8743
@@ -120,21 +119,12 @@ def create_server(service: PlanningService, port: int = DEFAULT_PORT) -> DemoHtt
     return server
 
 
-def _default_fixture_path() -> Path:
-    repository_fixture = (
-        Path(__file__).resolve().parents[3] / "data" / "sample" / "synthetic_corridor.json"
-    )
-    if repository_fixture.is_file():
-        return repository_fixture
-    return Path(sys.prefix) / "share" / "chargepath" / "synthetic_corridor.json"
-
-
 def _argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="chargepath-demo", description=__doc__)
     parser.add_argument("--mode", choices=("fixture", "integration"), default="fixture")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
     parser.add_argument("--tile-url", default=DEFAULT_TILE_URL)
-    parser.add_argument("--fixture", type=Path, default=_default_fixture_path())
+    parser.add_argument("--fixture", type=Path, default=SYNTHETIC_SCENARIO_PATH)
     parser.add_argument("--osrm-endpoint", default=DEFAULT_OSRM_ENDPOINT)
     parser.add_argument(
         "--allow-remote-osrm",

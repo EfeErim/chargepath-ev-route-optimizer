@@ -6,8 +6,9 @@ from typing import Any
 import pytest
 
 from chargepath import GeoJsonLineString, load_synthetic_scenario
+from chargepath.fixtures import SYNTHETIC_SCENARIO_PATH
 
-SYNTHETIC_FIXTURE = Path(__file__).resolve().parents[1] / "data/sample/synthetic_corridor.json"
+SYNTHETIC_FIXTURE = SYNTHETIC_SCENARIO_PATH
 
 
 def test_bundled_synthetic_fixture_is_directly_loadable() -> None:

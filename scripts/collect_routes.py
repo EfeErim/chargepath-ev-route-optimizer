@@ -6,12 +6,12 @@ import argparse
 import json
 from pathlib import Path
 
-from chargepath.providers.osrm import OsrmHttpClient
-from chargepath.real_route_collection import (
+from chargepath.benchmarks.real_route_collection import (
     collect_graphs,
     load_frozen_options,
     measure_osrm_runtime,
 )
+from chargepath.providers.osrm import OsrmHttpClient
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MANIFEST = REPOSITORY_ROOT / "data/benchmarks/real-routes/v1/manifest.json"

@@ -2,22 +2,16 @@
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
-
-REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(REPOSITORY_ROOT / "src"))
-
-from chargepath import (  # noqa: E402
+from chargepath import (
     CompetitiveRoutePlanner,
     load_synthetic_scenario,
     verify_route_plan,
 )
-from chargepath.providers import StaticRoadNetwork  # noqa: E402
+from chargepath.providers import StaticRoadNetwork
 
 
 def main() -> None:
-    scenario = load_synthetic_scenario(REPOSITORY_ROOT / "data/sample/synthetic_corridor.json")
+    scenario = load_synthetic_scenario()
     stations = scenario.station_map()
     network = StaticRoadNetwork(scenario.legs)
     result = CompetitiveRoutePlanner(soc_step_pct=5).plan(
