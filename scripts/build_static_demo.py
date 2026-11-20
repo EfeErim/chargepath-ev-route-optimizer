@@ -12,12 +12,11 @@ import shutil
 import zipfile
 from pathlib import Path
 
-from chargepath.fixtures import SYNTHETIC_SCENARIO_PATH
-
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 WEB_ROOT = REPOSITORY_ROOT / "src" / "chargepath" / "web"
 PACKAGE_ROOT = REPOSITORY_ROOT / "src" / "chargepath"
-FIXTURE = SYNTHETIC_SCENARIO_PATH
+# Paths only: the Pages job runs this script without installing the package.
+FIXTURE = PACKAGE_ROOT / "data" / "synthetic_corridor.json"
 BRIDGE = Path(__file__).resolve().parent / "static-demo" / "static-api.js"
 # Pyodide 0.27 ships CPython 3.12, inside the project's supported 3.11+ range.
 PYODIDE_VERSION = "0.27.7"
