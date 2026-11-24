@@ -12,6 +12,7 @@ from chargepath.energy import (
     DEFAULT_CONSUMPTION,
     ConsumptionModel,
     LegBucketCache,
+    LegBuckets,
     SocGrid,
     buckets_for_leg,
     charging_minutes,
@@ -29,6 +30,9 @@ from chargepath.providers.base import RoadNetwork
 
 State = tuple[str, int]
 Priority = tuple[float, float, float, int]
+# The best known way to reach a state: its priority, total minutes, distance and charging sessions.
+# The priority is stored so that each candidate is rounded once.
+Label = tuple[Priority, float, float, int]
 
 # Accumulated float sums that differ only by rounding noise are treated as ties, so the documented
 # tie-breaks decide between them instead of the last bits of the arithmetic.
@@ -41,27 +45,6 @@ class RoutePreference(StrEnum):
     FASTEST = "fastest"
     SHORTEST_DISTANCE = "shortest_distance"
     FEWEST_CHARGING_STOPS = "fewest_charging_stops"
-
-
-@dataclass(frozen=True, slots=True)
-class _SearchMetrics:
-    total_minutes: float = 0.0
-    distance_km: float = 0.0
-    charging_stops: int = 0
-
-    def drive(self, leg: RoadLeg) -> _SearchMetrics:
-        return _SearchMetrics(
-            total_minutes=self.total_minutes + leg.duration_minutes,
-            distance_km=self.distance_km + leg.distance_km,
-            charging_stops=self.charging_stops,
-        )
-
-    def charge(self, minutes: float) -> _SearchMetrics:
-        return _SearchMetrics(
-            total_minutes=self.total_minutes + minutes,
-            distance_km=self.distance_km,
-            charging_stops=self.charging_stops + 1,
-        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -139,15 +122,20 @@ class EVRouteOptimizer:
             model=self.consumption_model,
             bucket_kwh=grid.bucket_kwh,
         )
-        start: State = (origin_id, grid.initial)
+        # Each node's legs with their (net, peak) bucket counts, built when the node is first
+        # expanded, and charge minutes per (station power, from bucket, to bucket).
+        outgoing: dict[str, list[tuple[RoadLeg, LegBuckets]]] = {}
+        charge_cache: dict[tuple[float, int, int], float] = {}
+        priority_of = self._priority
+        after_leg = grid.after_leg
+        maximum, step = grid.maximum, self.soc_step_pct
 
-        best_metrics: dict[State, _SearchMetrics] = {start: _SearchMetrics()}
+        start: State = (origin_id, grid.initial)
+        start_priority = priority_of(0.0, 0.0, 0, grid.initial)
+        labels: dict[State, Label] = {start: (start_priority, 0.0, 0.0, 0)}
         predecessors: dict[State, tuple[State, Action]] = {}
-        queue: list[tuple[Priority, int, State]] = []
-        sequence = itertools.count()
-        heapq.heappush(
-            queue, (self._priority(_SearchMetrics(), grid.initial), next(sequence), start)
-        )
+        queue: list[tuple[Priority, int, State]] = [(start_priority, 0, start)]
+        sequence = itertools.count(1)
         destination_state: State | None = None
         # Highest bucket already settled at each node. A state settled earlier has a priority no
         # worse than any later one, and a higher bucket can replay every continuation of a lower
@@ -156,10 +144,10 @@ class EVRouteOptimizer:
 
         while queue:
             current_priority, _, current = heapq.heappop(queue)
-            current_metrics = best_metrics[current]
-            node_id, energy_bucket = current
-            if current_priority != self._priority(current_metrics, energy_bucket):
+            priority, minutes, distance_km, sessions = labels[current]
+            if current_priority != priority:
                 continue
+            node_id, energy_bucket = current
             if energy_bucket < settled_bucket.get(node_id, -1):
                 continue
             settled_bucket[node_id] = energy_bucket
@@ -167,51 +155,64 @@ class EVRouteOptimizer:
                 destination_state = current
                 break
 
-            for leg in road_network.neighbors(node_id):
-                remaining_bucket = grid.after_leg(
-                    energy_bucket,
-                    buckets_for_leg(
-                        leg_lookup,
+            legs = outgoing.get(node_id)
+            if legs is None:
+                legs = [
+                    (
                         leg,
-                        vehicle=vehicle,
-                        model=self.consumption_model,
-                        bucket_kwh=grid.bucket_kwh,
-                    ),
-                )
+                        buckets_for_leg(
+                            leg_lookup,
+                            leg,
+                            vehicle=vehicle,
+                            model=self.consumption_model,
+                            bucket_kwh=grid.bucket_kwh,
+                        ),
+                    )
+                    for leg in road_network.neighbors(node_id)
+                ]
+                outgoing[node_id] = legs
+            for leg, buckets in legs:
+                remaining_bucket = after_leg(energy_bucket, buckets)
                 if remaining_bucket is None:
                     continue
+                next_minutes = minutes + leg.duration_minutes
+                next_distance = distance_km + leg.distance_km
+                next_priority = priority_of(next_minutes, next_distance, sessions, remaining_bucket)
                 next_state = (leg.destination_id, remaining_bucket)
-                self._relax(
-                    current=current,
-                    next_state=next_state,
-                    action=_DriveAction(leg),
-                    next_metrics=current_metrics.drive(leg),
-                    best_metrics=best_metrics,
-                    predecessors=predecessors,
-                    queue=queue,
-                    sequence=sequence,
-                )
+                existing = labels.get(next_state)
+                if existing is not None and next_priority >= existing[0]:
+                    continue
+                labels[next_state] = (next_priority, next_minutes, next_distance, sessions)
+                predecessors[next_state] = (current, _DriveAction(leg))
+                heapq.heappush(queue, (next_priority, next(sequence), next_state))
 
             station = stations.get(node_id)
-            if station is None or energy_bucket >= grid.maximum:
+            if station is None or energy_bucket >= maximum:
                 continue
             if station.connector_type not in vehicle.supported_dc_connectors:
                 continue
-            for target_bucket in range(energy_bucket + 1, grid.maximum + 1):
-                from_soc = energy_bucket * self.soc_step_pct
-                to_soc = target_bucket * self.soc_step_pct
-                duration = charging_minutes(vehicle, station.max_power_kw, from_soc, to_soc)
+            power_kw = station.max_power_kw
+            next_sessions = sessions + 1
+            for target_bucket in range(energy_bucket + 1, maximum + 1):
+                key = (power_kw, energy_bucket, target_bucket)
+                duration = charge_cache.get(key)
+                if duration is None:
+                    duration = charging_minutes(
+                        vehicle, power_kw, energy_bucket * step, target_bucket * step
+                    )
+                    charge_cache[key] = duration
+                next_minutes = minutes + duration
+                next_priority = priority_of(next_minutes, distance_km, next_sessions, target_bucket)
                 next_state = (node_id, target_bucket)
-                self._relax(
-                    current=current,
-                    next_state=next_state,
-                    action=_ChargeAction(node_id, energy_bucket, target_bucket, duration),
-                    next_metrics=current_metrics.charge(duration),
-                    best_metrics=best_metrics,
-                    predecessors=predecessors,
-                    queue=queue,
-                    sequence=sequence,
+                existing = labels.get(next_state)
+                if existing is not None and next_priority >= existing[0]:
+                    continue
+                labels[next_state] = (next_priority, next_minutes, distance_km, next_sessions)
+                predecessors[next_state] = (
+                    current,
+                    _ChargeAction(node_id, energy_bucket, target_bucket, duration),
                 )
+                heapq.heappush(queue, (next_priority, next(sequence), next_state))
 
         if destination_state is None:
             reason = f"no energy-feasible route from {origin_id!r} to {destination_id!r}"
@@ -229,37 +230,18 @@ class EVRouteOptimizer:
             vehicle=vehicle,
         )
 
-    def _relax(
-        self,
-        *,
-        current: State,
-        next_state: State,
-        action: Action,
-        next_metrics: _SearchMetrics,
-        best_metrics: dict[State, _SearchMetrics],
-        predecessors: dict[State, tuple[State, Action]],
-        queue: list[tuple[Priority, int, State]],
-        sequence: itertools.count[int],
-    ) -> None:
-        next_priority = self._priority(next_metrics, next_state[1])
-        existing = best_metrics.get(next_state)
-        if existing is not None and next_priority >= self._priority(existing, next_state[1]):
-            return
-        best_metrics[next_state] = next_metrics
-        predecessors[next_state] = (current, action)
-        heapq.heappush(queue, (next_priority, next(sequence), next_state))
-
-    def _priority(self, metrics: _SearchMetrics, energy_bucket: int) -> Priority:
+    def _priority(
+        self, minutes: float, distance_km: float, sessions: int, energy_bucket: int
+    ) -> Priority:
         """Lexicographic priority; the last term prefers the higher battery level on full ties."""
 
-        minutes = round(metrics.total_minutes, _PRIORITY_DECIMALS)
-        distance = round(metrics.distance_km, _PRIORITY_DECIMALS)
-        sessions = float(metrics.charging_stops)
+        rounded_minutes = round(minutes, _PRIORITY_DECIMALS)
+        rounded_distance = round(distance_km, _PRIORITY_DECIMALS)
         if self.preference is RoutePreference.FASTEST:
-            return (minutes, sessions, distance, -energy_bucket)
+            return (rounded_minutes, float(sessions), rounded_distance, -energy_bucket)
         if self.preference is RoutePreference.SHORTEST_DISTANCE:
-            return (distance, minutes, sessions, -energy_bucket)
-        return (sessions, minutes, distance, -energy_bucket)
+            return (rounded_distance, rounded_minutes, float(sessions), -energy_bucket)
+        return (float(sessions), rounded_minutes, rounded_distance, -energy_bucket)
 
     def _reconstruct(
         self,

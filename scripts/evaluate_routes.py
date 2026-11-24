@@ -60,7 +60,9 @@ def main() -> None:
         if args.osrm_runtime is not None:
             runtime["osrm"] = json.loads(args.osrm_runtime.read_text(encoding="utf-8"))
         args.runtime_out.parent.mkdir(parents=True, exist_ok=True)
-        args.runtime_out.write_text(json.dumps(runtime, indent=2) + "\n", encoding="utf-8")
+        args.runtime_out.write_text(
+            json.dumps(runtime, indent=2) + "\n", encoding="utf-8", newline="\n"
+        )
 
 
 if __name__ == "__main__":

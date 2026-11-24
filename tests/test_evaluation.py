@@ -21,7 +21,8 @@ from chargepath.providers import StaticRoadNetwork
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 SYNTHETIC_MANIFEST = REPOSITORY_ROOT / "data/benchmarks/synthetic/v1/manifest.json"
 SYNTHETIC_CORRECTNESS = REPOSITORY_ROOT / "docs/benchmarks/synthetic/correctness_v1.json"
-SYNTHETIC_RUNTIME = REPOSITORY_ROOT / "docs/benchmarks/synthetic/runtime_2026-11-18.json"
+# One file per dated run; every committed run must belong to the current manifest.
+SYNTHETIC_RUNTIMES = sorted((REPOSITORY_ROOT / "docs/benchmarks/synthetic").glob("runtime_*.json"))
 
 
 def test_manifest_pins_fixture_and_covers_every_required_class() -> None:
@@ -91,14 +92,15 @@ def test_committed_correctness_evidence_matches_regenerated_bytes() -> None:
 
 def test_committed_runtime_evidence_is_bound_to_manifest_and_protocol() -> None:
     manifest = load_benchmark_manifest(SYNTHETIC_MANIFEST)
-    runtime = json.loads(SYNTHETIC_RUNTIME.read_text(encoding="utf-8"))
-
-    assert runtime["manifest_sha256"] == manifest.manifest_sha256
-    assert runtime["fixture_sha256"] == manifest.fixture_sha256
-    assert runtime["case_count_per_sample"] == len(manifest.cases)
-    assert runtime["protocol"]["warmup_count"] == 3
-    assert runtime["protocol"]["measured_repetitions"] == 20
-    assert runtime["protocol"]["network_access"] == "none"
+    assert len(SYNTHETIC_RUNTIMES) >= 2
+    for path in SYNTHETIC_RUNTIMES:
+        runtime = json.loads(path.read_text(encoding="utf-8"))
+        assert runtime["manifest_sha256"] == manifest.manifest_sha256, path.name
+        assert runtime["fixture_sha256"] == manifest.fixture_sha256, path.name
+        assert runtime["case_count_per_sample"] == len(manifest.cases)
+        assert runtime["protocol"]["warmup_count"] == 3
+        assert runtime["protocol"]["measured_repetitions"] == 20
+        assert runtime["protocol"]["network_access"] == "none"
 
 
 def test_reserve_violations_are_counted_by_the_replay(monkeypatch: pytest.MonkeyPatch) -> None:

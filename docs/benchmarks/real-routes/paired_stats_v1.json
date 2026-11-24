@@ -1,0 +1,46 @@
+{
+  "exact_vs_fixed_80": {
+    "median_ci95_min": [
+      16.113,
+      29.465
+    ],
+    "median_saving_min": 24.694,
+    "route_mean_signed_rank": {
+      "negative": 0,
+      "nonzero_pairs": 23,
+      "p_value": 2.38e-07,
+      "positive": 23,
+      "w_plus": 276.0
+    },
+    "routes": 24,
+    "scenarios": 71
+  },
+  "exact_vs_lookahead": {
+    "median_ci95_min": [
+      0.948,
+      4.765
+    ],
+    "median_saving_min": 2.559,
+    "route_mean_signed_rank": {
+      "negative": 0,
+      "nonzero_pairs": 21,
+      "p_value": 9.54e-07,
+      "positive": 21,
+      "w_plus": 231.0
+    },
+    "routes": 24,
+    "scenarios": 72
+  },
+  "inputs": {
+    "fixed_80": "docs/benchmarks/real-routes/trips_v1.jsonl",
+    "lookahead": "docs/benchmarks/real-routes/lookahead_baseline_v1.json"
+  },
+  "method": {
+    "bootstrap_resamples": 10000,
+    "bootstrap_seed": 20261122,
+    "confidence": 0.95,
+    "interval": "percentile interval of the pooled median over route-level resamples with replacement",
+    "saving": "other strategy's modeled total minutes minus exact fastest's, per scenario",
+    "test": "two-sided exact Wilcoxon signed-rank test on per-route mean savings, zero differences dropped, average ranks for ties"
+  }
+}

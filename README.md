@@ -50,14 +50,16 @@ Planning between arbitrary points needs a charger snapshot and a local OSRM serv
 On 24 routes across Türkiye's road network with three vehicle profiles, the exact planner was a
 median **24.7 minutes (4.2%) faster** than the simple rule of charging to 80% at each stop. That
 covers the 71 of 72 scenarios where both found a plan; the 80% heuristic found none on the remaining
-one. The percentage looks small because driving is a median 87.5% of the trip and no charging
+one. Scenarios on the same route are not independent, so the uncertainty comes from resampling
+whole routes: the 95% interval for that median is 16.1 to 29.5 minutes. The percentage looks small because driving is a median 87.5% of the trip and no charging
 planner can shorten it. Measured against the part a planner does control, the median time spent
 charging fell from 70.7 to 53.0 minutes, a median cut of 28.7% in the 66 scenarios where the
 heuristic charged.
 
 A stronger heuristic picks each next charger and how much to charge there by a one-step
 lookahead. Against it the exact planner was a median **2.6 minutes (0.5%) faster**, tied in 22 of
-72 scenarios and at most 26.5 minutes faster; the heuristic never failed. On this benchmark a
+72 scenarios and at most 26.5 minutes faster, with a route-resampled 95% interval of 0.9 to 4.8
+minutes for the median; the heuristic never failed. On this benchmark a
 careful heuristic gets close. What exact search adds is the worst cases, a guarantee that no plan
 on the same graph and SOC grid is faster, and the yardstick itself: without the optimum, the
 heuristic's 2.6-minute gap could not be measured. Whether the gap widens with sparser chargers or
@@ -72,8 +74,8 @@ one static charger snapshot, not measured drives.
 
 | What | Data | Comparison | Result | Reproduce |
 |---|---|---|---|---|
-| Trip time | 72 real-route scenarios (24 routes × 3 vehicles) | exact fastest vs charge-to-80% | median 24.7 min (4.2%) saved, max 98.5 min; charging time cut by a median 28.7%; 6 ties, 1 heuristic failure | `pytest tests/test_published_results.py` recomputes it from the committed outcomes |
-| Stronger baseline | same 72 scenarios | exact fastest vs one-step lookahead heuristic | median 2.6 min (0.5%) saved, p90 12.0 min, max 26.5 min; 22 ties, 0 heuristic failures | same test; `scripts/run_baseline_comparison.py` reruns it, needs the frozen graphs |
+| Trip time | 72 real-route scenarios (24 routes × 3 vehicles) | exact fastest vs charge-to-80% | median 24.7 min (4.2%) saved, 95% interval 16.1–29.5 min over resampled routes, max 98.5 min; charging time cut by a median 28.7%; 6 ties, 1 heuristic failure | `pytest tests/test_published_results.py` recomputes it from the committed outcomes; `scripts/paired_statistics.py` writes the intervals |
+| Stronger baseline | same 72 scenarios | exact fastest vs one-step lookahead heuristic | median 2.6 min (0.5%) saved, 95% interval 0.9–4.8 min, p90 12.0 min, max 26.5 min; 22 ties, 0 heuristic failures | same test; `scripts/run_baseline_comparison.py` reruns it, needs the frozen graphs |
 | Where the saving comes from | same 71 paired scenarios | 80% heuristic → best charge amounts on its own path → free path | medians of 9.6 min and 10.5 min; they add per scenario, not as medians | `scripts/run_route_followup.py`, needs the frozen graphs |
 | Slower driving | same 72 scenarios, opt-in speed-dependent consumption | fixed OSRM speed vs also 90% and 80% | no scenario improved; with fast chargers, driving slower costs more time than the charging it saves | `scripts/run_speed_choice.py`, needs the frozen graphs |
 | Plan validity | all 2,525 returned plans | replay checker | 0 reserve violations | same test as the first row |

@@ -366,8 +366,11 @@ def test_committed_evidence_belongs_to_the_frozen_manifest_and_passes_every_gate
 def test_committed_evidence_contains_no_station_data() -> None:
     summary, trips = _committed_evidence()
     assert_no_station_data({"summary": summary, "trips": trips}, {})
-    for name in ("summary_v1.json", "trips_v1.jsonl", "runtime_2026-11-05.json"):
-        text = (REPOSITORY_ROOT / "docs/benchmarks/real-routes" / name).read_text(encoding="utf-8")
+    real_routes = REPOSITORY_ROOT / "docs/benchmarks/real-routes"
+    runtimes = sorted(real_routes.glob("runtime_*.json"))
+    assert len(runtimes) >= 2
+    for path in [real_routes / "summary_v1.json", real_routes / "trips_v1.jsonl", *runtimes]:
+        text = path.read_text(encoding="utf-8")
         for forbidden in ("epdk:", "ŞRJ/", "sarjIstasyonu", "latitude", "longitude"):
             assert forbidden not in text
 

@@ -13,7 +13,8 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
-from chargepath.benchmarks.evidence import nearest_rank
+from chargepath.benchmarks.evidence import canonical_json_bytes, nearest_rank
+from chargepath.benchmarks.paired import build_paired_statistics
 
 ROOT = Path(__file__).resolve().parents[1]
 TRIPS = ROOT / "docs/benchmarks/real-routes/trips_v1.jsonl"
@@ -177,3 +178,22 @@ def test_soc_grid_cost_matches_the_readme() -> None:
     }
     assert (round(min(medians.values()), 1), round(max(medians.values()), 1)) == (0.8, 3.3)
     assert "the 5% grid added a median 0.8 to 3.3 minutes against a 2% grid" in README
+
+
+def test_paired_statistics_match_the_outcomes_and_the_readme() -> None:
+    real_routes = ROOT / "docs/benchmarks/real-routes"
+    fresh = build_paired_statistics(
+        trips=TRIPS, baseline=real_routes / "lookahead_baseline_v1.json"
+    )
+    committed = (real_routes / "paired_stats_v1.json").read_bytes()
+    assert committed == canonical_json_bytes(fresh), "rerun scripts/paired_statistics.py"
+
+    fixed80, lookahead = fresh["exact_vs_fixed_80"], fresh["exact_vs_lookahead"]
+    assert (fixed80["scenarios"], fixed80["routes"]) == (71, 24)
+    assert (lookahead["scenarios"], lookahead["routes"]) == (72, 24)
+    low, high = (round(value, 1) for value in fixed80["median_ci95_min"])
+    assert f"the 95% interval for that median is {low} to {high} minutes" in README
+    assert f"95% interval {low}–{high} min over resampled routes" in README
+    low, high = (round(value, 1) for value in lookahead["median_ci95_min"])
+    assert f"route-resampled 95% interval of {low} to {high} minutes" in README
+    assert f"95% interval {low}–{high} min, p90 12.0 min" in README

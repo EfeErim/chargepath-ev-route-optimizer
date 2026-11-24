@@ -31,16 +31,6 @@ def energy_for_distance(
     return distance_km * consumption_kwh_per_100km / 100 * safety_factor
 
 
-def soc_to_kwh(soc_pct: float, usable_battery_kwh: float) -> float:
-    _require_finite(soc_pct, field="soc_pct")
-    _require_finite(usable_battery_kwh, field="usable_battery_kwh")
-    if not 0 <= soc_pct <= 100:
-        raise ValueError("soc_pct must be between 0 and 100")
-    if usable_battery_kwh <= 0:
-        raise ValueError("usable_battery_kwh must be positive")
-    return usable_battery_kwh * soc_pct / 100
-
-
 @dataclass(frozen=True, slots=True)
 class LegEnergy:
     """Battery energy for one driven leg.
@@ -213,8 +203,8 @@ def charging_minutes(
         min(to_soc_pct, taper_start_pct) - min(from_soc_pct, taper_start_pct),
     )
     tapered_pct = max(0.0, to_soc_pct - max(from_soc_pct, taper_start_pct))
-    full_speed_kwh = soc_to_kwh(full_speed_pct, vehicle.usable_battery_kwh)
-    tapered_kwh = soc_to_kwh(tapered_pct, vehicle.usable_battery_kwh)
+    full_speed_kwh = vehicle.usable_battery_kwh * full_speed_pct / 100
+    tapered_kwh = vehicle.usable_battery_kwh * tapered_pct / 100
     energy_minutes = 60 * (
         full_speed_kwh / effective_power_kw + tapered_kwh / (effective_power_kw * taper_factor)
     )

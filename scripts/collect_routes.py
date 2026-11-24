@@ -57,7 +57,9 @@ def main() -> None:
     )
     if args.osrm_runtime_out is not None:
         runtime = measure_osrm_runtime(manifest=manifest, client=client, graphs_dir=args.graphs_dir)
-        args.osrm_runtime_out.write_text(json.dumps(runtime, indent=2) + "\n", encoding="utf-8")
+        args.osrm_runtime_out.write_text(
+            json.dumps(runtime, indent=2) + "\n", encoding="utf-8", newline="\n"
+        )
         print(f"osrm_runtime={args.osrm_runtime_out}")
 
 

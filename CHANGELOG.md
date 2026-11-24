@@ -4,6 +4,17 @@ The project uses [Semantic Versioning](https://semver.org/).
 
 ## Unreleased
 
+- Exact search keeps each state's priority with its label, turns a node's legs into bucket counts
+  once per search, and memoizes charge minutes per station power and bucket pair. Relaxation
+  order and arithmetic are unchanged, so every plan and evidence file is identical.
+  `soc_to_kwh` is gone; `charging_minutes` computes the energy inline. New dated runtime files
+  `runtime_2026-11-24.json` (synthetic and real-route) sit beside the earlier ones; one E1 pass
+  of exact fastest takes a median 5.98 s, against 21.3 s on 2026-11-05. `evaluate_routes.py` and
+  `collect_routes.py` write their timing JSON with LF line endings on Windows too.
+- `scripts/paired_statistics.py` writes `paired_stats_v1.json` from the committed outcomes: 95%
+  intervals for the median E1 savings with whole routes resampled, and an exact Wilcoxon
+  signed-rank test on per-route mean savings. `tests/test_published_results.py` checks the file and
+  the README intervals.
 - Benchmark and evidence code moved to `chargepath.benchmarks` and is no longer shipped in the
   static demo's source archive. The synthetic corridor ships as package data at
   `chargepath/data/synthetic_corridor.json`, and `load_synthetic_scenario()` loads it by default;
