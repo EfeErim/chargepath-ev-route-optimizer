@@ -2,8 +2,11 @@
 
 The project uses [Semantic Versioning](https://semver.org/).
 
-## Unreleased
+## 0.4.0 - 2026-11-27
 
+- The README quotes the measured exact-search time per 72-scenario pass instead of "under a
+  second", and says which figures have no stored output. A new test checks the reserve rule
+  against its definition on every small integer case.
 - Exact search keeps each state's priority with its label, turns a node's legs into bucket counts
   once per search, and memoizes charge minutes per station power and bucket pair. Relaxation
   order and arithmetic are unchanged, so every plan and evidence file is identical.
