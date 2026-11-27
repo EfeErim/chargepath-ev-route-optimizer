@@ -169,3 +169,21 @@ def test_curve_plans_replay_and_tampering_is_caught() -> None:
     verify_route_plan(plan, vehicle=vehicle, stations=stations)
     with pytest.raises(PlanVerificationError, match="charging minutes"):
         verify_route_plan(plan, vehicle=replace(vehicle, charging_curve=None), stations=stations)
+
+
+def test_drive_bucket_matches_the_reserve_definition_on_every_small_case() -> None:
+    """Every point on the leg stays at or above the reserve, over all small integer cases."""
+    maximum = 10
+    for start in range(maximum + 1):
+        for reserve in range(5):
+            for peak in range(13):
+                for net in range(-5, peak + 1):
+                    end = min(maximum, start - net)
+                    lowest_point = min(start, start - peak, end)
+                    expected = end if lowest_point >= reserve else None
+                    assert (
+                        drive_bucket(
+                            start, (net, peak), reserve_bucket=reserve, maximum_bucket=maximum
+                        )
+                        == expected
+                    ), (start, reserve, peak, net)
