@@ -18,8 +18,8 @@ browser through Pyodide on a synthetic corridor.
 On 72 modeled trips over 24 real routes in Türkiye:
 
 - 24.7 minutes faster (median) than charging to 80% at every stop.
-- 2.6 minutes faster (median) than a one-step lookahead heuristic, so most of the gain is
-  available without exact search.
+- 2.6 minutes faster (median) than a one-step lookahead heuristic, so a simpler heuristic
+  gets most of the gain. The heuristic's runtime was not measured.
 - Every returned plan replayed by a separate checker, with zero reserve violations.
 
 ## Quickstart
@@ -79,7 +79,7 @@ one static charger snapshot, not measured drives.
 | Where the saving comes from | same 71 paired scenarios | 80% heuristic → best charge amounts on its own path → free path | medians of 9.6 min and 10.5 min; they add per scenario, not as medians | `scripts/run_route_followup.py`, needs the frozen graphs |
 | Slower driving | same 72 scenarios, opt-in speed-dependent consumption | fixed OSRM speed vs also 90% and 80% | no scenario improved; with fast chargers, driving slower costs more time than the charging it saves | `scripts/run_speed_choice.py`, needs the frozen graphs |
 | Plan validity | all 2,525 returned plans | replay checker | 0 reserve violations | same test as the first row |
-| Solver agreement | Hypothesis-generated graphs, 150 per property in CI | optimizer vs exact-rational reference solver | no disagreement; 20,000 cases in one deeper run | `pytest tests/test_properties.py` |
+| Solver agreement | Hypothesis-generated graphs, 150 per property in CI | optimizer vs exact-rational reference solver | no disagreement; a deeper local run of 20,000 cases also agreed, and its output is not stored | `pytest tests/test_properties.py` |
 | Synthetic suite | 8 hand-checked cases | known feasible/infeasible labels | all 5 feasible and 3 infeasible matched | `scripts/run_synthetic_benchmark.py` |
 
 The real-route numbers depend on a road graph and an EPDK station snapshot that are kept outside Git
@@ -130,7 +130,8 @@ more minutes for one fewer stop"; it returns the separate options instead.
 
 **OSRM owns the roads; the planner sees a small candidate graph.** Searching the full road network
 with battery state would need a custom routing engine. A matrix between origin, destination and
-up to 50 chargers keeps one exact search under a second on the real routes. The candidate cap can
+up to 50 chargers keeps a pass of exact search over all 72 real-route scenarios at a median 5.98 s,
+about 0.08 s per scenario ([E6](docs/results.md)); per-scenario maxima were not recorded. The candidate cap can
 hide a better charger: lowering it from 50 to 12 cost a median 3.5 minutes, up to 91 minutes, and
 made 4 of 72 scenarios infeasible.
 
