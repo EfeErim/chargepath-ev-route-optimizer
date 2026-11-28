@@ -110,6 +110,16 @@ TAMPERING: list[tuple[str, Callable[[RoutePlan], dict[str, Any]], str]] = [
         lambda plan: {"plan": _tampered_stop(plan, node_index=0)},
         "not at its plan node",
     ),
+    # One percentage point more stays in the arrival bucket on the 5% grid, so no energy is added.
+    (
+        "stop-adds-no-bucket",
+        lambda plan: {
+            "plan": _tampered_stop(
+                plan, departure_soc_pct=plan.charging_stops[0].arrival_soc_pct + 1
+            )
+        },
+        "departure bucket is invalid",
+    ),
     ("other-origin", lambda plan: {"origin_id": "s"}, "requested origin"),
     ("other-destination", lambda plan: {"destination_id": "s"}, "requested destination"),
 ]
@@ -194,3 +204,11 @@ def test_replay_counts_reserve_violations_instead_of_raising(plan: RoutePlan) ->
     )
     assert replay.reserve_violations == 1
     assert replay_route_plan(plan, vehicle=VEHICLE, stations=STATIONS).reserve_violations == 0
+
+
+def test_a_stop_the_drive_never_reaches_is_rejected(plan: RoutePlan) -> None:
+    # Without its charge the car dips below the reserve, which this replay only counts; the
+    # unreplayed stop must still fail the plan.
+    unreached = _tampered_stop(plan, node_index=len(plan.legs))
+    with pytest.raises(PlanVerificationError, match="not in drive order"):
+        replay_route_plan(unreached, vehicle=VEHICLE, stations=STATIONS)
