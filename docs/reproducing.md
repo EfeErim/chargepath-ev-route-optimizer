@@ -24,20 +24,21 @@ from the source archive of the pinned commit. The manifest's `car.lua` checksum 
 endings; GitHub serves LF.
 
 ```powershell
+$Root = "D:\osrm-data"  # any folder outside the repository
 $Commit = "0844e3af77896d11998ef6db356a553056652c8e"
 $Asset = "node_osrm-v26.7.3-8-win32-x64-Release.tar.gz"
-New-Item -ItemType Directory -Force D:\osrm-data\bin, D:\osrm-data\profiles, D:\osrm-data\extract
+New-Item -ItemType Directory -Force $Root\bin, $Root\profiles, $Root\extract
 
-curl.exe -fsSL -o D:\osrm-data\$Asset "https://github.com/Project-OSRM/osrm-backend/releases/download/v26.7.3/$Asset"
-tar.exe -xzf D:\osrm-data\$Asset -C D:\osrm-data\bin
-curl.exe -fsSL -o D:\osrm-data\src.tar.gz "https://github.com/Project-OSRM/osrm-backend/archive/$Commit.tar.gz"
-tar.exe -xzf D:\osrm-data\src.tar.gz -C D:\osrm-data\profiles --strip-components=2 "osrm-backend-$Commit/profiles"
-curl.exe -fsSL -o D:\osrm-data\extract\turkey-latest.osm.pbf https://download.geofabrik.de/europe/turkey-latest.osm.pbf
+curl.exe -fsSL -o $Root\$Asset "https://github.com/Project-OSRM/osrm-backend/releases/download/v26.7.3/$Asset"
+tar.exe -xzf $Root\$Asset -C $Root\bin
+curl.exe -fsSL -o $Root\src.tar.gz "https://github.com/Project-OSRM/osrm-backend/archive/$Commit.tar.gz"
+tar.exe -xzf $Root\src.tar.gz -C $Root\profiles --strip-components=2 "osrm-backend-$Commit/profiles"
+curl.exe -fsSL -o $Root\extract\turkey-latest.osm.pbf https://download.geofabrik.de/europe/turkey-latest.osm.pbf
 
-$Bin = "D:\osrm-data\bin\binding_napi_v8"
-& $Bin\osrm-extract.exe -p D:\osrm-data\profiles\car.lua -d <data-version> -t 8 D:\osrm-data\extract\turkey-latest.osm.pbf
-& $Bin\osrm-contract.exe -t 8 D:\osrm-data\extract\turkey-latest.osrm
-& $Bin\osrm-routed.exe --algorithm CH --ip 127.0.0.1 --port 5000 --max-table-size 100 D:\osrm-data\extract\turkey-latest.osrm
+$Bin = "$Root\bin\binding_napi_v8"
+& $Bin\osrm-extract.exe -p $Root\profiles\car.lua -d <data-version> -t 8 $Root\extract\turkey-latest.osm.pbf
+& $Bin\osrm-contract.exe -t 8 $Root\extract\turkey-latest.osrm
+& $Bin\osrm-routed.exe --algorithm CH --ip 127.0.0.1 --port 5000 --max-table-size 100 $Root\extract\turkey-latest.osrm
 ```
 
 Pass `--ip 127.0.0.1`; `osrm-routed` binds `0.0.0.0` by default. `osrm-extract` can use nearly all
